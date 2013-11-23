@@ -1,1 +1,1 @@
-We need modern text editor! (I love vim, though)
+Tor : rythmical text editor
