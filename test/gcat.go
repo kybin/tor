@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 	//"strings"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 )
 
 func main() {
@@ -12,11 +12,11 @@ func main() {
 	//fmt.Printf(strings.Join(os.Args[1], " "))
 	//fmt.Println()
 	rf := os.Args[1]
-    // read whole the file
+	// read whole the file
 	b, err := ioutil.ReadFile(rf)
-	if err != nil { panic(err) }
+	if err != nil {
+		panic(err)
+	}
 	s := string(b)
 	fmt.Print(s)
 }
-
-
