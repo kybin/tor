@@ -1,0 +1,179 @@
+package main
+
+import (
+	"unicode/utf8"
+	term "github.com/nsf/termbox-go"
+)
+
+var (
+	taboffset = 4
+)
+
+type cursor struct {
+	txt text
+	linenum int
+	off int // byte offset.
+	visoff int // visual offset. It can be different with actual cursor placement. cursor.cursorOffset() calculate that.
+}
+
+func (c *cursor) linedata() line {
+	return c.txt[c.linenum]
+}
+
+// when we move the cursor up or down, it will not recalculate it's offsets.
+// This method tell us whether we should recalcuate offsets or not.
+func (c *cursor) exceededLineLimit() bool {
+	return c.off > len(c.linedata())
+}
+
+func (c *cursor) runeAfter() (rune, int) {
+	return utf8.DecodeRune(c.linedata()[c.off:])
+}
+
+func (c *cursor) runeBefore() (rune, int) {
+	return utf8.DecodeLastRune(c.linedata()[:c.off])
+}
+
+func runeVisualLength(r rune) int {
+	if r=='\t' {
+		return taboffset
+	}
+	return 1
+}
+
+func (c *cursor) findByteOffset(cursoroff int) (byteoff int) {
+	remaintext := c.linedata()
+	for cursoroff>0 {
+		r, rlen := utf8.DecodeRune(remaintext)
+		remaintext = remaintext[rlen:]
+		byteoff += rlen
+		cursoroff -= runeVisualLength(r)
+	}
+	return
+}
+
+func (c *cursor) findVisualOffset(byteoff int) (visoff int){
+	remaintext := c.linedata()[:byteoff]
+	for len(remaintext) > 0 {
+		r, rlen := utf8.DecodeRune(remaintext)
+		remaintext = remaintext[rlen:]
+		visoff += runeVisualLength(r)
+	}
+	return
+}
+
+func (c *cursor) visualLineLength() int {
+	return c.findVisualOffset(len(c.linedata()))
+}
+
+func (c *cursor) setOffsets(off int) {
+	c.off = off
+	c.visoff = c.findVisualOffset(off)
+}
+
+// cursor offset on terminal. It cannot exceeded line's maximum visual length.
+func (c *cursor) cursorOffset() (cursoroff int) {
+	linevisoff := c.visualLineLength()
+	if c.visoff >  linevisoff {
+		return linevisoff
+	}
+
+	// Cursor should not in the middle of multi visual length character.
+	// So we should recalculate cursor offset.
+	remaintext := c.linedata()
+	lastcursor := 0
+	for {
+		r, rlen := utf8.DecodeRune(remaintext)
+		remaintext = remaintext[rlen:]
+		lastcursor = cursoroff
+		cursoroff += runeVisualLength(r)
+		if cursoroff==c.visoff {
+			return cursoroff
+		} else if cursoroff > c.visoff {
+			return lastcursor
+		}
+	}
+	return
+}
+
+func setVisualCursor(c *cursor) {
+	term.SetCursor(c.cursorOffset(), c.linenum)
+}
+
+func init_cursor(t text) cursor {
+	term.SetCursor(0, 0)
+	c := cursor{t, 0, 0, 0}
+	return c
+}
+
+func (c *cursor) atBol() bool{
+	return c.off == 0
+}
+
+func (c *cursor) atEol() bool{
+	return c.off == len(c.linedata())
+}
+
+func (c *cursor) onFirstline() bool{
+	return c.linenum == 0
+}
+
+func (c *cursor) onLastline() bool {
+	return c.linenum == len(c.txt)-1
+}
+
+func (c *cursor) atBof() bool {
+	return c.onFirstline() && c.atBol()
+}
+
+func (c *cursor) atEof() bool {
+	return c.onLastline() && c.atEol()
+}
+
+
+func (c *cursor) moveLeft() {
+	c.off = c.findByteOffset(c.cursorOffset())
+	c.visoff = c.findVisualOffset(c.off)
+	if c.atBof() {
+		return
+	} else if c.atBol() {
+		c.linenum--
+		c.setOffsets(len(c.linedata()))
+		return
+	} else if c.exceededLineLimit() {
+		c.off = len(c.linedata())
+	}
+	r, rlen := c.runeBefore()
+	c.off -= rlen
+	c.visoff -= runeVisualLength(r)
+}
+
+func (c *cursor) moveRight() {
+	c.off = c.findByteOffset(c.cursorOffset())
+	c.visoff = c.findVisualOffset(c.off)
+	if c.atEof() {
+		return
+	} else if c.atEol() || c.exceededLineLimit(){
+		c.linenum++
+		c.setOffsets(0)
+		return
+	}
+	r, rlen := c.runeAfter()
+	c.off += rlen
+	c.visoff += runeVisualLength(r)
+}
+
+func (c *cursor) moveUp() {
+	if c.onFirstline() {
+		return
+	}
+	c.linenum--
+
+}
+
+func (c *cursor) moveDown() {
+	if c.onLastline() {
+		return
+	}
+	c.linenum++
+}

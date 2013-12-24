@@ -1,8 +1,6 @@
 package main
 
 import (
-	//	"fmt"
-	//	"os"
 	"io/ioutil"
 )
 
@@ -28,10 +26,3 @@ func open(f string) text {
 	//	fmt.Print(txt)
 	return txt
 }
-
-//func main() {
-//	readf := os.Args[1]
-//	readf := "/home/kybin/go/src/github.com/coldmine/tor/tor.go"
-//	contents := open(readf)
-//	fmt.Println(contents)
-//}
