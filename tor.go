@@ -2,16 +2,12 @@ package main
 
 import (
 	"fmt"
+	"os"
 	term "github.com/nsf/termbox-go"
 )
 
-var (
-	termWhite   = term.ColorWhite
-	termDefault = term.ColorDefault
-)
-
 func clear_term() {
-	term.Clear(termDefault, termDefault)
+	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 }
 
@@ -28,7 +24,7 @@ func print_text(t text) {
 				choff++
 				visoff += taboffset
 			} else {
-				term.SetCell(visoff, l, rune(ch), termWhite, termDefault)
+				term.SetCell(visoff, l, rune(ch), term.ColorWhite, term.ColorDefault)
 				choff++
 				visoff++
 			}
@@ -48,10 +44,10 @@ func setState(c *cursor) {
 
 	state := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", linenum, byteoff, visoff, cursoroff)
 	for off:=0 ; off<termw ; off++ {
-		term.SetCell(off, stateline, ' ', termDefault, termDefault)
+		term.SetCell(off, stateline, ' ', term.ColorBlack, term.ColorWhite)
 	}
 	for off, ch := range state {
-		term.SetCell(off, stateline, rune(ch), termWhite, termDefault)
+		term.SetCell(off, stateline, rune(ch), term.ColorBlack, term.ColorWhite)
 	}
 }
 
@@ -64,12 +60,17 @@ func main() { // main loop
 
 	clear_term()
 
-	f := "/home/kybin/go/src/github.com/coldmine/tor/text"
+	// f := "/home/kybin/go/src/github.com/coldmine/tor/text"
+	args := os.Args[1:]
+	if len(args)==0 {
+		print("please, set text file")
+		os.Exit(1)
+	}
+	f := args[0]
 	text := open(f)
 	print_text(text)
-
-
-	cursor := init_cursor(text)
+	cursor := initializeCursor(text)
+	setState(&cursor)
 	term.Flush()
 
 loop:
@@ -91,19 +92,19 @@ loop:
 			}
 
 			// for unknown reason ev.Mod is not a term.ModAlt so I enforce it.
-			//ev.Mod = term.ModAlt
-			//if ev.Mod == term.ModAlt {
-			//	switch ev.Ch {
-			//	case 'j':
-			//		cursor.move(-1, 0)
-			//	case 'l':
-			//		cursor.move(1, 0)
-			//	case 'i':
-			//		cursor.move(0, -1)
-			//	case 'k':
-			//		cursor.move(0, 1)
-			//	}
-			//}
+			ev.Mod = term.ModAlt
+			if ev.Mod == term.ModAlt {
+				switch ev.Ch {
+				case 'j': cursor.moveLeft()
+				case 'l': cursor.moveRight()
+				case 'i': cursor.moveUp()
+				case 'k': cursor.moveDown()
+				case 'm': cursor.moveBow()
+				case '.': cursor.moveEow()
+				case 'u': cursor.moveBol()
+				case 'o': cursor.moveEol()
+				}
+			}
 		// case term.EventResize:
 		//	something()
 		}
