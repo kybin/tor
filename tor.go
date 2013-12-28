@@ -11,28 +11,25 @@ func clear_term() {
 	term.Flush()
 }
 
-func print_text(t text) {
-	width, height := term.Size()
-	height -= 1 // for print state
-
-	for l := 0; l < height && l < len(t); l++ { // should not exceeded both line num and term size
-		line := t[l]
-		choff, visoff := 0, 0
-		for visoff < width && choff < len(line) { // same here
-			ch := line[choff]
+func draw(txt text) {
+	//termw, termh := term.Size()
+	for linenum, line := range txt {
+		visoff := 0
+		for off, ch := range line {
 			if ch == '\t' {
-				choff++
+				off++
 				visoff += taboffset
 			} else {
-				term.SetCell(visoff, l, rune(ch), term.ColorWhite, term.ColorDefault)
-				choff++
+				term.SetCell(visoff, linenum, rune(ch), term.ColorWhite, term.ColorDefault)
+				off++
 				visoff++
 			}
 		}
-		fmt.Println("")
 	}
 	term.Flush()
 }
+
+
 
 func setState(c *cursor) {
 	termw, termh := term.Size()
@@ -60,7 +57,6 @@ func main() { // main loop
 
 	clear_term()
 
-	// f := "/home/kybin/go/src/github.com/coldmine/tor/text"
 	args := os.Args[1:]
 	if len(args)==0 {
 		print("please, set text file")
@@ -68,9 +64,9 @@ func main() { // main loop
 	}
 	f := args[0]
 	text := open(f)
-	print_text(text)
+	draw(text)
 	cursor := initializeCursor(text)
-	setState(&cursor)
+	setState(cursor)
 	term.Flush()
 
 loop:
@@ -108,8 +104,8 @@ loop:
 		// case term.EventResize:
 		//	something()
 		}
-		setVisualCursor(&cursor)
-		setState(&cursor)
+		setVisualCursor(cursor)
+		setState(cursor)
 		term.Flush()
 	}
 }

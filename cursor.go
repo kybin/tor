@@ -17,10 +17,9 @@ type cursor struct {
 	visoff int // visual offset. It may be different with actual cursor placement. For that, use cursor.cursorOffset().
 }
 
-func initializeCursor(t text) cursor {
+func initializeCursor(t text) *cursor {
 	term.SetCursor(0, 0)
-	c := cursor{t, 0, 0, 0}
-	return c
+	return &cursor{t, 0, 0, 0}
 }
 
 func setVisualCursor(c *cursor) {
