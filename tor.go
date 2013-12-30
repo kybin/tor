@@ -11,19 +11,49 @@ func clear_term() {
 	term.Flush()
 }
 
-func draw(txt text) {
-	//termw, termh := term.Size()
-	for linenum, line := range txt {
-		visoff := 0
-		for off, ch := range line {
+func textToDrawBuffer(txt text) [][]rune {
+	drawbuf := make([][]rune, 0)
+	for _ , line := range txt {
+		linebuf := make([]rune, 0)
+		for _, ch := range line {
 			if ch == '\t' {
-				off++
-				visoff += taboffset
+				for i:=0 ; i<taboffset ; i++ { linebuf = append(linebuf, rune(' ')) }
 			} else {
-				term.SetCell(visoff, linenum, rune(ch), term.ColorWhite, term.ColorDefault)
-				off++
-				visoff++
+				linebuf = append(linebuf, rune(ch))
 			}
+		}
+		drawbuf = append(drawbuf, linebuf)
+	}
+	return drawbuf
+}
+
+func clipDrawBuffer(drawbuf [][]rune) [][]rune {
+	clipbuf := make([][]rune, 0)
+	sh, eh := 0, 0
+	sw, ew := term.Size()
+
+	eh = min(eh, len(drawbuf))
+	if eh < sh {
+		// if then, we don't have a place for draw
+		return clipbuf
+	}
+	for _, origbuf := range drawbuf[sh:eh] {
+		minoff := sw
+		maxoff := ew
+		maxoff = min(maxoff, len(origbuf))
+		if maxoff-minoff > 0 {
+			clipbuf = append(clipbuf, origbuf[minoff:maxoff])
+		} else {
+			clipbuf = append(clipbuf, make([]rune, 0))
+		}
+	}
+	return clipbuf
+}
+
+func draw(clipbuf [][]rune) {
+	for linenum, line := range clipbuf {
+		for off, r := range line {
+			term.SetCell(off, linenum, r, term.ColorWhite, term.ColorDefault)
 		}
 	}
 	term.Flush()
@@ -54,55 +84,64 @@ func main() { // main loop
 		panic(err)
 	}
 	defer term.Close()
-
+	//term.SetInputMode(term.InputEsc)
 	clear_term()
 
 	args := os.Args[1:]
 	if len(args)==0 {
-		print("please, set text file")
-		os.Exit(1)
+		fmt.Println("please, set text file")
+		return
 	}
 	f := args[0]
+	//view := newViewer()
 	text := open(f)
-	draw(text)
+	db := textToDrawBuffer(text)
+	//cb := clipDrawBuffer(db, view)
+	draw(db)
 	cursor := initializeCursor(text)
 	setState(cursor)
 	term.Flush()
 
-loop:
+	events := make(chan term.Event, 20)
+	go func() {
+		for {
+			events <- term.PollEvent()
+		}
+	}()
 	for {
-		ev := term.PollEvent()
-		switch ev.Type {
-		case term.EventKey:
-			switch ev.Key {
-			case term.KeyCtrlW:
-				break loop
-			case term.KeyArrowLeft:
-				cursor.moveLeft()
-			case term.KeyArrowRight:
-				cursor.moveRight()
-			case term.KeyArrowUp:
-				cursor.moveUp()
-			case term.KeyArrowDown:
-				cursor.moveDown()
-			}
-
-			// for unknown reason ev.Mod is not a term.ModAlt so I enforce it.
-			ev.Mod = term.ModAlt
-			if ev.Mod == term.ModAlt {
-				switch ev.Ch {
-				case 'j': cursor.moveLeft()
-				case 'l': cursor.moveRight()
-				case 'i': cursor.moveUp()
-				case 'k': cursor.moveDown()
-				case 'm': cursor.moveBow()
-				case '.': cursor.moveEow()
-				case 'u': cursor.moveBol()
-				case 'o': cursor.moveEol()
+		select {
+		case ev := <-events:
+			switch ev.Type {
+			case term.EventKey:
+				switch ev.Key {
+				case term.KeyCtrlW:
+					return
+				case term.KeyArrowLeft:
+					cursor.moveLeft()
+				case term.KeyArrowRight:
+					cursor.moveRight()
+				case term.KeyArrowUp:
+					cursor.moveUp()
+				case term.KeyArrowDown:
+					cursor.moveDown()
+				}
+				if ev.Mod&term.ModAlt != 0 {
+					switch ev.Ch {
+					case 'j': cursor.moveLeft()
+					case 'l': cursor.moveRight()
+					case 'i': cursor.moveUp()
+					case 'k': cursor.moveDown()
+					case 'm': cursor.moveBow()
+					case '.': cursor.moveEow()
+					case 'u': cursor.moveBol()
+					case 'o': cursor.moveEol()
+					}
 				}
 			}
 		// case term.EventResize:
-		//	something()
+		//	view.resize()
+		//	view.clear()
+		//	view.draw()
 		}
 		setVisualCursor(cursor)
 		setState(cursor)
