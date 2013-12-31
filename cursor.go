@@ -10,11 +10,20 @@ var (
 	taboffset = 4
 )
 
+//type place int
+//
+//var (
+//	BOC place = iota
+//	EOC
+//	EOL
+//)
+
 type cursor struct {
 	txt text
 	linenum int
 	off int // byte offset.
 	visoff int // visual offset. It may be different with actual cursor placement. For that, use cursor.cursorOffset().
+	// stick place
 }
 
 func initializeCursor(t text) *cursor {
@@ -94,7 +103,7 @@ func (c *cursor) cursorOffset() (cursoroff int) {
 		return linevisoff
 	}
 
-	// Cursor should not in the middle of multi visual length character.
+	// Cursor should not in the middle of multi (v) length character.
 	// So we should recalculate cursor offset.
 	remaintext := c.linedata()
 	lastcursor := 0

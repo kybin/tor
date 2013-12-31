@@ -27,21 +27,22 @@ func textToDrawBuffer(txt text) [][]rune {
 	return drawbuf
 }
 
-func clipDrawBuffer(drawbuf [][]rune) [][]rune {
+func clipDrawBuffer(drawbuf [][]rune, window *viewer) [][]rune {
 	clipbuf := make([][]rune, 0)
-	sh, eh := 0, 0
-	sw, ew := term.Size()
-
-	eh = min(eh, len(drawbuf))
-	if eh < sh {
+	xstart, ystart := window.min.X, window.min.Y
+	xend, yend := window.max.X, window.max.Y
+	//xstart, ystart := 0,0
+	//xend, yend := 20, 10
+	yend = min(yend+1, len(drawbuf))
+	if yend < ystart {
 		// if then, we don't have a place for draw
 		return clipbuf
 	}
-	for _, origbuf := range drawbuf[sh:eh] {
-		minoff := sw
-		maxoff := ew
+	for _, origbuf := range drawbuf[ystart:yend] {
+		minoff := xstart
+		maxoff := xend+1
 		maxoff = min(maxoff, len(origbuf))
-		if maxoff-minoff > 0 {
+		if maxoff > minoff {
 			clipbuf = append(clipbuf, origbuf[minoff:maxoff])
 		} else {
 			clipbuf = append(clipbuf, make([]rune, 0))
@@ -51,6 +52,12 @@ func clipDrawBuffer(drawbuf [][]rune) [][]rune {
 }
 
 func draw(clipbuf [][]rune) {
+	sizex, sizey := term.Size()
+	for x := 0 ; x < sizex ; x++ {
+		for y := 0 ; y < sizey ; y++ {
+			term.SetCell(x, y, ' ', term.ColorDefault, term.ColorDefault)
+		}
+	}
 	for linenum, line := range clipbuf {
 		for off, r := range line {
 			term.SetCell(off, linenum, r, term.ColorWhite, term.ColorDefault)
@@ -58,8 +65,6 @@ func draw(clipbuf [][]rune) {
 	}
 	term.Flush()
 }
-
-
 
 func setState(c *cursor) {
 	termw, termh := term.Size()
@@ -93,10 +98,9 @@ func main() { // main loop
 		return
 	}
 	f := args[0]
-	//view := newViewer()
+	view := newViewer()
 	text := open(f)
 	db := textToDrawBuffer(text)
-	//cb := clipDrawBuffer(db, view)
 	draw(db)
 	cursor := initializeCursor(text)
 	setState(cursor)
@@ -125,7 +129,8 @@ func main() { // main loop
 				case term.KeyArrowDown:
 					cursor.moveDown()
 				}
-				if ev.Mod&term.ModAlt != 0 {
+				ev.Mod=term.ModAlt
+				if (ev.Mod&term.ModAlt) != 0 {
 					switch ev.Ch {
 					case 'j': cursor.moveLeft()
 					case 'l': cursor.moveRight()
@@ -145,6 +150,10 @@ func main() { // main loop
 		}
 		setVisualCursor(cursor)
 		setState(cursor)
+		view.moveToCursor(cursor)
+		cb := clipDrawBuffer(db, view)
+		draw(cb)
 		term.Flush()
+
 	}
 }
