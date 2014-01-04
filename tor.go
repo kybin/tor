@@ -69,10 +69,10 @@ func draw(clipbuf [][]rune) {
 func setState(c *cursor) {
 	termw, termh := term.Size()
 	stateline := termh - 1
-	linenum := c.linenum
-	byteoff := c.off
-	visoff := c.visoff
-	cursoroff := c.cursorOffset()
+	linenum := c.line
+	byteoff := c.boff
+	visoff := c.voff
+	cursoroff := c.offset()
 
 	state := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", linenum, byteoff, visoff, cursoroff)
 	for off:=0 ; off<termw ; off++ {
@@ -102,7 +102,7 @@ func main() { // main loop
 	text := open(f)
 	db := textToDrawBuffer(text)
 	draw(db)
-	cursor := initializeCursor(text)
+	cursor := newCursor(text)
 	setState(cursor)
 	term.Flush()
 
@@ -148,7 +148,7 @@ func main() { // main loop
 		//	view.clear()
 		//	view.draw()
 		}
-		setVisualCursor(cursor)
+		setTermboxCursor(cursor)
 		setState(cursor)
 		view.moveToCursor(cursor)
 		cb := clipDrawBuffer(db, view)

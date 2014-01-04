@@ -31,8 +31,8 @@ func (v *viewer) move(t image.Point) {
 }
 
 func (v *viewer) cursorInViewer(c *cursor) bool {
-	cx := c.cursorOffset()
-	cy := c.linenum
+	cx := c.offset()
+	cy := c.line
 
 	if (v.min.X <= cx && cx <= v.max.X) && (v.min.Y <= cy && cy <= v.max.Y) {
 		return true
@@ -42,8 +42,8 @@ func (v *viewer) cursorInViewer(c *cursor) bool {
 
 func (v *viewer) moveToCursor(c *cursor) {
 	if !v.cursorInViewer(c) {
-		cx := c.cursorOffset()
-		cy := c.linenum
+		cx := c.offset()
+		cy := c.line
 		tx, ty := 0, 0
 		if cx < v.min.X {
 			tx = cx - v.min.X
