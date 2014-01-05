@@ -13,46 +13,90 @@ var (
 //type place int
 //
 //var (
-//	BOC place = iota
+//	NONE place = iota
+//	BOC
 //	EOC
 //	EOL
 //)
 
 type cursor struct {
-	txt text
-	linenum int
-	off int // byte offset.
-	visoff int // visual offset. It may be different with actual cursor placement. For that, use cursor.cursorOffset().
-	// stick place
+	line int
+	boff int // byte offset.
+	voff int // visual offset. It may be different with cursor offset. For that, use cursor.offset().
+	t text
+	// stick place - will implement later
 }
 
-func initializeCursor(t text) *cursor {
+func newCursor(t text) *cursor {
 	term.SetCursor(0, 0)
-	return &cursor{t, 0, 0, 0}
+	return &cursor{0, 0, 0, t}
 }
 
-func setVisualCursor(c *cursor) {
-	term.SetCursor(c.cursorOffset(), c.linenum)
+func setTermboxCursor(c *cursor, v *viewer) {
+	cy, cx := c.positionInViewer(v)
+	term.SetCursor(cx, cy)
 }
 
-func (c *cursor) linedata() line {
-	return c.txt[c.linenum]
+// cursor offset cannot go further than line's maximum visual length.
+func (c *cursor) offset() (coff int) {
+	maxlen := c.lineVisualLength()
+	if c.voff >  maxlen {
+		return maxlen
+	}
+
+	// Cursor should not in the middle of multi-length(visual) character.
+	// So we should recalculate cursor offset.
+	remain := c.lineData()
+	lastcoff := 0
+	for {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
+		lastcoff = coff
+		coff += runeVisualLength(r)
+		if coff==c.voff {
+			return coff
+		} else if coff > c.voff {
+			return lastcoff
+		}
+	}
+	return
 }
 
-// when we move the cursor up or down, it will not recalculate it's offsets.
-// This method tell us whether we should recalcuate offsets or not.
+func (c *cursor) position() (int, int) {
+	return c.line, c.offset()
+}
+
+func (c *cursor) positionInViewer(v *viewer) (int, int) {
+	return c.line-v.min.Y, c.offset()-v.min.X
+}
+
+// text on the line
+func (c *cursor) lineData() line {
+	return c.t[c.line]
+}
+
+func (c *cursor) lineDataUntilCursor() line {
+	return c.lineData()[:c.boff]
+}
+
+func (c *cursor) lineDataFromCursor() line {
+	return c.lineData()[c.boff:]
+}
+
 func (c *cursor) exceededLineLimit() bool {
-	return c.off > len(c.linedata())
+	return c.boff > len(c.lineData())
 }
 
 func (c *cursor) runeAfter() (rune, int) {
-	return utf8.DecodeRune(c.linedata()[c.off:])
+	return utf8.DecodeRune(c.lineData()[c.boff:])
 }
 
 func (c *cursor) runeBefore() (rune, int) {
-	return utf8.DecodeLastRune(c.linedata()[:c.off])
+	return utf8.DecodeLastRune(c.lineData()[:c.boff])
 }
 
+// should refine after
+// may be use dictionary??
 func runeVisualLength(r rune) int {
 	if r=='\t' {
 		return taboffset
@@ -61,80 +105,55 @@ func runeVisualLength(r rune) int {
 }
 
 func (c *cursor) lineVisualLength() int {
-	return c.visualOffsetFromByteOffset(len(c.linedata()))
+	return c.voffFromBoff(len(c.lineData()))
 }
 
-// Set byte and visual offsets from current cursor position.
+// Set boff and voff from current cursor position.
 func (c *cursor) resetInternalOffsets() {
-	c.off = c.byteOffsetFromCursorOffset(c.cursorOffset())
-	c.visoff = c.visualOffsetFromByteOffset(c.off)
+	c.boff = c.boffFromCoff(c.offset())
+	c.voff = c.voffFromBoff(c.boff)
 }
 
-func (c *cursor) byteOffsetFromCursorOffset(cursoroff int) (byteoff int) {
-	remaintext := c.linedata()
-	for cursoroff>0 {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
-		byteoff += rlen
-		cursoroff -= runeVisualLength(r)
+func (c *cursor) boffFromCoff(coff int) (boff int) {
+	remain := c.lineData()
+	for coff>0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
+		boff += rlen
+		coff -= runeVisualLength(r)
 	}
 	return
 }
 
-func (c *cursor) visualOffsetFromByteOffset(byteoff int) (visoff int){
-	remaintext := c.linedata()[:byteoff]
-	for len(remaintext) > 0 {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
-		visoff += runeVisualLength(r)
+func (c *cursor) voffFromBoff(boff int) (voff int){
+	remain := c.lineData()[:boff]
+	for len(remain) > 0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
+		voff += runeVisualLength(r)
 	}
 	return
 }
 
-func (c *cursor) setOffsets(off int) {
-	c.off = off
-	c.visoff = c.visualOffsetFromByteOffset(off)
-}
-
-// cursor offset on terminal. It cannot exceeded line's maximum visual length.
-func (c *cursor) cursorOffset() (cursoroff int) {
-	linevisoff := c.lineVisualLength()
-	if c.visoff >  linevisoff {
-		return linevisoff
-	}
-
-	// Cursor should not in the middle of multi (v) length character.
-	// So we should recalculate cursor offset.
-	remaintext := c.linedata()
-	lastcursor := 0
-	for {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
-		lastcursor = cursoroff
-		cursoroff += runeVisualLength(r)
-		if cursoroff==c.visoff {
-			return cursoroff
-		} else if cursoroff > c.visoff {
-			return lastcursor
-		}
-	}
-	return
+func (c *cursor) setOffsets(boff int) {
+	c.boff = boff
+	c.voff = c.voffFromBoff(boff)
 }
 
 func (c *cursor) atBol() bool{
-	return c.off == 0
+	return c.boff == 0
 }
 
 func (c *cursor) atEol() bool{
-	return c.off == len(c.linedata())
+	return c.boff == len(c.lineData())
 }
 
 func (c *cursor) onFirstline() bool{
-	return c.linenum == 0
+	return c.line == 0
 }
 
 func (c *cursor) onLastline() bool {
-	return c.linenum == len(c.txt)-1
+	return c.line == len(c.t)-1
 }
 
 func (c *cursor) atBof() bool {
@@ -150,15 +169,14 @@ func (c *cursor) moveLeft() {
 	if c.atBof() {
 		return
 	} else if c.atBol() {
-		c.linenum -= 1
-		c.setOffsets(len(c.linedata()))
+		c.line -= 1
+		c.boff = len(c.lineData())
+		c.voff = c.voffFromBoff(c.boff)
 		return
-	} else if c.exceededLineLimit() {
-		c.off = len(c.linedata())
 	}
 	r, rlen := c.runeBefore()
-	c.off -= rlen
-	c.visoff -= runeVisualLength(r)
+	c.boff -= rlen
+	c.voff -= runeVisualLength(r)
 }
 
 func (c *cursor) moveRight() {
@@ -166,20 +184,21 @@ func (c *cursor) moveRight() {
 	if c.atEof() {
 		return
 	} else if c.atEol() || c.exceededLineLimit(){
-		c.linenum += 1
+		c.line += 1
 		c.setOffsets(0)
 		return
 	}
 	r, rlen := c.runeAfter()
-	c.off += rlen
-	c.visoff += runeVisualLength(r)
+	c.boff += rlen
+	c.voff += runeVisualLength(r)
 }
 
+// With move up and down, we will lazily evaluate internal offsets.
 func (c *cursor) moveUp() {
 	if c.onFirstline() {
 		return
 	}
-	c.linenum--
+	c.line--
 
 }
 
@@ -187,7 +206,7 @@ func (c *cursor) moveDown() {
 	if c.onLastline() {
 		return
 	}
-	c.linenum++
+	c.line++
 }
 
 func (c *cursor) moveBow() {
@@ -236,69 +255,78 @@ func (c *cursor) moveEow() {
 }
 
 func (c *cursor) moveBol() {
-	if c.off == 0 && !c.onFirstline() {
-		c.linenum--
+	// if already bol, move cursor to prev line
+	if c.boff == 0 && !c.onFirstline() {
+		c.line--
 		return
 	}
-	remaintext := c.linedata()[:c.off]
-	// if  prev data is spaces
+
+	// if  prev data is all spaces, move cursor to beginning of line
+	remain := c.lineDataUntilCursor()
 	allspace := true
-	for len(remaintext)>0 {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
+	for len(remain)>0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			allspace = false
 			break
 		}
 	}
 	if allspace {
-		c.off = 0
-		c.visoff = 0
+		c.boff = 0
+		c.voff = 0
 		return
 	}
-	remaintext = c.linedata()
-	byteoff := 0
-        for len(remaintext)>0 {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
+
+	// or, move cursor to first character of text on line.
+	remain = c.lineData()
+	boff := 0
+        for len(remain)>0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			break
 		}
-		byteoff += rlen
+		boff += rlen
 	}
-	c.off = byteoff
-	c.visoff = c.visualOffsetFromByteOffset(byteoff)
+	c.boff = boff
+	c.voff = c.voffFromBoff(boff)
 }
 
 func (c *cursor) moveEol() {
-	if c.off == len(c.linedata()) && !c.onLastline() {
-		c.linenum++
+	// if already eol, move to next line
+	if c.boff == len(c.lineData()) && !c.onLastline() {
+		c.line++
 	}
-	remaintext := c.linedata()[:c.off+1] // with itself
+
+	// if  prev data is not all spaces move cursor to eol.
+	remain := c.lineData()[:c.boff+1] // we should use runelength instead of 1
 	allspace := true
-	for len(remaintext)>0 {
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
+	for len(remain)>0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			allspace = false
 			break
 		}
 	}
-	if !allspace { // NOT first.
-		c.off = len(c.linedata())
-		c.visoff = c.visualOffsetFromByteOffset(c.off)
+	if !allspace {
+		c.boff = len(c.lineData())
+		c.voff = c.voffFromBoff(c.boff)
 		return
 	}
-	remaintext = c.linedata()
-	byteoff := 0
-	for len(remaintext)>0 { // will make this a function
-		r, rlen := utf8.DecodeRune(remaintext)
-		remaintext = remaintext[rlen:]
+
+	// or, move it to first chararacter of text on line.
+	remain = c.lineData()
+	boff := 0
+	for len(remain)>0 { // will make this a function
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			break
 		}
-		byteoff +=rlen
+		boff +=rlen
 	}
-	c.off = byteoff
-	c.visoff = c.visualOffsetFromByteOffset(byteoff)
+	c.boff = boff
+	c.voff = c.voffFromBoff(boff)
 }

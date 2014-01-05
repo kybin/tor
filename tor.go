@@ -66,15 +66,16 @@ func draw(clipbuf [][]rune) {
 	term.Flush()
 }
 
-func setState(c *cursor) {
+func setState(c *cursor, v *viewer) {
 	termw, termh := term.Size()
 	stateline := termh - 1
-	linenum := c.linenum
-	byteoff := c.off
-	visoff := c.visoff
-	cursoroff := c.cursorOffset()
-
-	state := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", linenum, byteoff, visoff, cursoroff)
+	linenum := c.line
+	byteoff := c.boff
+	visoff := c.voff
+	cursoroff := c.offset()
+	cy, cx := c.positionInViewer(v)
+	vminy, vminx, vmaxy, vmaxx := v.min.Y, v.min.X, v.max.Y, v.max.X
+	state := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", linenum, byteoff, visoff, cursoroff, cy, cx, vminy, vminx, vmaxy, vmaxx)
 	for off:=0 ; off<termw ; off++ {
 		term.SetCell(off, stateline, ' ', term.ColorBlack, term.ColorWhite)
 	}
@@ -102,8 +103,8 @@ func main() { // main loop
 	text := open(f)
 	db := textToDrawBuffer(text)
 	draw(db)
-	cursor := initializeCursor(text)
-	setState(cursor)
+	cursor := newCursor(text)
+	setState(cursor, view)
 	term.Flush()
 
 	events := make(chan term.Event, 20)
@@ -148,11 +149,11 @@ func main() { // main loop
 		//	view.clear()
 		//	view.draw()
 		}
-		setVisualCursor(cursor)
-		setState(cursor)
 		view.moveToCursor(cursor)
 		cb := clipDrawBuffer(db, view)
 		draw(cb)
+		setState(cursor, view)
+		setTermboxCursor(cursor, view)
 		term.Flush()
 
 	}
