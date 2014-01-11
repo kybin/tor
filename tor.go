@@ -6,9 +6,10 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
-func clear_term() {
-	term.Clear(term.ColorDefault, term.ColorDefault)
-	term.Flush()
+func newTermCursor(c *cursor, l *layout) {
+	viewbound := l.mainViewerBound()
+	viewx, viewy := viewbound.Min.X, viewbound.Min.Y
+	term.SetCursor(viewx, viewy)
 }
 
 func textToDrawBuffer(txt text) [][]rune {
@@ -51,15 +52,19 @@ func clipDrawBuffer(drawbuf [][]rune, window *viewer) [][]rune {
 	return clipbuf
 }
 
-func draw(clipbuf [][]rune) {
-	sizex, sizey := term.Size()
-	for x := 0 ; x < sizex ; x++ {
-		for y := 0 ; y < sizey ; y++ {
+func draw(clipbuf [][]rune, l *layout) {
+	drawrect := l.mainViewerBound()
+	minx, maxx := drawrect.Min.X, drawrect.Max.X
+	miny, maxy := drawrect.Min.Y, drawrect.Max.Y
+	for x := minx ; x < maxx ; x++ {
+		for y := miny ; y < maxy ; y++ {
 			term.SetCell(x, y, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
 	for linenum, line := range clipbuf {
+		linenum += miny
 		for off, r := range line {
+			off += minx
 			term.SetCell(off, linenum, r, term.ColorWhite, term.ColorDefault)
 		}
 	}
@@ -84,26 +89,33 @@ func setState(c *cursor, v *viewer) {
 	}
 }
 
-func main() { // main loop
-	err := term.Init()
-	if err != nil {
-		panic(err)
-	}
-	defer term.Close()
-	//term.SetInputMode(term.InputEsc)
-	clear_term()
-
+func main() {
+	// check there is an destination file. ex)tor some.file
 	args := os.Args[1:]
 	if len(args)==0 {
 		fmt.Println("please, set text file")
 		return
 	}
 	f := args[0]
-	view := newViewer()
+
+	err := term.Init()
+	if err != nil {
+		panic(err)
+	}
+	defer term.Close()
+	term.Clear(term.ColorDefault, term.ColorDefault)
+	term.Flush()
+
 	text := open(f)
-	db := textToDrawBuffer(text)
-	draw(db)
+
+	layout := newLayout()
+	view := newViewer(layout)
 	cursor := newCursor(text)
+	newTermCursor(cursor, layout)
+
+	db := textToDrawBuffer(text)
+	draw(db, layout)
+
 	setState(cursor, view)
 	term.Flush()
 
@@ -151,9 +163,9 @@ func main() { // main loop
 		}
 		view.moveToCursor(cursor)
 		cb := clipDrawBuffer(db, view)
-		draw(cb)
+		draw(cb, layout)
 		setState(cursor, view)
-		setTermboxCursor(cursor, view)
+		setTermboxCursor(cursor, view, layout)
 		term.Flush()
 
 	}

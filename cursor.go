@@ -28,13 +28,14 @@ type cursor struct {
 }
 
 func newCursor(t text) *cursor {
-	term.SetCursor(0, 0)
 	return &cursor{0, 0, 0, t}
 }
 
-func setTermboxCursor(c *cursor, v *viewer) {
+func setTermboxCursor(c *cursor, v *viewer, l *layout) {
+	viewbound := l.mainViewerBound()
+	viewx, viewy := viewbound.Min.X, viewbound.Min.Y
 	cy, cx := c.positionInViewer(v)
-	term.SetCursor(cx, cy)
+	term.SetCursor(viewx+cx, viewy+cy)
 }
 
 // cursor offset cannot go further than line's maximum visual length.

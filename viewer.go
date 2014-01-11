@@ -2,7 +2,7 @@ package main
 
 import (
 	"image"
-	term "github.com/nsf/termbox-go"
+	//term "github.com/nsf/termbox-go"
 )
 
 type viewer struct {
@@ -10,10 +10,10 @@ type viewer struct {
 	max image.Point
 }
 
-func newViewer() *viewer {
-	tx, ty := term.Size()
-	tx, ty = tx-1, ty-1
-	v := viewer{image.Pt(0,0), image.Pt(tx, ty)}
+func newViewer(l *layout) *viewer {
+	maxpt := l.mainViewerSize()
+	minpt := image.Pt(0, 0)
+	v := viewer{minpt, maxpt}
 	return &v
 }
 
