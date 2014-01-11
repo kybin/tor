@@ -1,1 +1,1 @@
-tor : rhythmical text editor
+tor : rythmical ediTOR
