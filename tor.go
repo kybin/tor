@@ -103,6 +103,7 @@ func main() {
 		panic(err)
 	}
 	defer term.Close()
+	term.SetInputMode(term.InputAlt)
 	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 
@@ -142,7 +143,6 @@ func main() {
 				case term.KeyArrowDown:
 					cursor.moveDown()
 				}
-				ev.Mod=term.ModAlt
 				if (ev.Mod&term.ModAlt) != 0 {
 					switch ev.Ch {
 					case 'j': cursor.moveLeft()
