@@ -5,6 +5,9 @@ import (
 	//term "github.com/nsf/termbox-go"
 )
 
+// Viewer is a window that follows a cursor.
+// It's size should same as tor's main layout size.
+// It will used for text buffer clipping.
 type viewer struct {
 	min image.Point
 	max image.Point

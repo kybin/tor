@@ -5,6 +5,20 @@ import(
 	term "github.com/nsf/termbox-go"
 )
 
+// Layout means divided section in a terminal window.
+// For now, it divied by three section. header, main and footer.
+//
+// header (for tab)
+// ---------------------------------
+// main (for edit)
+//
+//
+//
+//
+//
+// ---------------------------------
+// footer (for information)
+// 
 type layout struct {
 	headerSize int
 	footerSize int
