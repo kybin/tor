@@ -38,7 +38,7 @@ func (v *viewer) move(t image.Point) {
 func (v *viewer) cursorInViewer(c *cursor) bool {
 	cy, cx := c.position()
 
-	if (v.min.X <= cx && cx <= v.max.X) && (v.min.Y <= cy && cy <= v.max.Y) {
+	if (v.min.X <= cx && cx < v.max.X) && (v.min.Y <= cy && cy < v.max.Y) {
 		return true
 	}
 	return false
@@ -47,15 +47,22 @@ func (v *viewer) cursorInViewer(c *cursor) bool {
 func (v *viewer) moveToCursor(c *cursor) {
 		cy, cx := c.position()
 		tx, ty := 0, 0
-		if cx < v.min.X {
-			tx = cx - v.min.X
-		} else if cx > v.max.X {
-			tx = cx - v.max.X
+
+		minx := v.min.X
+		miny := v.min.Y
+		// cursorMax = viewMax - 1
+		maxx := v.max.X-1
+		maxy := v.max.Y-1
+
+		if cx < minx {
+			tx = cx - minx
+		} else if cx > maxx {
+			tx = cx - maxx
 		}
-		if cy < v.min.Y {
-			ty = cy - v.min.Y
-		} else if cy > v.max.Y {
-			ty = cy - v.max.Y
+		if cy < miny {
+			ty = cy - miny
+		} else if cy > maxy {
+			ty = cy - maxy
 		}
 		v.move(image.Pt(tx, ty))
 }

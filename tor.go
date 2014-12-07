@@ -28,20 +28,20 @@ func textToDrawBuffer(txt text) [][]rune {
 	return drawbuf
 }
 
-func clipDrawBuffer(drawbuf [][]rune, window *viewer) [][]rune {
+func clipDrawBuffer(drawbuf [][]rune, v *viewer) [][]rune {
 	clipbuf := make([][]rune, 0)
-	xstart, ystart := window.min.X, window.min.Y
-	xend, yend := window.max.X, window.max.Y
+	xstart, ystart := v.min.X, v.min.Y
+	xend, yend := v.max.X, v.max.Y
 	//xstart, ystart := 0,0
 	//xend, yend := 20, 10
-	yend = min(yend+1, len(drawbuf))
+	yend = min(yend, len(drawbuf))
 	if yend < ystart {
 		// if then, we don't have a place for draw
 		return clipbuf
 	}
 	for _, origbuf := range drawbuf[ystart:yend] {
 		minoff := xstart
-		maxoff := xend+1
+		maxoff := xend
 		maxoff = min(maxoff, len(origbuf))
 		if maxoff > minoff {
 			clipbuf = append(clipbuf, origbuf[minoff:maxoff])
@@ -62,10 +62,8 @@ func draw(clipbuf [][]rune, l *layout) {
 		}
 	}
 	for linenum, line := range clipbuf {
-		linenum += miny
 		for off, r := range line {
-			off += minx
-			term.SetCell(off, linenum, r, term.ColorWhite, term.ColorDefault)
+			term.SetCell(minx+off, miny+linenum, r, term.ColorWhite, term.ColorDefault)
 		}
 	}
 	term.Flush()

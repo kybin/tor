@@ -27,7 +27,7 @@ type layout struct {
 
 func newLayout() *layout {
 	defaultHeaderSize := 1
-	defaultFooterSize := 2
+	defaultFooterSize := 1
 	return &layout{defaultHeaderSize, defaultFooterSize}
 }
 
