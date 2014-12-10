@@ -8,6 +8,7 @@ import (
 
 var (
 	taboffset = 4
+	pageoffset =8
 )
 
 //type place int
@@ -330,4 +331,22 @@ func (c *cursor) moveEol() {
 	}
 	c.boff = boff
 	c.voff = c.voffFromBoff(boff)
+}
+
+func (c *cursor) pageUp() {
+	for i:=0; i < pageoffset; i++ {
+		if c.onFirstline() {
+			break
+		}
+		c.line--
+	}
+}
+
+func (c *cursor) pageDown() {
+	for i:=0; i < pageoffset; i++ {
+		if c.onLastline() {
+			break
+		}
+		c.line++
+	}
 }

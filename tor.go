@@ -149,8 +149,8 @@ func main() {
 					case 'k': cursor.moveDown()
 					case 'm': cursor.moveBow()
 					case '.': cursor.moveEow()
-					case 'u': cursor.moveBol()
-					case 'o': cursor.moveEol()
+					case 'u': cursor.pageUp()
+					case 'o': cursor.pageDown()
 					}
 				}
 			}
