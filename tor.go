@@ -52,7 +52,7 @@ func clipDrawBuffer(drawbuf [][]rune, v *viewer) [][]rune {
 	return clipbuf
 }
 
-func draw(clipbuf [][]rune, l *layout) {
+func clearScreen(l *layout) {
 	drawrect := l.mainViewerBound()
 	minx, maxx := drawrect.Min.X, drawrect.Max.X
 	miny, maxy := drawrect.Min.Y, drawrect.Max.Y
@@ -61,12 +61,15 @@ func draw(clipbuf [][]rune, l *layout) {
 			term.SetCell(x, y, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
+}
+
+func draw(clipbuf [][]rune, l *layout) {
+	min := l.mainViewerBound().Min
 	for linenum, line := range clipbuf {
 		for off, r := range line {
-			term.SetCell(minx+off, miny+linenum, r, term.ColorWhite, term.ColorDefault)
+			term.SetCell(min.X+off, min.Y+linenum, r, term.ColorWhite, term.ColorDefault)
 		}
 	}
-	term.Flush()
 }
 
 func setState(c *cursor, v *viewer) {
@@ -86,6 +89,7 @@ func setState(c *cursor, v *viewer) {
 		term.SetCell(off, stateline, rune(ch), term.ColorBlack, term.ColorWhite)
 	}
 }
+
 
 func main() {
 	// check there is an destination file. ex)tor some.file
@@ -109,14 +113,10 @@ func main() {
 
 	layout := newLayout()
 	view := newViewer(layout)
+	drawbuf := textToDrawBuffer(text)
 	cursor := newCursor(text)
 	newTermCursor(cursor, layout)
 
-	db := textToDrawBuffer(text)
-	draw(db, layout)
-
-	setState(cursor, view)
-	term.Flush()
 
 	events := make(chan term.Event, 20)
 	go func() {
@@ -125,6 +125,16 @@ func main() {
 		}
 	}()
 	for {
+		// draw buffer
+		view.moveToCursor(cursor)
+		cb := clipDrawBuffer(drawbuf, view)
+		clearScreen(layout)
+		draw(cb, layout)
+		setState(cursor, view)
+		setTermboxCursor(cursor, view, layout)
+		term.Flush()
+
+		// wait for keyboard input
 		select {
 		case ev := <-events:
 			switch ev.Type {
@@ -159,12 +169,6 @@ func main() {
 		//	view.clear()
 		//	view.draw()
 		}
-		view.moveToCursor(cursor)
-		cb := clipDrawBuffer(db, view)
-		draw(cb, layout)
-		setState(cursor, view)
-		setTermboxCursor(cursor, view, layout)
-		term.Flush()
 
 	}
 }
