@@ -223,6 +223,9 @@ func (c *cursor) moveBow() {
 			break
 		}
 		c.moveLeft()
+		if c.atBof() {
+			return
+		}
 	}
 	// Then we will find first space charactor and stop.
 	for {
@@ -231,6 +234,9 @@ func (c *cursor) moveBow() {
 			return
 		}
 		c.moveLeft()
+		if c.atBof() {
+			return
+		}
 	}
 }
 
@@ -246,6 +252,9 @@ func (c *cursor) moveEow() {
 			break
 		}
 		c.moveRight()
+		if c.atEof() {
+			return
+		}
 	}
 	for {
 		r, _ := c.runeAfter()
@@ -253,6 +262,9 @@ func (c *cursor) moveEow() {
 			return
 		}
 		c.moveRight()
+		if c.atEof() {
+			return
+		}
 	}
 }
 
