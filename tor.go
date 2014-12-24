@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 	term "github.com/nsf/termbox-go"
 )
 
@@ -72,21 +73,14 @@ func draw(clipbuf [][]rune, l *layout) {
 	}
 }
 
-func setState(c *cursor, v *viewer) {
+func printStatus(status string) {
 	termw, termh := term.Size()
-	stateline := termh - 1
-	linenum := c.line
-	byteoff := c.boff
-	visoff := c.voff
-	cursoroff := c.offset()
-	cy, cx := c.positionInViewer(v)
-	vminy, vminx, vmaxy, vmaxx := v.min.Y, v.min.X, v.max.Y, v.max.X
-	state := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", linenum, byteoff, visoff, cursoroff, cy, cx, vminy, vminx, vmaxy, vmaxx)
+	statusLine := termh - 1
 	for off:=0 ; off<termw ; off++ {
-		term.SetCell(off, stateline, ' ', term.ColorBlack, term.ColorWhite)
+		term.SetCell(off, statusLine, ' ', term.ColorBlack, term.ColorWhite)
 	}
-	for off, ch := range state {
-		term.SetCell(off, stateline, rune(ch), term.ColorBlack, term.ColorWhite)
+	for off, ch := range status {
+		term.SetCell(off, statusLine, rune(ch), term.ColorBlack, term.ColorWhite)
 	}
 }
 
@@ -117,7 +111,7 @@ func main() {
 	cursor := newCursor(text)
 	newTermCursor(cursor, layout)
 
-
+	edit := false
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -130,13 +124,21 @@ func main() {
 		cb := clipDrawBuffer(drawbuf, view)
 		clearScreen(layout)
 		draw(cb, layout)
-		setState(cursor, view)
+		cy, cx := cursor.positionInViewer(view)
+		status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cy, cx, view.min.Y, view.min.X, view.max.Y, view.max.X)
+		if edit == true {
+			status += " editing..."
+		} else {
+			status += " idle"
+		}
+		printStatus(status)
 		setTermboxCursor(cursor, view, layout)
 		term.Flush()
 
 		// wait for keyboard input
 		select {
 		case ev := <-events:
+			edit = true
 			switch ev.Type {
 			case term.EventKey:
 				switch ev.Key {
@@ -164,11 +166,16 @@ func main() {
 					}
 				}
 			}
+		case <-time.After(time.Second):
+			// OK. It's idle time. We should check if any edit applied on contents.
+			if edit == true {
+				// remember the action. (or difference)
+			}
+			edit = false
 		// case term.EventResize:
 		//	view.resize()
 		//	view.clear()
 		//	view.draw()
 		}
-
 	}
 }
