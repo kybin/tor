@@ -1,0 +1,3 @@
+It is really messed up with x,y,line,offset things. 
+Should merge one approach. I will choose line,offset, because it's an editor.
+Maybe I will copy image.Point/Rect. But Line,Offset instead of X,Y
