@@ -64,6 +64,19 @@ func (c *cursor) offset() (coff int) {
 	return
 }
 
+// non-instance version of cursor.offset() 
+func cursorOffset(l line, boff int) int {
+	remain := l
+	coff := 0
+	for boff > 0 {
+		r, rlen := utf8.DecodeRune(remain)
+		remain = remain[rlen:]
+		boff -= rlen
+		coff += runeVisualLength(r)
+	}
+	return coff
+}
+
 func (c *cursor) position() (int, int) {
 	return c.line, c.offset()
 }

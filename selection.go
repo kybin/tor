@@ -15,11 +15,11 @@ func NewSelection() *selection {
 }
 
 func (s *selection) SetStart(c *cursor) {
-	s.start = image.Point{c.boff, c.line}
+	s.start = image.Point{c.offset(), c.line}
 }
 
 func (s *selection) SetEnd(c *cursor) {
-	s.end = image.Point{c.boff, c.line}
+	s.end = image.Point{c.offset(), c.line}
 }
 
 func withShift(ch rune) bool {
