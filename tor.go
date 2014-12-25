@@ -155,14 +155,30 @@ func main() {
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
 					switch ev.Ch {
-					case 'j': cursor.moveLeft()
-					case 'l': cursor.moveRight()
-					case 'i': cursor.moveUp()
-					case 'k': cursor.moveDown()
-					case 'm': cursor.moveBow()
-					case '.': cursor.moveEow()
-					case 'u': cursor.pageUp()
-					case 'o': cursor.pageDown()
+					case 'j':
+						cursor.moveLeft()
+					case 'l':
+						cursor.moveRight()
+					case 'i':
+						cursor.moveUp()
+					case 'k':
+						cursor.moveDown()
+					case 'm':
+						cursor.moveBow()
+					case '.':
+						cursor.moveEow()
+					case 'u':
+						cursor.moveBol()
+					case 'o':
+						cursor.moveEol()
+					case 'h':
+						cursor.pageUp()
+					case 'n':
+						cursor.pageDown()
+					case 'a':
+						cursor.moveBof()
+					case 'z':
+						cursor.moveEof()
 					}
 				}
 			}

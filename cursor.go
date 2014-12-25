@@ -362,3 +362,23 @@ func (c *cursor) pageDown() {
 		c.line++
 	}
 }
+
+func (c *cursor) moveBof() {
+	for {
+		if c.onFirstline() {
+			break
+		}
+		c.line--
+	}
+	c.moveBol()
+}
+
+func (c *cursor) moveEof() {
+	for {
+		if c.onLastline() {
+			break
+		}
+		c.line++
+	}
+	c.moveEol()
+}
