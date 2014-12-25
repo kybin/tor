@@ -109,6 +109,7 @@ func main() {
 	view := newViewer(layout)
 	drawbuf := textToDrawBuffer(text)
 	cursor := newCursor(text)
+	selection := NewSelection()
 	newTermCursor(cursor, layout)
 
 	edit := false
@@ -124,14 +125,14 @@ func main() {
 		cb := clipDrawBuffer(drawbuf, view)
 		clearScreen(layout)
 		draw(cb, layout)
-		cy, cx := cursor.positionInViewer(view)
-		status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cy, cx, view.min.Y, view.min.X, view.max.Y, view.max.X)
-		if edit == true {
-			status += " editing..."
-		} else {
-			status += " idle"
-		}
-		printStatus(status)
+		// cy, cx := cursor.positionInViewer(view)
+		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cy, cx, view.min.Y, view.min.X, view.max.Y, view.max.X)
+		// if edit == true {
+		// 	status += " editing..."
+		// } else {
+		// 	status += " idle"
+		// }
+		// printStatus(status)
 		setTermboxCursor(cursor, view, layout)
 		term.Flush()
 
@@ -144,6 +145,8 @@ func main() {
 				switch ev.Key {
 				case term.KeyCtrlW:
 					return
+				// case term.KeyCtrlC:
+					// copySelection()
 				case term.KeyArrowLeft:
 					cursor.moveLeft()
 				case term.KeyArrowRight:
@@ -154,32 +157,50 @@ func main() {
 					cursor.moveDown()
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
+					if withShift(ev.Ch) {
+						if !selection.on {
+							selection.on = true
+							selection.SetStart(cursor)
+						} else {
+							// already on selection. do nothing.
+						}
+					} else {
+						selection.on = false
+					}
 					switch ev.Ch {
-					case 'j':
+					// if character pressed with shift
+					// we will enable cursor selection.
+					case 'j', 'J':
 						cursor.moveLeft()
-					case 'l':
+					case 'l', 'L':
 						cursor.moveRight()
-					case 'i':
+					case 'i', 'I':
 						cursor.moveUp()
-					case 'k':
+					case 'k', 'K':
 						cursor.moveDown()
-					case 'm':
+					case 'm', 'M':
 						cursor.moveBow()
-					case '.':
+					case '.', '>':
 						cursor.moveEow()
-					case 'u':
+					case 'u', 'U':
 						cursor.moveBol()
-					case 'o':
+					case 'o', 'O':
 						cursor.moveEol()
-					case 'h':
+					case 'h', 'H':
 						cursor.pageUp()
-					case 'n':
+					case 'n', 'N':
 						cursor.pageDown()
-					case 'a':
+					case 'a', 'A':
 						cursor.moveBof()
-					case 'z':
+					case 'z', 'Z':
 						cursor.moveEof()
 					}
+				}
+				if selection.on {
+					selection.SetEnd(cursor)
+					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.X, selection.start.Y, selection.end.X, selection.end.Y))
+				} else {
+					printStatus("selection off")
 				}
 			}
 		case <-time.After(time.Second):
