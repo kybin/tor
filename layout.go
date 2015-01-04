@@ -1,7 +1,6 @@
 package main
 
 import(
-	"image"
 	term "github.com/nsf/termbox-go"
 )
 
@@ -31,15 +30,15 @@ func newLayout() *layout {
 	return &layout{defaultHeaderSize, defaultFooterSize}
 }
 
-func (l *layout) mainViewerBound() *image.Rectangle {
+func (l *layout) mainViewerBound() *Area {
 	termw, termh := term.Size()
 
-	bbmin := image.Point{0, l.headerSize}
-	bbmax := image.Point{termw, termh-l.footerSize}
+	min := Point{l.headerSize, 0}
+	max := Point{termh-l.footerSize, termw}
 
-	return &image.Rectangle{bbmin, bbmax}
+	return NewArea(min, max)
 }
 
-func (l *layout) mainViewerSize() image.Point {
-	return l.mainViewerBound().Size()
-}
+// func (l *layout) mainViewerSize() image.Point {
+// 	return l.mainViewerBound().Size()
+// }

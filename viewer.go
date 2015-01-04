@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	//term "github.com/nsf/termbox-go"
 )
 
@@ -9,60 +8,60 @@ import (
 // It's size should same as tor's main layout size.
 // It will used for text buffer clipping.
 type viewer struct {
-	min image.Point
-	max image.Point
+	min Point
+	max Point
 }
 
 func newViewer(l *layout) *viewer {
-	maxpt := l.mainViewerSize()
-	minpt := image.Pt(0, 0)
+	maxpt := l.mainViewerBound().Size()
+	minpt := Point{0, 0}
 	v := viewer{minpt, maxpt}
 	return &v
 }
 
-func (v *viewer) set(min, max image.Point) {
+func (v *viewer) set(min, max Point) {
 	v.min = min
 	v.max = max
 }
 
 func (v *viewer) size() (int, int) {
 	size := v.max.Sub(v.min)
-	return size.X, size.Y
+	return size.o, size.l
 }
 
-func (v *viewer) move(t image.Point) {
+func (v *viewer) move(t Point) {
 	v.min = v.min.Add(t)
 	v.max = v.max.Add(t)
 }
 
 func (v *viewer) cursorInViewer(c *cursor) bool {
-	cy, cx := c.position()
+	cl, co := c.position()
 
-	if (v.min.X <= cx && cx < v.max.X) && (v.min.Y <= cy && cy < v.max.Y) {
+	if (v.min.o <= co && co < v.max.o) && (v.min.l <= cl && cl < v.max.l) {
 		return true
 	}
 	return false
 }
 
 func (v *viewer) moveToCursor(c *cursor) {
-		cy, cx := c.position()
-		tx, ty := 0, 0
+		cl, co := c.position()
+		tl, to := 0, 0
 
-		minx := v.min.X
-		miny := v.min.Y
+		mino := v.min.o
+		minl := v.min.l
 		// cursorMax = viewMax - 1
-		maxx := v.max.X-1
-		maxy := v.max.Y-1
+		maxo := v.max.o-1
+		maxl := v.max.l-1
 
-		if cx < minx {
-			tx = cx - minx
-		} else if cx > maxx {
-			tx = cx - maxx
+		if co < mino {
+			to = co - mino
+		} else if co > maxo {
+			to = co - maxo
 		}
-		if cy < miny {
-			ty = cy - miny
-		} else if cy > maxy {
-			ty = cy - maxy
+		if cl < minl {
+			tl = cl - minl
+		} else if cl > maxl {
+			tl = cl - maxl
 		}
-		v.move(image.Pt(tx, ty))
+		v.move(Point{tl, to})
 }

@@ -1,13 +1,9 @@
 package main
 
-import (
-	"image"
-)
-
 type selection struct {
 	on bool
-	start image.Point
-	end image.Point
+	start Point
+	end Point
 }
 
 func NewSelection() *selection {
@@ -15,11 +11,11 @@ func NewSelection() *selection {
 }
 
 func (s *selection) SetStart(c *cursor) {
-	s.start = image.Point{c.offset(), c.line}
+	s.start = Point{c.line, c.offset()}
 }
 
 func (s *selection) SetEnd(c *cursor) {
-	s.end = image.Point{c.offset(), c.line}
+	s.end = Point{c.line, c.offset()}
 }
 
 func withShift(ch rune) bool {

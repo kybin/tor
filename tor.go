@@ -4,14 +4,22 @@ import (
 	"fmt"
 	"os"
 	"time"
-	"image"
 	term "github.com/nsf/termbox-go"
 )
 
+// we use line, offset style. termbox use o, l style.
+func SetCursor(l, o int) {
+	term.SetCursor(o, l)
+}
+
+func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
+	term.SetCell(l, o, ch, fg, bg)
+}
+
 func newTermCursor(c *cursor, l *layout) {
 	viewbound := l.mainViewerBound()
-	viewx, viewy := viewbound.Min.X, viewbound.Min.Y
-	term.SetCursor(viewx, viewy)
+	viewl, viewo := viewbound.min.l, viewbound.min.o
+	SetCursor(viewl, viewo)
 }
 
 type cell struct {
@@ -22,28 +30,28 @@ type cell struct {
 func textToDrawBuffer(txt text, sel *selection) [][]cell {
 	// highlight start, end should recalculate from selection, so we can ensure start < end.
 	var highlight bool
-	var hstart, hend image.Point
+	var hstart, hend Point
 	if sel.on {
-		if sel.end.Y < sel.start.Y {
+		if sel.end.l < sel.start.l {
 			hstart, hend = sel.end, sel.start
-		} else if sel.end.Y == sel.start.Y && sel.end.X < sel.start.X {
+		} else if sel.end.l == sel.start.l && sel.end.o < sel.start.o {
 			hstart, hend = sel.end, sel.start
 		} else {
 			hstart, hend = sel.start, sel.end
 		}
 	}
 	drawbuf := make([][]cell, 0)
-	for y , line := range txt {
+	for l , line := range txt {
 		linebuf := make([]cell, 0)
-		x := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
+		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
 		for _, ch := range line {
 			// if selection is on, caculate this cell is in highlight range
 			if sel.on {
-				if y < hstart.Y || y > hend.Y {
+				if l < hstart.l || l > hend.l {
 					highlight = false
-				} else if y == hstart.Y && x < hstart.X {
+				} else if l == hstart.l && o < hstart.o {
 					highlight = false
-				} else if y == hend.Y && x >= hend.X {
+				} else if l == hend.l && o >= hend.o {
 					highlight = false
 				} else {
 					highlight = true
@@ -55,11 +63,11 @@ func textToDrawBuffer(txt text, sel *selection) [][]cell {
 			if ch == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					linebuf = append(linebuf, cell{rune(' '), highlight})
-					x += 1
+					o += 1
 				}
 			} else {
 				linebuf = append(linebuf, cell{rune(ch), highlight})
-				x += 1
+				o += 1
 			}
 		}
 		drawbuf = append(drawbuf, linebuf)
@@ -69,18 +77,18 @@ func textToDrawBuffer(txt text, sel *selection) [][]cell {
 
 func clipDrawBuffer(drawbuf [][]cell, v *viewer) [][]cell {
 	clipbuf := make([][]cell, 0)
-	xstart, ystart := v.min.X, v.min.Y
-	xend, yend := v.max.X, v.max.Y
-	//xstart, ystart := 0,0
-	//xend, yend := 20, 10
-	yend = min(yend, len(drawbuf))
-	if yend < ystart {
+	ostart, lstart := v.min.o, v.min.l
+	oend, lend := v.max.o, v.max.l
+	//ostart, lstart := 0,0
+	//oend, lend := 20, 10
+	lend = min(lend, len(drawbuf))
+	if lend < lstart {
 		// if then, we don't have a place for draw
 		return clipbuf
 	}
-	for _, origbuf := range drawbuf[ystart:yend] {
-		minoff := xstart
-		maxoff := xend
+	for _, origbuf := range drawbuf[lstart:lend] {
+		minoff := ostart
+		maxoff := oend
 		maxoff = min(maxoff, len(origbuf))
 		if maxoff > minoff {
 			clipbuf = append(clipbuf, origbuf[minoff:maxoff])
@@ -93,17 +101,17 @@ func clipDrawBuffer(drawbuf [][]cell, v *viewer) [][]cell {
 
 func clearScreen(l *layout) {
 	drawrect := l.mainViewerBound()
-	minx, maxx := drawrect.Min.X, drawrect.Max.X
-	miny, maxy := drawrect.Min.Y, drawrect.Max.Y
-	for x := minx ; x < maxx ; x++ {
-		for y := miny ; y < maxy ; y++ {
-			term.SetCell(x, y, ' ', term.ColorDefault, term.ColorDefault)
+	mino, maxo := drawrect.min.o, drawrect.max.o
+	minl, maxl := drawrect.min.l, drawrect.max.l
+	for o := mino ; o < maxo ; o++ {
+		for l := minl ; l < maxl ; l++ {
+			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
 }
 
 func draw(clipbuf [][]cell, l *layout) {
-	min := l.mainViewerBound().Min
+	min := l.mainViewerBound().min
 	for linenum, line := range clipbuf {
 		for off, c := range line {
 			fgColor := term.ColorWhite
@@ -111,7 +119,7 @@ func draw(clipbuf [][]cell, l *layout) {
 			if c.highlight {
 				bgColor = term.ColorGreen
 			}
-			term.SetCell(min.X+off, min.Y+linenum, c.rune, fgColor, bgColor)
+			SetCell(min.l+linenum, min.o+off, c.rune, fgColor, bgColor)
 		}
 	}
 }
@@ -120,10 +128,10 @@ func printStatus(status string) {
 	termw, termh := term.Size()
 	statusLine := termh - 1
 	for off:=0 ; off<termw ; off++ {
-		term.SetCell(off, statusLine, ' ', term.ColorBlack, term.ColorWhite)
+		SetCell(statusLine, off, ' ', term.ColorBlack, term.ColorWhite)
 	}
 	for off, ch := range status {
-		term.SetCell(off, statusLine, rune(ch), term.ColorBlack, term.ColorWhite)
+		SetCell(statusLine, off, rune(ch), term.ColorBlack, term.ColorWhite)
 	}
 }
 
@@ -169,8 +177,8 @@ func main() {
 		cb := clipDrawBuffer(drawbuf, view)
 		clearScreen(layout)
 		draw(cb, layout)
-		// cy, cx := cursor.positionInViewer(view)
-		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cy, cx, view.min.Y, view.min.X, view.max.Y, view.max.X)
+		// cl, co := cursor.positionInViewer(view)
+		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cl, co, view.min.l, view.min.o, view.max.l, view.max.o)
 		// if edit == true {
 		// 	status += " editing..."
 		// } else {
@@ -242,7 +250,7 @@ func main() {
 				}
 				if selection.on {
 					selection.SetEnd(cursor)
-					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.X, selection.start.Y, selection.end.X, selection.end.Y))
+					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.o, selection.start.l, selection.end.o, selection.end.l))
 				} else {
 					printStatus("selection off")
 				}

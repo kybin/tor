@@ -34,9 +34,9 @@ func newCursor(t text) *cursor {
 
 func setTermboxCursor(c *cursor, v *viewer, l *layout) {
 	viewbound := l.mainViewerBound()
-	viewx, viewy := viewbound.Min.X, viewbound.Min.Y
-	cy, cx := c.positionInViewer(v)
-	term.SetCursor(viewx+cx, viewy+cy)
+	viewl, viewo := viewbound.min.l, viewbound.min.o
+	cl, co := c.positionInViewer(v)
+	term.SetCursor(viewl+cl, viewo+co)
 }
 
 // cursor offset cannot go further than line's maximum visual length.
@@ -82,7 +82,7 @@ func (c *cursor) position() (int, int) {
 }
 
 func (c *cursor) positionInViewer(v *viewer) (int, int) {
-	return c.line-v.min.Y, c.offset()-v.min.X
+	return c.line-v.min.l, c.offset()-v.min.o
 }
 
 // text on the line
