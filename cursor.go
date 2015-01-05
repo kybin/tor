@@ -3,7 +3,6 @@ package main
 import (
 	"unicode"
 	"unicode/utf8"
-	term "github.com/nsf/termbox-go"
 )
 
 var (
@@ -36,7 +35,7 @@ func setTermboxCursor(c *cursor, v *viewer, l *layout) {
 	viewbound := l.mainViewerBound()
 	viewl, viewo := viewbound.min.l, viewbound.min.o
 	cl, co := c.positionInViewer(v)
-	term.SetCursor(viewl+cl, viewo+co)
+	SetCursor(viewl+cl, viewo+co)
 }
 
 // cursor offset cannot go further than line's maximum visual length.

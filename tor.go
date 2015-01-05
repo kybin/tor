@@ -13,7 +13,7 @@ func SetCursor(l, o int) {
 }
 
 func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
-	term.SetCell(l, o, ch, fg, bg)
+	term.SetCell(o, l, ch, fg, bg)
 }
 
 func newTermCursor(c *cursor, l *layout) {
