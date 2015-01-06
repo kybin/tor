@@ -31,10 +31,10 @@ func newCursor(t text) *cursor {
 	return &cursor{0, 0, 0, t}
 }
 
-func setTermboxCursor(c *cursor, v *viewer, l *layout) {
+func setTermboxCursor(c *cursor, w *window, l *layout) {
 	viewbound := l.mainViewerBound()
 	viewl, viewo := viewbound.min.l, viewbound.min.o
-	cl, co := c.positionInViewer(v)
+	cl, co := c.positionInWindow(w)
 	SetCursor(viewl+cl, viewo+co)
 }
 
@@ -80,8 +80,8 @@ func (c *cursor) position() (int, int) {
 	return c.line, c.offset()
 }
 
-func (c *cursor) positionInViewer(v *viewer) (int, int) {
-	return c.line-v.min.l, c.offset()-v.min.o
+func (c *cursor) positionInWindow(w *window) (int, int) {
+	return c.line-w.min.l, c.offset()-w.min.o
 }
 
 // text on the line

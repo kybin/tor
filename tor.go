@@ -33,7 +33,7 @@ func clearScreen(l *layout) {
 }
 
 // draw text inside of window at mainviewer
-func drawScreen(l *layout, w *viewer, t text, sel *selection) {
+func drawScreen(l *layout, w *window, t text, sel *selection) {
 	viewer := l.mainViewerBound()
 	for l , lbyte := range t {
 		if l < w.min.l || l >= w.max.l {
@@ -99,7 +99,7 @@ func main() {
 	text := open(f)
 
 	layout := newLayout()
-	view := newViewer(layout)
+	win := NewWindow(layout)
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := newCursor(text)
 	selection := NewSelection()
@@ -113,18 +113,18 @@ func main() {
 		}
 	}()
 	for {
-		view.moveToCursor(cursor)
+		win.Follow(cursor)
 		clearScreen(layout)
-		drawScreen(layout, view, text, selection)
-		// cl, co := cursor.positionInViewer(view)
-		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cl, co, view.min.l, view.min.o, view.max.l, view.max.o)
+		drawScreen(layout, win, text, selection)
+		// cl, co := cursor.positionInViewer(win)
+		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cl, co, win.min.l, win.min.o, win.max.l, win.max.o)
 		// if edit == true {
 		// 	status += " editing..."
 		// } else {
 		// 	status += " idle"
 		// }
 		// printStatus(status)
-		setTermboxCursor(cursor, view, layout)
+		setTermboxCursor(cursor, win, layout)
 		term.Flush()
 
 		// wait for keyboard input
@@ -201,9 +201,9 @@ func main() {
 			}
 			edit = false
 		// case term.EventResize:
-		//	view.resize()
-		//	view.clear()
-		//	view.draw()
+		//	win.resize()
+		//	win.clear()
+		//	win.draw()
 		}
 	}
 }
