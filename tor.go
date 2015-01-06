@@ -16,13 +16,6 @@ func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, ch, fg, bg)
 }
 
-func NewTermCursor(c *Cursor, l *Layout) {
-	viewbound := l.MainViewerBound()
-	viewl, viewo := viewbound.min.l, viewbound.min.o
-	SetCursor(viewl, viewo)
-}
-
-
 func clearScreen(l *Layout) {
 	viewer := l.MainViewerBound()
 	for l := viewer.min.l ; l < viewer.max.l ; l++ {
@@ -99,11 +92,12 @@ func main() {
 	text := open(f)
 
 	layout := NewLayout()
+	mainview := layout.MainViewerBound()
 	win := NewWindow(layout)
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := NewCursor(text)
 	selection := NewSelection()
-	NewTermCursor(cursor, layout)
+	SetCursor(mainview.min.l, mainview.min.o)
 
 	edit := false
 	events := make(chan term.Event, 20)
