@@ -1,24 +1,24 @@
 package main
 
-type selection struct {
+type Selection struct {
 	on bool
 	start Point
 	end Point
 }
 
-func NewSelection() *selection {
-	return &selection{}
+func NewSelection() *Selection {
+	return &Selection{}
 }
 
-func (s *selection) SetStart(c *cursor) {
-	s.start = Point{c.line, c.offset()}
+func (s *Selection) SetStart(c *Cursor) {
+	s.start = Point{c.line, c.Offset()}
 }
 
-func (s *selection) SetEnd(c *cursor) {
-	s.end = Point{c.line, c.offset()}
+func (s *Selection) SetEnd(c *Cursor) {
+	s.end = Point{c.line, c.Offset()}
 }
 
-func (s *selection) Contains(p Point) bool {
+func (s *Selection) Contains(p Point) bool {
 	min := s.start
 	max := s.end
 	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {

@@ -16,15 +16,15 @@ func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, ch, fg, bg)
 }
 
-func newTermCursor(c *cursor, l *layout) {
-	viewbound := l.mainViewerBound()
+func NewTermCursor(c *Cursor, l *Layout) {
+	viewbound := l.MainViewerBound()
 	viewl, viewo := viewbound.min.l, viewbound.min.o
 	SetCursor(viewl, viewo)
 }
 
 
-func clearScreen(l *layout) {
-	viewer := l.mainViewerBound()
+func clearScreen(l *Layout) {
+	viewer := l.MainViewerBound()
 	for l := viewer.min.l ; l < viewer.max.l ; l++ {
 		for o := viewer.min.o ; o < viewer.max.o ; o++ {
 			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
@@ -33,8 +33,8 @@ func clearScreen(l *layout) {
 }
 
 // draw text inside of window at mainviewer
-func drawScreen(l *layout, w *window, t text, sel *selection) {
-	viewer := l.mainViewerBound()
+func drawScreen(l *Layout, w *Window, t Text, sel *Selection) {
+	viewer := l.MainViewerBound()
 	for l , lbyte := range t {
 		if l < w.min.l || l >= w.max.l {
 			continue
@@ -98,12 +98,12 @@ func main() {
 
 	text := open(f)
 
-	layout := newLayout()
+	layout := NewLayout()
 	win := NewWindow(layout)
 	// drawbuf := textToDrawBuffer(text, selection)
-	cursor := newCursor(text)
+	cursor := NewCursor(text)
 	selection := NewSelection()
-	newTermCursor(cursor, layout)
+	NewTermCursor(cursor, layout)
 
 	edit := false
 	events := make(chan term.Event, 20)
@@ -124,7 +124,7 @@ func main() {
 		// 	status += " idle"
 		// }
 		// printStatus(status)
-		setTermboxCursor(cursor, win, layout)
+		SetTermboxCursor(cursor, win, layout)
 		term.Flush()
 
 		// wait for keyboard input
@@ -139,13 +139,13 @@ func main() {
 				// case term.KeyCtrlC:
 					// copySelection()
 				case term.KeyArrowLeft:
-					cursor.moveLeft()
+					cursor.MoveLeft()
 				case term.KeyArrowRight:
-					cursor.moveRight()
+					cursor.MoveRight()
 				case term.KeyArrowUp:
-					cursor.moveUp()
+					cursor.MoveUp()
 				case term.KeyArrowDown:
-					cursor.moveDown()
+					cursor.MoveDown()
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
 					if withShift(ev.Ch) {
@@ -162,29 +162,29 @@ func main() {
 					// if character pressed with shift
 					// we will enable cursor selection.
 					case 'j', 'J':
-						cursor.moveLeft()
+						cursor.MoveLeft()
 					case 'l', 'L':
-						cursor.moveRight()
+						cursor.MoveRight()
 					case 'i', 'I':
-						cursor.moveUp()
+						cursor.MoveUp()
 					case 'k', 'K':
-						cursor.moveDown()
+						cursor.MoveDown()
 					case 'm', 'M':
-						cursor.moveBow()
+						cursor.MoveBow()
 					case '.', '>':
-						cursor.moveEow()
+						cursor.MoveEow()
 					case 'u', 'U':
-						cursor.moveBol()
+						cursor.MoveBol()
 					case 'o', 'O':
-						cursor.moveEol()
+						cursor.MoveEol()
 					case 'h', 'H':
-						cursor.pageUp()
+						cursor.PageUp()
 					case 'n', 'N':
-						cursor.pageDown()
+						cursor.PageDown()
 					case 'a', 'A':
-						cursor.moveBof()
+						cursor.MoveBof()
 					case 'z', 'Z':
-						cursor.moveEof()
+						cursor.MoveEof()
 					}
 				}
 				if selection.on {

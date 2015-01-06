@@ -19,41 +19,41 @@ var (
 //	EOL
 //)
 
-type cursor struct {
+type Cursor struct {
 	line int
 	boff int // byte offset.
 	voff int // visual offset. It may be different with cursor offset. For that, use cursor.offset().
-	t text
+	t Text
 	// stick place - will implement later
 }
 
-func newCursor(t text) *cursor {
-	return &cursor{0, 0, 0, t}
+func NewCursor(t Text) *Cursor {
+	return &Cursor{0, 0, 0, t}
 }
 
-func setTermboxCursor(c *cursor, w *window, l *layout) {
-	viewbound := l.mainViewerBound()
+func SetTermboxCursor(c *Cursor, w *Window, l *Layout) {
+	viewbound := l.MainViewerBound()
 	viewl, viewo := viewbound.min.l, viewbound.min.o
-	cl, co := c.positionInWindow(w)
+	cl, co := c.PositionInWindow(w)
 	SetCursor(viewl+cl, viewo+co)
 }
 
 // cursor offset cannot go further than line's maximum visual length.
-func (c *cursor) offset() (coff int) {
-	maxlen := c.lineVisualLength()
+func (c *Cursor) Offset() (coff int) {
+	maxlen := c.LineVisualLength()
 	if c.voff >  maxlen {
 		return maxlen
 	}
 
-	// Cursor should not in the middle of multi-length(visual) character.
+	// nursor should not in the middle of multi-length(visual) character.
 	// So we should recalculate cursor offset.
-	remain := c.lineData()
+	remain := c.LineData()
 	lastcoff := 0
 	for {
 		r, rlen := utf8.DecodeRune(remain)
 		remain = remain[rlen:]
 		lastcoff = coff
-		coff += runeVisualLength(r)
+		coff += RuneVisualLength(r)
 		if coff==c.voff {
 			return coff
 		} else if coff > c.voff {
@@ -63,232 +63,232 @@ func (c *cursor) offset() (coff int) {
 	return
 }
 
-// non-instance version of cursor.offset() 
-func cursorOffset(l line, boff int) int {
+// non-instance version of cursor.Offset() 
+func CursorOffset(l Line, boff int) int {
 	remain := l
 	coff := 0
 	for boff > 0 {
 		r, rlen := utf8.DecodeRune(remain)
 		remain = remain[rlen:]
 		boff -= rlen
-		coff += runeVisualLength(r)
+		coff += RuneVisualLength(r)
 	}
 	return coff
 }
 
-func (c *cursor) position() (int, int) {
-	return c.line, c.offset()
+func (c *Cursor) Position() (int, int) {
+	return c.line, c.Offset()
 }
 
-func (c *cursor) positionInWindow(w *window) (int, int) {
-	return c.line-w.min.l, c.offset()-w.min.o
+func (c *Cursor) PositionInWindow(w *Window) (int, int) {
+	return c.line-w.min.l, c.Offset()-w.min.o
 }
 
 // text on the line
-func (c *cursor) lineData() line {
+func (c *Cursor) LineData() Line {
 	return c.t[c.line]
 }
 
-func (c *cursor) lineDataUntilCursor() line {
-	return c.lineData()[:c.boff]
+func (c *Cursor) LineDataUntilCursor() Line {
+	return c.LineData()[:c.boff]
 }
 
-func (c *cursor) lineDataFromCursor() line {
-	return c.lineData()[c.boff:]
+func (c *Cursor) LineDataFromCursor() Line {
+	return c.LineData()[c.boff:]
 }
 
-func (c *cursor) exceededLineLimit() bool {
-	return c.boff > len(c.lineData())
+func (c *Cursor) ExceededLineLimit() bool {
+	return c.boff > len(c.LineData())
 }
 
-func (c *cursor) runeAfter() (rune, int) {
-	return utf8.DecodeRune(c.lineData()[c.boff:])
+func (c *Cursor) RuneAfter() (rune, int) {
+	return utf8.DecodeRune(c.LineData()[c.boff:])
 }
 
-func (c *cursor) runeBefore() (rune, int) {
-	return utf8.DecodeLastRune(c.lineData()[:c.boff])
+func (c *Cursor) RuneBefore() (rune, int) {
+	return utf8.DecodeLastRune(c.LineData()[:c.boff])
 }
 
 // should refine after
 // may be use dictionary??
-func runeVisualLength(r rune) int {
+func RuneVisualLength(r rune) int {
 	if r=='\t' {
 		return taboffset
 	}
 	return 1
 }
 
-func (c *cursor) lineVisualLength() int {
-	return c.voffFromBoff(len(c.lineData()))
+func (c *Cursor) LineVisualLength() int {
+	return c.VoffFromBoff(len(c.LineData()))
 }
 
 // Set boff and voff from current cursor position.
-func (c *cursor) resetInternalOffsets() {
-	c.boff = c.boffFromCoff(c.offset())
-	c.voff = c.voffFromBoff(c.boff)
+func (c *Cursor) ResetInternalOffsets() {
+	c.boff = c.BoffFromCoff(c.Offset())
+	c.voff = c.VoffFromBoff(c.boff)
 }
 
-func (c *cursor) boffFromCoff(coff int) (boff int) {
-	remain := c.lineData()
+func (c *Cursor) BoffFromCoff(coff int) (boff int) {
+	remain := c.LineData()
 	for coff>0 {
 		r, rlen := utf8.DecodeRune(remain)
 		remain = remain[rlen:]
 		boff += rlen
-		coff -= runeVisualLength(r)
+		coff -= RuneVisualLength(r)
 	}
 	return
 }
 
-func (c *cursor) voffFromBoff(boff int) (voff int){
-	remain := c.lineData()[:boff]
+func (c *Cursor) VoffFromBoff(boff int) (voff int){
+	remain := c.LineData()[:boff]
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRune(remain)
 		remain = remain[rlen:]
-		voff += runeVisualLength(r)
+		voff += RuneVisualLength(r)
 	}
 	return
 }
 
-func (c *cursor) setOffsets(boff int) {
+func (c *Cursor) SetOffsets(boff int) {
 	c.boff = boff
-	c.voff = c.voffFromBoff(boff)
+	c.voff = c.VoffFromBoff(boff)
 }
 
-func (c *cursor) atBol() bool{
+func (c *Cursor) AtBol() bool{
 	return c.boff == 0
 }
 
-func (c *cursor) atEol() bool{
-	return c.boff == len(c.lineData())
+func (c *Cursor) AtEol() bool{
+	return c.boff == len(c.LineData())
 }
 
-func (c *cursor) onFirstline() bool{
+func (c *Cursor) OnFirstLine() bool{
 	return c.line == 0
 }
 
-func (c *cursor) onLastline() bool {
+func (c *Cursor) OnLastLine() bool {
 	return c.line == len(c.t)-1
 }
 
-func (c *cursor) atBof() bool {
-	return c.onFirstline() && c.atBol()
+func (c *Cursor) AtBof() bool {
+	return c.OnFirstLine() && c.AtBol()
 }
 
-func (c *cursor) atEof() bool {
-	return c.onLastline() && c.atEol()
+func (c *Cursor) AtEof() bool {
+	return c.OnLastLine() && c.AtEol()
 }
 
-func (c *cursor) moveLeft() {
-	c.resetInternalOffsets()
-	if c.atBof() {
+func (c *Cursor) MoveLeft() {
+	c.ResetInternalOffsets()
+	if c.AtBof() {
 		return
-	} else if c.atBol() {
+	} else if c.AtBol() {
 		c.line -= 1
-		c.boff = len(c.lineData())
-		c.voff = c.voffFromBoff(c.boff)
+		c.boff = len(c.LineData())
+		c.voff = c.VoffFromBoff(c.boff)
 		return
 	}
-	r, rlen := c.runeBefore()
+	r, rlen := c.RuneBefore()
 	c.boff -= rlen
-	c.voff -= runeVisualLength(r)
+	c.voff -= RuneVisualLength(r)
 }
 
-func (c *cursor) moveRight() {
-	c.resetInternalOffsets()
-	if c.atEof() {
+func (c *Cursor) MoveRight() {
+	c.ResetInternalOffsets()
+	if c.AtEof() {
 		return
-	} else if c.atEol() || c.exceededLineLimit(){
+	} else if c.AtEol() || c.ExceededLineLimit(){
 		c.line += 1
-		c.setOffsets(0)
+		c.SetOffsets(0)
 		return
 	}
-	r, rlen := c.runeAfter()
+	r, rlen := c.RuneAfter()
 	c.boff += rlen
-	c.voff += runeVisualLength(r)
+	c.voff += RuneVisualLength(r)
 }
 
 // With move up and down, we will lazily evaluate internal offsets.
-func (c *cursor) moveUp() {
-	if c.onFirstline() {
+func (c *Cursor) MoveUp() {
+	if c.OnFirstLine() {
 		return
 	}
 	c.line--
 
 }
 
-func (c *cursor) moveDown() {
-	if c.onLastline() {
+func (c *Cursor) MoveDown() {
+	if c.OnLastLine() {
 		return
 	}
 	c.line++
 }
 
-func (c *cursor) moveBow() {
-	c.resetInternalOffsets()
-	if c.atBof() {
+func (c *Cursor) MoveBow() {
+	c.ResetInternalOffsets()
+	if c.AtBof() {
 		return
 	}
 	// First we should pass every space character.
 	for {
-		r, _ := c.runeBefore()
+		r, _ := c.RuneBefore()
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			break
 		}
-		c.moveLeft()
-		if c.atBof() {
+		c.MoveLeft()
+		if c.AtBof() {
 			return
 		}
 	}
 	// Then we will find first space charactor and stop.
 	for {
-		r, _ := c.runeBefore()
+		r, _ := c.RuneBefore()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
 			return
 		}
-		c.moveLeft()
-		if c.atBof() {
+		c.MoveLeft()
+		if c.AtBof() {
 			return
 		}
 	}
 }
 
 // See moveEow for the algorithm.
-func (c *cursor) moveEow() {
-	c.resetInternalOffsets()
-	if c.atEof() {
+func (c *Cursor) MoveEow() {
+	c.ResetInternalOffsets()
+	if c.AtEof() {
 		return
 	}
 	for {
-		r, _ := c.runeAfter()
+		r, _ := c.RuneAfter()
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			break
 		}
-		c.moveRight()
-		if c.atEof() {
+		c.MoveRight()
+		if c.AtEof() {
 			return
 		}
 	}
 	for {
-		r, _ := c.runeAfter()
+		r, _ := c.RuneAfter()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
 			return
 		}
-		c.moveRight()
-		if c.atEof() {
+		c.MoveRight()
+		if c.AtEof() {
 			return
 		}
 	}
 }
 
-func (c *cursor) moveBol() {
+func (c *Cursor) MoveBol() {
 	// if already bol, move cursor to prev line
-	if c.boff == 0 && !c.onFirstline() {
+	if c.boff == 0 && !c.OnFirstLine() {
 		c.line--
 		return
 	}
 
 	// if  prev data is all spaces, move cursor to beginning of line
-	remain := c.lineDataUntilCursor()
+	remain := c.LineDataUntilCursor()
 	allspace := true
 	for len(remain)>0 {
 		r, rlen := utf8.DecodeRune(remain)
@@ -305,7 +305,7 @@ func (c *cursor) moveBol() {
 	}
 
 	// or, move cursor to first character of text on line.
-	remain = c.lineData()
+	remain = c.LineData()
 	boff := 0
         for len(remain)>0 {
 		r, rlen := utf8.DecodeRune(remain)
@@ -316,17 +316,17 @@ func (c *cursor) moveBol() {
 		boff += rlen
 	}
 	c.boff = boff
-	c.voff = c.voffFromBoff(boff)
+	c.voff = c.VoffFromBoff(boff)
 }
 
-func (c *cursor) moveEol() {
+func (c *Cursor) MoveEol() {
 	// if already eol, move to next line
-	if c.boff == len(c.lineData()) && !c.onLastline() {
+	if c.boff == len(c.LineData()) && !c.OnLastLine() {
 		c.line++
 	}
 
 	// if  prev data is not all spaces move cursor to eol.
-	remain := c.lineData()[:c.boff+1] // we should use runelength instead of 1
+	remain := c.LineData()[:c.boff+1] // we should use runelength instead of 1
 	allspace := true
 	for len(remain)>0 {
 		r, rlen := utf8.DecodeRune(remain)
@@ -337,13 +337,13 @@ func (c *cursor) moveEol() {
 		}
 	}
 	if !allspace {
-		c.boff = len(c.lineData())
-		c.voff = c.voffFromBoff(c.boff)
+		c.boff = len(c.LineData())
+		c.voff = c.VoffFromBoff(c.boff)
 		return
 	}
 
 	// or, move it to first chararacter of text on line.
-	remain = c.lineData()
+	remain = c.LineData()
 	boff := 0
 	for len(remain)>0 { // will make this a function
 		r, rlen := utf8.DecodeRune(remain)
@@ -354,43 +354,43 @@ func (c *cursor) moveEol() {
 		boff +=rlen
 	}
 	c.boff = boff
-	c.voff = c.voffFromBoff(boff)
+	c.voff = c.VoffFromBoff(boff)
 }
 
-func (c *cursor) pageUp() {
+func (c *Cursor) PageUp() {
 	for i:=0; i < pageoffset; i++ {
-		if c.onFirstline() {
+		if c.OnFirstLine() {
 			break
 		}
 		c.line--
 	}
 }
 
-func (c *cursor) pageDown() {
+func (c *Cursor) PageDown() {
 	for i:=0; i < pageoffset; i++ {
-		if c.onLastline() {
+		if c.OnLastLine() {
 			break
 		}
 		c.line++
 	}
 }
 
-func (c *cursor) moveBof() {
+func (c *Cursor) MoveBof() {
 	for {
-		if c.onFirstline() {
+		if c.OnFirstLine() {
 			break
 		}
 		c.line--
 	}
-	c.moveBol()
+	c.MoveBol()
 }
 
-func (c *cursor) moveEof() {
+func (c *Cursor) MoveEof() {
 	for {
-		if c.onLastline() {
+		if c.OnLastLine() {
 			break
 		}
 		c.line++
 	}
-	c.moveEol()
+	c.MoveEol()
 }

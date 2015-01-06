@@ -18,19 +18,19 @@ import(
 // ---------------------------------
 // footer (for information)
 // 
-type layout struct {
+type Layout struct {
 	headerSize int
 	footerSize int
 	// main viewer's size will determined by calculating
 }
 
-func newLayout() *layout {
+func NewLayout() *Layout {
 	defaultHeaderSize := 1
 	defaultFooterSize := 1
-	return &layout{defaultHeaderSize, defaultFooterSize}
+	return &Layout{defaultHeaderSize, defaultFooterSize}
 }
 
-func (l *layout) mainViewerBound() *Area {
+func (l *Layout) MainViewerBound() *Area {
 	termw, termh := term.Size()
 
 	min := Point{l.headerSize, 0}
@@ -39,6 +39,6 @@ func (l *layout) mainViewerBound() *Area {
 	return NewArea(min, max)
 }
 
-// func (l *layout) mainViewerSize() image.Point {
-// 	return l.mainViewerBound().Size()
+// func (l *Layout) MainViewerSize() image.Point {
+// 	return l.MainViewerBound().Size()
 // }
