@@ -22,104 +22,46 @@ func newTermCursor(c *cursor, l *layout) {
 	SetCursor(viewl, viewo)
 }
 
-type cell struct {
-	rune rune
-	highlight bool // maybe changed to attributes?
-}
-
-func textToDrawBuffer(txt text, sel *selection) [][]cell {
-	// highlight start, end should recalculate from selection, so we can ensure start < end.
-	var highlight bool
-	var hstart, hend Point
-	if sel.on {
-		if sel.end.l < sel.start.l {
-			hstart, hend = sel.end, sel.start
-		} else if sel.end.l == sel.start.l && sel.end.o < sel.start.o {
-			hstart, hend = sel.end, sel.start
-		} else {
-			hstart, hend = sel.start, sel.end
-		}
-	}
-	drawbuf := make([][]cell, 0)
-	for l , line := range txt {
-		linebuf := make([]cell, 0)
-		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
-		for _, ch := range line {
-			// if selection is on, caculate this cell is in highlight range
-			if sel.on {
-				if l < hstart.l || l > hend.l {
-					highlight = false
-				} else if l == hstart.l && o < hstart.o {
-					highlight = false
-				} else if l == hend.l && o >= hend.o {
-					highlight = false
-				} else {
-					highlight = true
-				}
-			} else {
-				highlight = false
-			}
-			// append cell to buffer
-			if ch == '\t' {
-				for i:=0 ; i<taboffset ; i++ {
-					linebuf = append(linebuf, cell{rune(' '), highlight})
-					o += 1
-				}
-			} else {
-				linebuf = append(linebuf, cell{rune(ch), highlight})
-				o += 1
-			}
-		}
-		drawbuf = append(drawbuf, linebuf)
-	}
-	return drawbuf
-}
-
-func clipDrawBuffer(drawbuf [][]cell, v *viewer) [][]cell {
-	clipbuf := make([][]cell, 0)
-	ostart, lstart := v.min.o, v.min.l
-	oend, lend := v.max.o, v.max.l
-	//ostart, lstart := 0,0
-	//oend, lend := 20, 10
-	lend = min(lend, len(drawbuf))
-	if lend < lstart {
-		// if then, we don't have a place for draw
-		return clipbuf
-	}
-	for _, origbuf := range drawbuf[lstart:lend] {
-		minoff := ostart
-		maxoff := oend
-		maxoff = min(maxoff, len(origbuf))
-		if maxoff > minoff {
-			clipbuf = append(clipbuf, origbuf[minoff:maxoff])
-		} else {
-			clipbuf = append(clipbuf, make([]cell, 0))
-		}
-	}
-	return clipbuf
-}
 
 func clearScreen(l *layout) {
-	drawrect := l.mainViewerBound()
-	mino, maxo := drawrect.min.o, drawrect.max.o
-	minl, maxl := drawrect.min.l, drawrect.max.l
-	for o := mino ; o < maxo ; o++ {
-		for l := minl ; l < maxl ; l++ {
+	viewer := l.mainViewerBound()
+	for l := viewer.min.l ; l < viewer.max.l ; l++ {
+		for o := viewer.min.o ; o < viewer.max.o ; o++ {
 			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
 }
 
-func draw(clipbuf [][]cell, l *layout) {
-	min := l.mainViewerBound().min
-	for linenum, line := range clipbuf {
-		for off, c := range line {
-			fgColor := term.ColorWhite
+// draw text inside of window at mainviewer
+func drawScreen(l *layout, w *viewer, t text, sel *selection) {
+	viewer := l.mainViewerBound()
+	for l , lbyte := range t {
+		if l < w.min.l || l >= w.max.l {
+			continue
+		}
+		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
+		for _, ch := range lbyte {
+			if o >= w.max.o {
+				break
+			}
 			bgColor := term.ColorDefault
-			if c.highlight {
+			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
 			}
-			SetCell(min.l+linenum, min.o+off, c.rune, fgColor, bgColor)
+			// append cell to buffer
+			if ch == '\t' {
+				for i:=0 ; i<taboffset ; i++ {
+					if o >= w.min.o {
+						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), term.ColorWhite, bgColor)
+					}
+					o += 1
+				}
+			} else {
+				if o >= w.min.o {
+					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), term.ColorWhite, bgColor)
+				}
+				o += 1
+			}
 		}
 	}
 }
@@ -171,12 +113,9 @@ func main() {
 		}
 	}()
 	for {
-		// draw buffer
 		view.moveToCursor(cursor)
-		drawbuf := textToDrawBuffer(text, selection)
-		cb := clipDrawBuffer(drawbuf, view)
 		clearScreen(layout)
-		draw(cb, layout)
+		drawScreen(layout, view, text, selection)
 		// cl, co := cursor.positionInViewer(view)
 		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cl, co, view.min.l, view.min.o, view.max.l, view.max.o)
 		// if edit == true {
