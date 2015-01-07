@@ -11,11 +11,11 @@ func NewSelection() *Selection {
 }
 
 func (s *Selection) SetStart(c *Cursor) {
-	s.start = Point{c.line, c.Offset()}
+	s.start = c.Position()
 }
 
 func (s *Selection) SetEnd(c *Cursor) {
-	s.end = Point{c.line, c.Offset()}
+	s.end = c.Position()
 }
 
 func (s *Selection) Contains(p Point) bool {

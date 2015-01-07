@@ -35,9 +35,8 @@ func (w *Window) Move(t Point) {
 }
 
 func (w *Window) Contains(c *Cursor) bool {
-	cl, co := c.Position()
-
-	if (w.min.o <= co && co < w.max.o) && (w.min.l <= cl && cl < w.max.l) {
+	cp := c.Position()
+	if (w.min.o <= cp.o && cp.o < w.max.o) && (w.min.l <= cp.l && cp.l < w.max.l) {
 		return true
 	}
 	return false
@@ -46,22 +45,22 @@ func (w *Window) Contains(c *Cursor) bool {
 func (w *Window) Follow(c *Cursor) {
 		var tl, to int
 
-		cl, co := c.Position()
+		cp := c.Position()
 
 		// mino := w.min.o
 		// minl := w.min.l
 		// maxo := w.max.o-1
 		// maxl := w.max.l-1
 
-		if co < w.min.o {
-			to = co - w.min.o
-		} else if co >= w.max.o {
-			to = co - w.max.o + 1
+		if cp.o < w.min.o {
+			to = cp.o - w.min.o
+		} else if cp.o >= w.max.o {
+			to = cp.o - w.max.o + 1
 		}
-		if cl < w.min.l {
-			tl = cl - w.min.l
-		} else if cl >= w.max.l {
-			tl = cl - w.max.l + 1
+		if cp.l < w.min.l {
+			tl = cp.l - w.min.l
+		} else if cp.l >= w.max.l {
+			tl = cp.l - w.max.l + 1
 		}
 		w.Move(Point{tl, to})
 }

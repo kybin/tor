@@ -110,14 +110,14 @@ func main() {
 		win.Follow(cursor)
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
-		// cl, co := cursor.positionInViewer(win)
-		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.line, cursor.boff, cursor.voff, cursor.offset(), cl, co, win.min.l, win.min.o, win.max.l, win.max.o)
+		c := cursor.PositionInWindow(win)
+		status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, c.l, c.o, win.min.l, win.min.o, win.max.l, win.max.o)
 		// if edit == true {
 		// 	status += " editing..."
 		// } else {
 		// 	status += " idle"
 		// }
-		// printStatus(status)
+		printStatus(status)
 		SetTermboxCursor(cursor, win, layout)
 		term.Flush()
 
@@ -181,12 +181,12 @@ func main() {
 						cursor.MoveEof()
 					}
 				}
-				if selection.on {
-					selection.SetEnd(cursor)
-					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.o, selection.start.l, selection.end.o, selection.end.l))
-				} else {
-					printStatus("selection off")
-				}
+				// if selection.on {
+				// 	selection.SetEnd(cursor)
+				// 	printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.o, selection.start.l, selection.end.o, selection.end.l))
+				// } else {
+				// 	printStatus("selection off")
+				// }
 			}
 		case <-time.After(time.Second):
 			// OK. It's idle time. We should check if any edit applied on contents.
