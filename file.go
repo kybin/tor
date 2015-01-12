@@ -1,28 +1,27 @@
 package main
 
 import (
-	"io/ioutil"
+	"bufio"
+	"os"
+	"log"
 )
 
-type Line []byte
-type Text []Line
-
-func open(f string) Text {
-
-	bytes, err := ioutil.ReadFile(f)
+func open(f string) *Text {
+	file, err := os.Open(f)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	lines := make([]Line, 0)
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		ln := Line{scanner.Text()}
+		lines = append(lines, ln)
 	}
 
-	txt := make(Text, 0)
-	lastidx := -1
-	for idx, rune := range bytes {
-		if rune == '\n' {
-			newline := Line(bytes[lastidx+1 : idx])
-			lastidx = idx
-			txt = append(txt, newline)
-		}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
 	}
-	//	fmt.Print(txt)
-	return txt
+	return &Text{lines}
 }

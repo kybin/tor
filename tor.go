@@ -26,14 +26,14 @@ func clearScreen(l *Layout) {
 }
 
 // draw text inside of window at mainviewer
-func drawScreen(l *Layout, w *Window, t Text, sel *Selection) {
+func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 	viewer := l.MainViewerBound()
-	for l , lbyte := range t {
+	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
 		}
 		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
-		for _, ch := range lbyte {
+		for _, ch := range ln.data {
 			if o >= w.max.o {
 				break
 			}
@@ -140,6 +140,12 @@ func main() {
 					cursor.MoveUp()
 				case term.KeyArrowDown:
 					cursor.MoveDown()
+				case term.KeyEnter:
+					cursor.SplitLine()
+				case term.KeyDelete:
+					cursor.Delete()
+				case term.KeyBackspace2:
+					cursor.Backspace()
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
 					if withShift(ev.Ch) {

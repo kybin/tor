@@ -24,11 +24,11 @@ type Cursor struct {
 	o int // cursor offset - When MoveUp or MoveDown, it will calculated from visual offset.
 	v int // visual offset - When MoveLeft of MoveRight, it will matched to cursor offset.
 	b int // byte offset
-	t Text
+	t *Text
 	// stick place - will implement later
 }
 
-func NewCursor(t Text) *Cursor {
+func NewCursor(t *Text) *Cursor {
 	return &Cursor{0, 0, 0, 0, t}
 }
 
@@ -69,7 +69,7 @@ func (c *Cursor) OFromV(v int) (o int) {
 	remain := c.LineData()
 	lasto := 0
 	for {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		lasto = o
 		o += RuneVisualLength(r)
@@ -85,7 +85,7 @@ func (c *Cursor) OFromV(v int) (o int) {
 func (c *Cursor) BFromC(o int) (b int) {
 	remain := c.LineData()
 	for o>0 {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		b+= rlen
 		o-= RuneVisualLength(r)
@@ -96,7 +96,7 @@ func (c *Cursor) BFromC(o int) (b int) {
 func (c *Cursor) VFromB(b int) (v int){
 	remain := c.LineData()[:b]
 	for len(remain) > 0 {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		v += RuneVisualLength(r)
 	}
@@ -112,15 +112,15 @@ func (c *Cursor) PositionInWindow(w *Window) Point {
 	return c.Position().Sub(w.min)
 }
 
-func (c *Cursor) LineData() Line {
-	return c.t[c.l]
+func (c *Cursor) LineData() string {
+	return c.t.lines[c.l].data
 }
 
-func (c *Cursor) LineDataUntilCursor() Line {
+func (c *Cursor) LineDataUntilCursor() string {
 	return c.LineData()[:c.b]
 }
 
-func (c *Cursor) LineDataFromCursor() Line {
+func (c *Cursor) LineDataFromCursor() string {
 	return c.LineData()[c.b:]
 }
 
@@ -129,12 +129,12 @@ func (c *Cursor) ExceededLineLimit() bool {
 }
 
 func (c *Cursor) RuneAfter() (rune, int, int) {
-	r, rlen := utf8.DecodeRune(c.LineData()[c.b:])
+	r, rlen := utf8.DecodeRuneInString(c.LineData()[c.b:])
 	return r, rlen, RuneVisualLength(r)
 }
 
 func (c *Cursor) RuneBefore() (rune, int, int) {
-	r, rlen := utf8.DecodeLastRune(c.LineData()[:c.b])
+	r, rlen := utf8.DecodeLastRuneInString(c.LineData()[:c.b])
 	return r, rlen, RuneVisualLength(r)
 }
 
@@ -168,7 +168,7 @@ func (c *Cursor) OnFirstLine() bool{
 }
 
 func (c *Cursor) OnLastLine() bool {
-	return c.l == len(c.t)-1
+	return c.l == len(c.t.lines)-1
 }
 
 func (c *Cursor) AtBof() bool {
@@ -285,7 +285,7 @@ func (c *Cursor) MoveBol() {
 	remain := c.LineDataUntilCursor()
 	allspace := true
 	for len(remain)>0 {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			allspace = false
@@ -301,7 +301,7 @@ func (c *Cursor) MoveBol() {
 	remain = c.LineData()
 	b := 0
         for len(remain)>0 {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			break
@@ -321,7 +321,7 @@ func (c *Cursor) MoveEol() {
 	remain := c.LineData()[:c.b+1] // we should use runelength instead of 1
 	allspace := true
 	for len(remain)>0 {
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			allspace = false
@@ -337,7 +337,7 @@ func (c *Cursor) MoveEol() {
 	remain = c.LineData()
 	b := 0
 	for len(remain)>0 { // will make this a function
-		r, rlen := utf8.DecodeRune(remain)
+		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
 			break
@@ -383,4 +383,36 @@ func (c *Cursor) MoveEof() {
 		c.MoveDown()
 	}
 	c.MoveEol()
+}
+
+func (c *Cursor) SplitLine() {
+	c.t.SplitLine(c.l, c.b)
+	c.MoveDown()
+	c.SetOffsets(0)
+}
+
+func (c *Cursor) Insert(r rune) {
+	c.t.Insert(r, c.l, c.b)
+}
+
+func (c *Cursor) Delete() {
+	if c.AtEof() {
+		return
+	}
+	remain := c.LineDataFromCursor()
+	if len(remain) == 0 {
+		// reach at end of line. join with bottom line.
+		c.t.lines = append(append(c.t.lines[:c.l], Line{c.LineData()+c.t.lines[c.l+1].data}), c.t.lines[c.l+2:]...)
+		return
+	}
+	_, rlen := utf8.DecodeRuneInString(remain)
+	c.t.Remove(c.l, c.b, c.b+rlen)
+}
+
+func (c *Cursor) Backspace() {
+	if c.AtBof() {
+		return
+	}
+	c.MoveLeft()
+	c.Delete()
 }
