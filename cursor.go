@@ -402,7 +402,7 @@ func (c *Cursor) Delete() {
 	remain := c.LineDataFromCursor()
 	if len(remain) == 0 {
 		// reach at end of line. join with bottom line.
-		c.t.lines = append(append(c.t.lines[:c.l], Line{c.LineData()+c.t.lines[c.l+1].data}), c.t.lines[c.l+2:]...)
+		c.t.JoinNextLine(c.l)
 		return
 	}
 	_, rlen := utf8.DecodeRuneInString(remain)
