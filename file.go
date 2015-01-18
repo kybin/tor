@@ -25,3 +25,15 @@ func open(f string) *Text {
 	}
 	return &Text{lines}
 }
+
+func save(f string, t *Text) error {
+	file, err := os.Create(extendFileName(f, "_tor"))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	for _, line := range t.lines {
+		file.WriteString(line.data+"\n")
+	}
+	return nil
+}

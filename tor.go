@@ -110,14 +110,14 @@ func main() {
 		win.Follow(cursor)
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
-		c := cursor.PositionInWindow(win)
-		status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, c.l, c.o, win.min.l, win.min.o, win.max.l, win.max.o)
+		// c := cursor.PositionInWindow(win)
+		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, c.l, c.o, win.min.l, win.min.o, win.max.l, win.max.o)
 		// if edit == true {
 		// 	status += " editing..."
 		// } else {
 		// 	status += " idle"
 		// }
-		printStatus(status)
+		// printStatus(status)
 		SetTermboxCursor(cursor, win, layout)
 		term.Flush()
 
@@ -132,6 +132,13 @@ func main() {
 					return
 				// case term.KeyCtrlC:
 					// copySelection()
+				case term.KeyCtrlS:
+					err := save(f, text)
+					if err != nil {
+						printStatus(fmt.Sprintf("%v", err))
+						continue
+					}
+					printStatus(fmt.Sprintf("successfully saved : %v", f))
 				case term.KeyArrowLeft:
 					cursor.MoveLeft()
 				case term.KeyArrowRight:
