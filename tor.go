@@ -194,8 +194,9 @@ func main() {
 						cursor.MoveEof()
 					}
 				}
-				// if selection.on {
-				// 	selection.SetEnd(cursor)
+				if selection.on {
+					selection.SetEnd(cursor)
+				}
 				// 	printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.o, selection.start.l, selection.end.o, selection.end.l))
 				// } else {
 				// 	printStatus("selection off")
