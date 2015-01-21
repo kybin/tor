@@ -150,9 +150,17 @@ func main() {
 				case term.KeyEnter:
 					cursor.SplitLine()
 				case term.KeyDelete:
-					cursor.Delete()
+					if selection.on {
+						cursor.DeleteSelection(selection)
+						continue
+					}
+					cursor.Delete(selection)
 				case term.KeyBackspace2:
-					cursor.Backspace()
+					if selection.on {
+						cursor.DeleteSelection(selection)
+						continue
+					}
+					cursor.Backspace(selection)
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
 					if withShift(ev.Ch) {

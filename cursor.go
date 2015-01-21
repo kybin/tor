@@ -395,7 +395,7 @@ func (c *Cursor) Insert(r rune) {
 	c.t.Insert(r, c.l, c.b)
 }
 
-func (c *Cursor) Delete() {
+func (c *Cursor) Delete(sel *Selection) {
 	if c.AtEof() {
 		return
 	}
@@ -409,10 +409,15 @@ func (c *Cursor) Delete() {
 	c.t.Remove(c.l, c.b, c.b+rlen)
 }
 
-func (c *Cursor) Backspace() {
+func (c *Cursor) Backspace(sel *Selection) {
 	if c.AtBof() {
 		return
 	}
 	c.MoveLeft()
-	c.Delete()
+	c.Delete(sel)
+}
+
+func (c *Cursor) DeleteSelection(sel *Selection) {
+	min, max := sel.MinMax()
+	c.t.RemoveRange(min, max)
 }
