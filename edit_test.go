@@ -57,6 +57,16 @@ func TestRemoveRange(t *testing.T) {
 				Line{"Lines is a slice of bytes."},
 			}},
 		},
+		{
+			Text{[]Line{
+		        Line{"		for o := viewer.min.o ; o < viewer.max.o ; o++ {"},
+				Line{"			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)"},
+			}},
+			Point{0, BFromC("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17)}, Point{1, BFromC("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19)},
+			Text{[]Line{
+				Line{"		for o := (l, o, ' ', term.ColorDefault, term.ColorDefault)"},
+			}},
+		},
 	}
 	for _, c := range cases {
 		in := c.in
@@ -69,7 +79,7 @@ func TestRemoveRange(t *testing.T) {
 		for i, gotl := range c.in.lines {
 			wantl = c.want.lines[i]
 			if gotl.data != wantl.data {
-				t.Errorf("%v.RemoveRange(%v, %v) == %q, want %q", in, c.min, c.max, got, c.want)
+				t.Errorf("%q.RemoveRange(%v, %v) == %q, want %q", in, c.min, c.max, got, c.want)
 			}
 		}
 	}

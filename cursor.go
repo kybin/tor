@@ -93,6 +93,17 @@ func (c *Cursor) BFromC(o int) (b int) {
 	return
 }
 
+func BFromC(line string, o int) (b int) {
+	remain := line
+	for o>0 {
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		b+= rlen
+		o-= RuneVisualLength(r)
+	}
+	return
+}
+
 func (c *Cursor) VFromB(b int) (v int){
 	remain := c.LineData()[:b]
 	for len(remain) > 0 {
@@ -419,5 +430,9 @@ func (c *Cursor) Backspace(sel *Selection) {
 
 func (c *Cursor) DeleteSelection(sel *Selection) {
 	min, max := sel.MinMax()
-	c.t.RemoveRange(min, max)
+	bmin := Point{min.l, BFromC(c.t.lines[min.l].data, min.o)}
+	bmax := Point{max.l, BFromC(c.t.lines[max.l].data, max.o)}
+	c.t.RemoveRange(bmin, bmax)
+	c.l = min.l
+	c.SetOffsets(bmin.o)
 }

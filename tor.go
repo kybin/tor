@@ -127,6 +127,10 @@ func main() {
 			edit = true
 			switch ev.Type {
 			case term.EventKey:
+				// on every key input, we should determine we need to keep selection.
+				// all key with SHIFT will keep selection.
+				keepSelection := false
+
 				switch ev.Key {
 				case term.KeyCtrlW:
 					return
@@ -152,26 +156,23 @@ func main() {
 				case term.KeyDelete:
 					if selection.on {
 						cursor.DeleteSelection(selection)
-						continue
+					} else {
+						cursor.Delete(selection)
 					}
-					cursor.Delete(selection)
 				case term.KeyBackspace2:
 					if selection.on {
 						cursor.DeleteSelection(selection)
-						continue
+					} else {
+						cursor.Backspace(selection)
 					}
-					cursor.Backspace(selection)
 				}
 				if (ev.Mod&term.ModAlt) != 0 {
 					if withShift(ev.Ch) {
 						if !selection.on {
 							selection.on = true
 							selection.SetStart(cursor)
-						} else {
-							// already on selection. do nothing.
 						}
-					} else {
-						selection.on = false
+						keepSelection = true
 					}
 					switch ev.Ch {
 					// if character pressed with shift
@@ -202,13 +203,15 @@ func main() {
 						cursor.MoveEof()
 					}
 				}
-				if selection.on {
-					selection.SetEnd(cursor)
-				}
-				// 	printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.o, selection.start.l, selection.end.o, selection.end.l))
-				// } else {
-				// 	printStatus("selection off")
-				// }
+			if !keepSelection {
+				selection.on = false
+			}
+			if selection.on {
+				selection.SetEnd(cursor)
+				printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
+			} else {
+				printStatus("selection off")
+			}
 			}
 		case <-time.After(time.Second):
 			// OK. It's idle time. We should check if any edit applied on contents.
