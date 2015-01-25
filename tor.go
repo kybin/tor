@@ -211,15 +211,15 @@ func main() {
 					} else {
 						cursor.Insert(ev.Ch)
 					}
-					if !keepSelection {
-						selection.on = false
-					}
-					if selection.on {
-						selection.SetEnd(cursor)
-						printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
-					} else {
-						printStatus("selection off")
-					}
+				}
+				if !keepSelection {
+					selection.on = false
+				}
+				if selection.on {
+					selection.SetEnd(cursor)
+					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
+				} else {
+					printStatus("selection off")
 				}
 			}
 		case <-time.After(time.Second):
