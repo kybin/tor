@@ -159,6 +159,8 @@ func main() {
 					cursor.MoveDown()
 				case term.KeyEnter:
 					cursor.SplitLine()
+				case term.KeyTab:
+					cursor.Insert('\t')
 				case term.KeyDelete:
 					if selection.on {
 						cursor.DeleteSelection(selection)
