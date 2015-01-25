@@ -165,53 +165,56 @@ func main() {
 					} else {
 						cursor.Backspace(selection)
 					}
-				}
-				if (ev.Mod&term.ModAlt) != 0 {
-					if withShift(ev.Ch) {
-						if !selection.on {
-							selection.on = true
-							selection.SetStart(cursor)
+				default:
+					if (ev.Mod&term.ModAlt) != 0 {
+						if withShift(ev.Ch) {
+							if !selection.on {
+								selection.on = true
+								selection.SetStart(cursor)
+							}
+							keepSelection = true
 						}
-						keepSelection = true
+						switch ev.Ch {
+						// if character pressed with shift
+						// we will enable cursor selection.
+						case 'j', 'J':
+							cursor.MoveLeft()
+						case 'l', 'L':
+							cursor.MoveRight()
+						case 'i', 'I':
+							cursor.MoveUp()
+						case 'k', 'K':
+							cursor.MoveDown()
+						case 'm', 'M':
+							cursor.MoveBow()
+						case '.', '>':
+							cursor.MoveEow()
+						case 'u', 'U':
+							cursor.MoveBol()
+						case 'o', 'O':
+							cursor.MoveEol()
+						case 'h', 'H':
+							cursor.PageUp()
+						case 'n', 'N':
+							cursor.PageDown()
+						case 'a', 'A':
+							cursor.MoveBof()
+						case 'z', 'Z':
+							cursor.MoveEof()
+						}
+					} else {
+						cursor.Insert(ev.Ch)
 					}
-					switch ev.Ch {
-					// if character pressed with shift
-					// we will enable cursor selection.
-					case 'j', 'J':
-						cursor.MoveLeft()
-					case 'l', 'L':
-						cursor.MoveRight()
-					case 'i', 'I':
-						cursor.MoveUp()
-					case 'k', 'K':
-						cursor.MoveDown()
-					case 'm', 'M':
-						cursor.MoveBow()
-					case '.', '>':
-						cursor.MoveEow()
-					case 'u', 'U':
-						cursor.MoveBol()
-					case 'o', 'O':
-						cursor.MoveEol()
-					case 'h', 'H':
-						cursor.PageUp()
-					case 'n', 'N':
-						cursor.PageDown()
-					case 'a', 'A':
-						cursor.MoveBof()
-					case 'z', 'Z':
-						cursor.MoveEof()
+					if !keepSelection {
+						selection.on = false
+					}
+					if selection.on {
+						selection.SetEnd(cursor)
+						printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
+					} else {
+						printStatus("selection off")
 					}
 				}
-			if !keepSelection {
-				selection.on = false
-			}
-			if selection.on {
-				selection.SetEnd(cursor)
-				printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
-			} else {
-				printStatus("selection off")
-			}
 			}
 		case <-time.After(time.Second):
 			// OK. It's idle time. We should check if any edit applied on contents.

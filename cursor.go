@@ -404,6 +404,7 @@ func (c *Cursor) SplitLine() {
 
 func (c *Cursor) Insert(r rune) {
 	c.t.Insert(r, c.l, c.b)
+	c.MoveRight()
 }
 
 func (c *Cursor) Delete(sel *Selection) {
