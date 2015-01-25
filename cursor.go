@@ -292,26 +292,9 @@ func (c *Cursor) MoveBol() {
 		return
 	}
 
-	// if  prev data is all spaces, move cursor to beginning of line
-	remain := c.LineDataUntilCursor()
-	allspace := true
+	remain := c.LineData()
+	b := 0 // where line contents start
 	for len(remain)>0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		if !unicode.IsSpace(r) {
-			allspace = false
-			break
-		}
-	}
-	if allspace {
-		c.SetOffsets(0)
-		return
-	}
-
-	// or, move cursor to first character of text on line.
-	remain = c.LineData()
-	b := 0
-        for len(remain)>0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
@@ -319,7 +302,11 @@ func (c *Cursor) MoveBol() {
 		}
 		b += rlen
 	}
-	c.SetOffsets(b)
+	if c.b > b {
+		c.SetOffsets(b)
+		return
+	}
+	c.SetOffsets(0)
 }
 
 func (c *Cursor) MoveEol() {
@@ -328,34 +315,21 @@ func (c *Cursor) MoveEol() {
 		c.MoveDown()
 	}
 
-	// if  prev data is not all spaces move cursor to eol.
-	remain := c.LineData()[:c.b+1] // we should use runelength instead of 1
-	allspace := true
+	remain := c.LineData()
+	b := 0 // where line contents start
 	for len(remain)>0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		if !unicode.IsSpace(r) {
-			allspace = false
 			break
 		}
+		b += rlen
 	}
-	if !allspace {
-		c.SetOffsets(c.LineByteLength())
+	if c.b < b {
+		c.SetOffsets(b)
 		return
 	}
-
-	// or, move it to first chararacter of text on line.
-	remain = c.LineData()
-	b := 0
-	for len(remain)>0 { // will make this a function
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		if !unicode.IsSpace(r) {
-			break
-		}
-		b +=rlen
-	}
-	c.SetOffsets(b)
+	c.SetOffsets(c.LineByteLength())
 }
 
 func (c *Cursor) PageUp() {
