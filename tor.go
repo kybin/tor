@@ -16,6 +16,12 @@ func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, ch, fg, bg)
 }
 
+func SetTermboxCursor(c *Cursor, w *Window, l *Layout) {
+	view := l.MainViewerBound()
+	p := c.PositionInWindow(w)
+	SetCursor(view.min.l+p.l, view.min.o+p.o)
+}
+
 func clearScreen(l *Layout) {
 	viewer := l.MainViewerBound()
 	for l := viewer.min.l ; l < viewer.max.l ; l++ {

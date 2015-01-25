@@ -32,12 +32,6 @@ func NewCursor(t *Text) *Cursor {
 	return &Cursor{0, 0, 0, 0, t}
 }
 
-func SetTermboxCursor(c *Cursor, w *Window, l *Layout) {
-	view := l.MainViewerBound()
-	p := c.PositionInWindow(w)
-	SetCursor(view.min.l+p.l, view.min.o+p.o)
-}
-
 func (c *Cursor) SetOffsets(b int) {
 	c.b = b
 	c.v = c.VFromB(b)
