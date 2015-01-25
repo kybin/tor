@@ -163,13 +163,13 @@ func main() {
 					if selection.on {
 						cursor.DeleteSelection(selection)
 					} else {
-						cursor.Delete(selection)
+						cursor.Delete()
 					}
 				case term.KeyBackspace2:
 					if selection.on {
 						cursor.DeleteSelection(selection)
 					} else {
-						cursor.Backspace(selection)
+						cursor.Backspace()
 					}
 				default:
 					if (ev.Mod&term.ModAlt) != 0 {

@@ -375,26 +375,24 @@ func (c *Cursor) Insert(r rune) {
 	c.MoveRight()
 }
 
-func (c *Cursor) Delete(sel *Selection) {
+func (c *Cursor) Delete() {
 	if c.AtEof() {
 		return
 	}
-	remain := c.LineDataFromCursor()
-	if len(remain) == 0 {
-		// reach at end of line. join with bottom line.
+	if c.AtEol() {
 		c.t.JoinNextLine(c.l)
 		return
 	}
-	_, rlen := utf8.DecodeRuneInString(remain)
+	_, rlen := c.RuneAfter()
 	c.t.Remove(c.l, c.b, c.b+rlen)
 }
 
-func (c *Cursor) Backspace(sel *Selection) {
+func (c *Cursor) Backspace() {
 	if c.AtBof() {
 		return
 	}
 	c.MoveLeft()
-	c.Delete(sel)
+	c.Delete()
 }
 
 func (c *Cursor) DeleteSelection(sel *Selection) {
