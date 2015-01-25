@@ -133,14 +133,12 @@ func (c *Cursor) ExceededLineLimit() bool {
 	return c.b > len(c.LineData())
 }
 
-func (c *Cursor) RuneAfter() (rune, int, int) {
-	r, rlen := utf8.DecodeRuneInString(c.LineData()[c.b:])
-	return r, rlen, RuneVisualLength(r)
+func (c *Cursor) RuneAfter() (rune, int) {
+	return utf8.DecodeRuneInString(c.LineData()[c.b:])
 }
 
-func (c *Cursor) RuneBefore() (rune, int, int) {
-	r, rlen := utf8.DecodeLastRuneInString(c.LineData()[:c.b])
-	return r, rlen, RuneVisualLength(r)
+func (c *Cursor) RuneBefore() (rune, int) {
+	return utf8.DecodeLastRuneInString(c.LineData()[:c.b])
 }
 
 // should refine after
@@ -192,7 +190,8 @@ func (c *Cursor) MoveLeft() {
 		c.SetOffsets(c.LineByteLength())
 		return
 	}
-	_, rlen, vlen := c.RuneBefore()
+	r, rlen := c.RuneBefore()
+	vlen := RuneVisualLength(r)
 	c.ShiftOffsets(-rlen, -vlen)
 }
 
@@ -204,7 +203,8 @@ func (c *Cursor) MoveRight() {
 		c.SetOffsets(0)
 		return
 	}
-	_, rlen, vlen := c.RuneAfter()
+	r, rlen := c.RuneAfter()
+	vlen := RuneVisualLength(r)
 	c.ShiftOffsets(rlen, vlen)
 }
 
@@ -230,7 +230,7 @@ func (c *Cursor) MoveBow() {
 	}
 	// First we should pass every space character.
 	for {
-		r, _, _ := c.RuneBefore()
+		r, _ := c.RuneBefore()
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			break
 		}
@@ -241,7 +241,7 @@ func (c *Cursor) MoveBow() {
 	}
 	// Then we will find first space charactor and stop.
 	for {
-		r, _, _ := c.RuneBefore()
+		r, _ := c.RuneBefore()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
 			return
 		}
@@ -258,7 +258,7 @@ func (c *Cursor) MoveEow() {
 		return
 	}
 	for {
-		r, _, _ := c.RuneAfter()
+		r, _ := c.RuneAfter()
 		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			break
 		}
@@ -268,7 +268,7 @@ func (c *Cursor) MoveEow() {
 		}
 	}
 	for {
-		r, _, _ := c.RuneAfter()
+		r, _ := c.RuneAfter()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
 			return
 		}
