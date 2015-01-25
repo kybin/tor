@@ -305,7 +305,7 @@ func (c *Cursor) MoveBol() {
 
 func (c *Cursor) MoveEol() {
 	// if already eol, move to next line
-	if c.b == len(c.LineData()) && !c.OnLastLine() {
+	if c.AtEol() && !c.OnLastLine() {
 		c.MoveDown()
 	}
 
