@@ -1,4 +1,4 @@
+Better status print.
 Logger for tor. Without this, it is hard to find what is an error.
-Fix a bug in moveBol,Eol introduced unknown-time.
 Offset changers for other than cursor line.
 
