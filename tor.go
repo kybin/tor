@@ -164,6 +164,8 @@ func main() {
 					cursor.MoveDown()
 				case term.KeyEnter:
 					cursor.SplitLine()
+				case term.KeySpace:
+					cursor.Insert(' ')
 				case term.KeyTab:
 					cursor.Insert('\t')
 				case term.KeyDelete:
