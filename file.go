@@ -3,13 +3,20 @@ package main
 import (
 	"bufio"
 	"os"
-	"log"
+	// "log"
 )
 
-func open(f string) *Text {
+func open(f string) (*Text, error) {
+	ex, err := exists(f)
+	if err != nil {
+		return nil, err
+	}
+	if !ex {
+		return &Text{lines:[]Line{Line{data:""}}}, nil
+	}
 	file, err := os.Open(f)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 	defer file.Close()
 
@@ -21,13 +28,13 @@ func open(f string) *Text {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
-	return &Text{lines}
+	return &Text{lines}, nil
 }
 
 func save(f string, t *Text) error {
-	file, err := os.Create(extendFileName(f, "_tor"))
+	file, err := os.Create(f)
 	if err != nil {
 		return err
 	}
@@ -36,4 +43,12 @@ func save(f string, t *Text) error {
 		file.WriteString(line.data+"\n")
 	}
 	return nil
+}
+
+// exists returns whether the given file or directory exists or not
+func exists(path string) (bool, error) {
+    _, err := os.Stat(path)
+    if err == nil { return true, nil }
+    if os.IsNotExist(err) { return false, nil }
+    return false, err
 }

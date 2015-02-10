@@ -86,7 +86,13 @@ func main() {
 	}
 	f := args[0]
 
-	err := term.Init()
+	text, err := open(f)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = term.Init()
 	if err != nil {
 		panic(err)
 	}
@@ -95,7 +101,6 @@ func main() {
 	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 
-	text := open(f)
 
 	layout := NewLayout()
 	mainview := layout.MainViewerBound()
