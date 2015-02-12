@@ -76,7 +76,6 @@ func printStatus(status string) {
 	}
 }
 
-
 func main() {
 	// check there is an destination file. ex)tor some.file
 	args := os.Args[1:]
@@ -111,6 +110,8 @@ func main() {
 	SetCursor(mainview.min.l, mainview.min.o)
 
 	edit := false
+	status := ""
+	holdStatus := false
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -121,14 +122,17 @@ func main() {
 		win.Follow(cursor)
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
-		// c := cursor.PositionInWindow(win)
-		// status := fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, cpos:(%v,%v), vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, c.l, c.o, win.min.l, win.min.o, win.max.l, win.max.o)
-		// if edit == true {
-		// 	status += " editing..."
-		// } else {
-		// 	status += " idle"
-		// }
-		// printStatus(status)
+
+		if !holdStatus {
+			if selection.on {
+				status = "selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o)
+			} else {
+				status = fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, win.min.l, win.min.o, win.max.l, win.max.o)
+			}
+		}
+		printStatus(status)
+		holdStatus = false
+
 		SetTermboxCursor(cursor, win, layout)
 		term.Flush()
 
@@ -150,10 +154,12 @@ func main() {
 				case term.KeyCtrlS:
 					err := save(f, text)
 					if err != nil {
-						printStatus(fmt.Sprintf("%v", err))
+						status = fmt.Sprintf("%v", err)
+						holdStatus = true
 						continue
 					}
-					printStatus(fmt.Sprintf("successfully saved : %v", f))
+					status = fmt.Sprintf("successfully saved : %v", f)
+					holdStatus = true
 				case term.KeyArrowLeft:
 					cursor.MoveLeft()
 				case term.KeyArrowRight:
@@ -226,12 +232,10 @@ func main() {
 				}
 				if selection.on {
 					selection.SetEnd(cursor)
-					printStatus("selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o))
-				} else {
-					printStatus("selection off")
 				}
 			}
 		case <-time.After(time.Second):
+			holdStatus = true
 			// OK. It's idle time. We should check if any edit applied on contents.
 			if edit == true {
 				// remember the action. (or difference)
