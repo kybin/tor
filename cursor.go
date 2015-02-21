@@ -375,31 +375,33 @@ func (c *Cursor) Insert(r rune) {
 	c.MoveRight()
 }
 
-func (c *Cursor) Delete() {
+func (c *Cursor) Delete() string {
 	if c.AtEof() {
-		return
+		return ""
 	}
 	if c.AtEol() {
 		c.t.JoinNextLine(c.l)
-		return
+		return "\n"
 	}
 	_, rlen := c.RuneAfter()
-	c.t.Remove(c.l, c.b, c.b+rlen)
+	return c.t.Remove(c.l, c.b, c.b+rlen)
 }
 
-func (c *Cursor) Backspace() {
+func (c *Cursor) Backspace() string {
 	if c.AtBof() {
-		return
+		return ""
 	}
 	c.MoveLeft()
-	c.Delete()
+	return c.Delete()
 }
 
-func (c *Cursor) DeleteSelection(sel *Selection) {
+func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
 	bmin := Point{min.l, BFromC(c.t.lines[min.l].data, min.o)}
 	bmax := Point{max.l, BFromC(c.t.lines[max.l].data, max.o)}
-	c.t.RemoveRange(bmin, bmax)
+	// TODO : should get deleted strings from RemoveRange
+	deleted := c.t.RemoveRange(bmin, bmax)
 	c.l = min.l
 	c.SetOffsets(bmin.o)
+	return deleted
 }
