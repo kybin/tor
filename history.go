@@ -1,14 +1,22 @@
 package main
 
 import (
+	"fmt"
 	"errors"
+	"strconv"
 )
 
 type Action struct {
 	kind string
 	value string
-	beforeCursor string
-	afterCursor string
+	beforeCursor Cursor
+	afterCursor Cursor
+}
+
+func (a Action) String() string {
+	bc := strconv.Itoa(a.beforeCursor.l)+":"+strconv.Itoa(a.beforeCursor.b)
+	ac := strconv.Itoa(a.afterCursor.l)+":"+strconv.Itoa(a.afterCursor.b)
+	return fmt.Sprintf("%v, %v, %v, %v", a.kind, a.value, bc, ac)
 }
 
 type History struct {

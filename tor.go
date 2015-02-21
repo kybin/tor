@@ -6,7 +6,6 @@ import (
 	"time"
 	term "github.com/nsf/termbox-go"
 	"io/ioutil"
-	"strconv"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -185,15 +184,15 @@ func main() {
 					cursor.Insert('\t')
 				case term.KeyDelete:
 					if selection.on {
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						deleted := cursor.DeleteSelection(selection)
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
 					} else {
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						deletedBefore := ""
 						deletedNow := cursor.Delete()
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						lastAct := history.Last()
 						if lastAct != nil {
 							if lastAct.kind == "delete" {
@@ -207,15 +206,15 @@ func main() {
 					}
 				case term.KeyBackspace2:
 					if selection.on {
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						deleted := cursor.DeleteSelection(selection)
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
 					} else {
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						deletedBefore := ""
 						deletedNow := cursor.Backspace()
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						lastAct := history.Last()
 						if lastAct != nil {
 							if lastAct.kind == "delete" {
@@ -236,7 +235,7 @@ func main() {
 							}
 							keepSelection = true
 						}
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						switch ev.Ch {
 						// if character pressed with shift
 						// we will enable cursor selection.
@@ -265,7 +264,7 @@ func main() {
 						case 'z', 'Z':
 							cursor.MoveEof()
 						}
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						lastAct := history.Last()
 						if lastAct != nil {
 							if lastAct.kind == "move" {
@@ -275,10 +274,10 @@ func main() {
 						}
 						history.Add(&Action{"move", "", beforeCursor, afterCursor})
 					} else {
-						beforeCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						beforeCursor := *cursor
 						addedBefore := ""
 						cursor.Insert(ev.Ch)
-						afterCursor := strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)
+						afterCursor := *cursor
 						lastAct := history.Last()
 						if lastAct != nil {
 							if lastAct.kind == "add" {
@@ -301,14 +300,14 @@ func main() {
 			lastAct := history.Last()
 			if lastAct != nil {
 				if lastAct.kind != "idle" {
-					history.Add(&Action{"idle", "", strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b), strconv.Itoa(cursor.l)+":"+strconv.Itoa(cursor.b)})
+					history.Add(&Action{"idle", "", *cursor, *cursor})
 				}
 				historyFileString := ""
 				for i, a := range history.actions {
 					if i != 0 {
 						historyFileString += "\n"
 					}
-					historyFileString += fmt.Sprintf("%v, %v, %v, %v", a.kind, a.value, a.beforeCursor, a.afterCursor)
+					historyFileString += fmt.Sprintf("%v", a)
 				}
 				ioutil.WriteFile(extendFileName(f, ".history"), []byte(historyFileString), 0755)
 			}
