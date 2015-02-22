@@ -77,6 +77,161 @@ func printStatus(status string) {
 	}
 }
 
+// Move keys are...
+// KeyArrowLeft, KeyArrowRight, KeyArrowUp, KeyArrowDown, alt+(any character)
+func isMoveEvent(ev term.Event) bool {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyArrowLeft, term.KeyArrowRight, term.KeyArrowUp, term.KeyArrowDown:
+			return true
+		default:
+			if ev.Mod & term.ModAlt != 0 {
+				if ev.Ch == 0 {
+					return false
+				}
+				return true
+			}
+			return false
+		}
+	default:
+		return false
+	}
+}
+
+// Add keys are...
+// KeyEnter, KeySpace, KeyTab, (any character)
+func isAddEvent(ev term.Event) bool {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyEnter, term.KeySpace, term.KeyTab:
+			return true
+		default:
+			if ev.Mod & term.ModAlt != 0 {
+				return false
+			}
+			if ev.Ch == 0 {
+				return false
+			}
+			return true
+		}
+	default:
+		return false
+	}
+}
+
+// Delete keys are...
+// KeyDelete, KeyBackspace, KeyBackspace2
+func isDeleteEvent(ev term.Event) bool {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyDelete, term.KeyBackspace, term.KeyBackspace2:
+			return true
+		default:
+			return false
+		}
+	default:
+		return false
+	}
+}
+
+func handleMoveEvent(ev term.Event, cursor *Cursor) {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyArrowLeft:
+			cursor.MoveLeft()
+		case term.KeyArrowRight:
+			cursor.MoveRight()
+		case term.KeyArrowUp:
+			cursor.MoveUp()
+		case term.KeyArrowDown:
+			cursor.MoveDown()
+		default:
+			if ev.Mod & term.ModAlt != 0 {
+				switch ev.Ch {
+				case 'j', 'J':
+					cursor.MoveLeft()
+				case 'l', 'L':
+					cursor.MoveRight()
+				case 'i', 'I':
+					cursor.MoveUp()
+				case 'k', 'K':
+					cursor.MoveDown()
+				case 'm', 'M':
+					cursor.MoveBow()
+				case '.', '>':
+					cursor.MoveEow()
+				case 'u', 'U':
+					cursor.MoveBol()
+				case 'o', 'O':
+					cursor.MoveEol()
+				case 'h', 'H':
+					cursor.PageUp()
+				case 'n', 'N':
+					cursor.PageDown()
+				case 'a', 'A':
+					cursor.MoveBof()
+				case 'z', 'Z':
+					cursor.MoveEof()
+				}
+			}
+		}
+	}
+}
+
+func handleAddEvent(ev term.Event, cursor *Cursor) string {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyEnter:
+			cursor.SplitLine()
+			return "\n"
+		case term.KeySpace:
+			cursor.Insert(' ')
+			return " "
+		case term.KeyTab:
+			cursor.Insert('\t')
+			return "\t"
+		default:
+			if ev.Mod & term.ModAlt != 0 {
+				return ""
+			}
+			if ev.Ch == 0 {
+				return ""
+			}
+			cursor.Insert(ev.Ch)
+			return string(ev.Ch)
+		}
+	}
+	return ""
+}
+
+func handleDeleteEvent(ev term.Event, cursor *Cursor, selection *Selection) (string, string) {
+	switch ev.Type {
+	case term.EventKey:
+		switch ev.Key {
+		case term.KeyDelete:
+			if selection.on {
+				return cursor.DeleteSelection(selection), "right"
+			} else {
+				return cursor.Delete(), "right"
+			}
+		case term.KeyBackspace, term.KeyBackspace2:
+			if selection.on {
+				return cursor.DeleteSelection(selection), "right"
+			} else {
+				return cursor.Backspace(), "left"
+			}
+		}
+	}
+	return "", "right"
+}
+
+
+
 func main() {
 	// check there is an destination file. ex)tor some.file
 	args := os.Args[1:]
@@ -111,7 +266,6 @@ func main() {
 	history := History{actions:make([]*Action, 0)}
 	SetCursor(mainview.min.l, mainview.min.o)
 
-	edit := false
 	status := ""
 	holdStatus := false
 	events := make(chan term.Event, 20)
@@ -141,152 +295,89 @@ func main() {
 		// wait for keyboard input
 		select {
 		case ev := <-events:
-			edit = true
 			switch ev.Type {
 			case term.EventKey:
 				// on every key input, we should determine we need to keep selection.
 				// all key with SHIFT will keep selection.
 				keepSelection := false
 
-				switch ev.Key {
-				case term.KeyCtrlW:
-					return
-				// case term.KeyCtrlC:
-					// copySelection()
-				case term.KeyCtrlS:
-					err := save(f, text)
-					if err != nil {
-						status = fmt.Sprintf("%v", err)
+				if isMoveEvent(ev) {
+					if withShift(ev.Ch) {
+						if !selection.on {
+							selection.on = true
+							selection.SetStart(cursor)
+						}
+						keepSelection = true
+					}
+					beforeCursor := *cursor
+
+					handleMoveEvent(ev, cursor)
+
+					lastAct := history.Last()
+					if lastAct != nil {
+						if lastAct.kind == "move" {
+							history.RemoveLast()
+							beforeCursor = lastAct.beforeCursor
+						}
+					}
+					history.Add(&Action{kind:"move", value:"", beforeCursor:beforeCursor, afterCursor:*cursor})
+				} else if isAddEvent(ev) {
+					beforeCursor := *cursor
+					addedBefore := ""
+					addedNow := handleAddEvent(ev, cursor)
+					lastAct := history.Last()
+					if lastAct != nil {
+						if lastAct.kind == "add" {
+							history.RemoveLast()
+							addedBefore = lastAct.value
+							beforeCursor = lastAct.beforeCursor
+						}
+					}
+					history.Add(&Action{kind:"add", value:addedBefore+addedNow, beforeCursor:beforeCursor, afterCursor:*cursor})
+				} else if isDeleteEvent(ev) {
+					deletedBefore := ""
+					beforeCursor := *cursor
+					lastAct := history.Last()
+					if lastAct != nil {
+						if lastAct.kind == "delete" {
+							history.RemoveLast()
+							deletedBefore = lastAct.value
+							beforeCursor = lastAct.beforeCursor
+						}
+					}
+
+					deletedNow, side := handleDeleteEvent(ev, cursor, selection)
+
+					var deleted string
+					if side == "left" {
+						deleted = deletedNow + deletedBefore
+					} else {
+						deleted = deletedBefore + deletedNow
+					}
+					history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:*cursor})
+				} else {
+					switch ev.Key {
+					case term.KeyCtrlW:
+						return
+					// case term.KeyCtrlC:
+						// copySelection()
+					case term.KeyCtrlS:
+						err := save(f, text)
+						if err != nil {
+							status = fmt.Sprintf("%v", err)
+							holdStatus = true
+							continue
+						}
+						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
-						continue
-					}
-					status = fmt.Sprintf("successfully saved : %v", f)
-					holdStatus = true
-				// case term.KeyCtrlZ:
-				// 	err := undo()
-				// 	// no more undo err
-				// case term.KeyCtrlY:
-				// 	err := redo()
-				// 	// no more redo err
-				case term.KeyArrowLeft:
-					cursor.MoveLeft()
-				case term.KeyArrowRight:
-					cursor.MoveRight()
-				case term.KeyArrowUp:
-					cursor.MoveUp()
-				case term.KeyArrowDown:
-					cursor.MoveDown()
-				case term.KeyEnter:
-					cursor.SplitLine()
-				case term.KeySpace:
-					cursor.Insert(' ')
-				case term.KeyTab:
-					cursor.Insert('\t')
-				case term.KeyDelete:
-					if selection.on {
-						beforeCursor := *cursor
-						deleted := cursor.DeleteSelection(selection)
-						afterCursor := *cursor
-						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
-					} else {
-						beforeCursor := *cursor
-						deletedBefore := ""
-						deletedNow := cursor.Delete()
-						afterCursor := *cursor
-						lastAct := history.Last()
-						if lastAct != nil {
-							if lastAct.kind == "delete" {
-								history.RemoveLast()
-								deletedBefore = lastAct.value
-								beforeCursor = lastAct.beforeCursor
-							}
-						}
-						deleted := deletedBefore + deletedNow
-						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
-					}
-				case term.KeyBackspace2:
-					if selection.on {
-						beforeCursor := *cursor
-						deleted := cursor.DeleteSelection(selection)
-						afterCursor := *cursor
-						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
-					} else {
-						beforeCursor := *cursor
-						deletedBefore := ""
-						deletedNow := cursor.Backspace()
-						afterCursor := *cursor
-						lastAct := history.Last()
-						if lastAct != nil {
-							if lastAct.kind == "delete" {
-								history.RemoveLast()
-								deletedBefore = lastAct.value
-								beforeCursor = lastAct.beforeCursor
-							}
-						}
-						deleted := deletedNow + deletedBefore // note that it is different from term.Delete.
-						history.Add(&Action{kind:"delete", value:deleted, beforeCursor:beforeCursor, afterCursor:afterCursor})
-					}
-				default:
-					if (ev.Mod&term.ModAlt) != 0 {
-						if withShift(ev.Ch) {
-							if !selection.on {
-								selection.on = true
-								selection.SetStart(cursor)
-							}
-							keepSelection = true
-						}
-						beforeCursor := *cursor
-						switch ev.Ch {
-						// if character pressed with shift
-						// we will enable cursor selection.
-						case 'j', 'J':
-							cursor.MoveLeft()
-						case 'l', 'L':
-							cursor.MoveRight()
-						case 'i', 'I':
-							cursor.MoveUp()
-						case 'k', 'K':
-							cursor.MoveDown()
-						case 'm', 'M':
-							cursor.MoveBow()
-						case '.', '>':
-							cursor.MoveEow()
-						case 'u', 'U':
-							cursor.MoveBol()
-						case 'o', 'O':
-							cursor.MoveEol()
-						case 'h', 'H':
-							cursor.PageUp()
-						case 'n', 'N':
-							cursor.PageDown()
-						case 'a', 'A':
-							cursor.MoveBof()
-						case 'z', 'Z':
-							cursor.MoveEof()
-						}
-						afterCursor := *cursor
-						lastAct := history.Last()
-						if lastAct != nil {
-							if lastAct.kind == "move" {
-								history.RemoveLast()
-								beforeCursor = lastAct.beforeCursor
-							}
-						}
-						history.Add(&Action{"move", "", beforeCursor, afterCursor})
-					} else {
-						beforeCursor := *cursor
-						addedBefore := ""
-						cursor.Insert(ev.Ch)
-						afterCursor := *cursor
-						lastAct := history.Last()
-						if lastAct != nil {
-							if lastAct.kind == "add" {
-								history.RemoveLast()
-								addedBefore = lastAct.value
-								beforeCursor = lastAct.beforeCursor
-							}
-						}
-						history.Add(&Action{"add", addedBefore+string(ev.Ch), beforeCursor, afterCursor})
+					// case term.KeyCtrlZ:
+					// 	err := undo()
+					// 	// no more undo err
+					// case term.KeyCtrlY:
+					// 	err := redo()
+					// 	// no more redo err
+					default:
+						panic("what the")
 					}
 				}
 				if !keepSelection {
@@ -299,9 +390,6 @@ func main() {
 		case <-time.After(time.Second):
 			lastAct := history.Last()
 			if lastAct != nil {
-				if lastAct.kind != "idle" {
-					history.Add(&Action{"idle", "", *cursor, *cursor})
-				}
 				historyFileString := ""
 				for i, a := range history.actions {
 					if i != 0 {
@@ -312,11 +400,6 @@ func main() {
 				ioutil.WriteFile(extendFileName(f, ".history"), []byte(historyFileString), 0755)
 			}
 			holdStatus = true
-			// OK. It's idle time. We should check if any edit applied on contents.
-			if edit == true {
-				// remember the action. (or difference)
-			}
-			edit = false
 		// case term.EventResize:
 		//	win.resize()
 		//	win.clear()
