@@ -2,8 +2,8 @@ package main
 
 type Selection struct {
 	on bool
-	start Point
-	end Point
+	start Cursor
+	end Cursor
 }
 
 func NewSelection() *Selection {
@@ -11,14 +11,14 @@ func NewSelection() *Selection {
 }
 
 func (s *Selection) SetStart(c *Cursor) {
-	s.start = c.Position()
+	s.start = *c
 }
 
 func (s *Selection) SetEnd(c *Cursor) {
-	s.end = c.Position()
+	s.end = *c
 }
 
-func (s *Selection) MinMax() (Point, Point) {
+func (s *Selection) MinMax() (Cursor, Cursor) {
 	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
 		return s.end, s.start
 	}

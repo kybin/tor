@@ -20,7 +20,27 @@ func (a Action) String() string {
 }
 
 type History struct {
+	head int
 	actions []*Action
+}
+
+func newHistory() *History{
+	return &History{
+		head:0,
+		actions:make([]*Action, 0),
+	}
+}
+
+func (h *History) Cut(to int) {
+	h.actions = h.actions[:to]
+}
+
+func (h *History) Len() int {
+	return len(h.actions)
+}
+
+func (h *History) At(i int) *Action {
+	return h.actions[i]
 }
 
 func (h *History) Last() *Action {

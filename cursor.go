@@ -32,6 +32,13 @@ func NewCursor(t *Text) *Cursor {
 	return &Cursor{0, 0, 0, 0, t}
 }
 
+func (c *Cursor) Copy(c2 Cursor) {
+	c.l = c2.l
+	c.o = c2.o
+	c.v = c2.v
+	c.b = c2.b
+}
+
 func (c *Cursor) SetOffsets(b int) {
 	c.b = b
 	c.v = c.VFromB(b)
@@ -371,6 +378,10 @@ func (c *Cursor) SplitLine() {
 }
 
 func (c *Cursor) Insert(r rune) {
+	if r == '\n' {
+		c.SplitLine()
+		return
+	}
 	c.t.Insert(r, c.l, c.b)
 	c.MoveRight()
 }
