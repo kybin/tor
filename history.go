@@ -31,8 +31,12 @@ func newHistory() *History{
 	}
 }
 
-func (h *History) Cut(to int) {
+// It will cut history and return how many were cut.
+func (h *History) Cut(to int) int {
+	oldlen := len(h.actions)
 	h.actions = h.actions[:to]
+	newlen := len(h.actions)
+	return oldlen - newlen
 }
 
 func (h *History) Len() int {

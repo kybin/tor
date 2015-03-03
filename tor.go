@@ -77,159 +77,200 @@ func printStatus(status string) {
 	}
 }
 
-// Move keys are...
-// KeyArrowLeft, KeyArrowRight, KeyArrowUp, KeyArrowDown, alt+(any character)
-func isMoveEvent(ev term.Event) bool {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyArrowLeft, term.KeyArrowRight, term.KeyArrowUp, term.KeyArrowDown:
-			return true
-		default:
-			if ev.Mod & term.ModAlt != 0 {
-				if ev.Ch == 0 {
-					return false
-				}
-				return true
+func parseEvent(ev term.Event, sel *Selection) []*Action {
+	if ev.Type != term.EventKey {
+		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
+	}
+
+	switch ev.Key {
+	case term.KeyCtrlW:
+		return []*Action{&Action{kind:"exit"}}
+	case term.KeyCtrlS:
+		return []*Action{&Action{kind:"save"}}
+	// move
+	case term.KeyArrowLeft:
+		return []*Action{&Action{kind:"move", value:"left"}}
+	case term.KeyArrowRight:
+		return []*Action{&Action{kind:"move", value:"right"}}
+	case term.KeyArrowUp:
+		return []*Action{&Action{kind:"move", value:"up"}}
+	case term.KeyArrowDown:
+		return []*Action{&Action{kind:"move", value:"down"}}
+	// insert
+	case term.KeyEnter:
+		return []*Action{&Action{kind:"insert", value:"\n"}}
+	case term.KeySpace:
+		return []*Action{&Action{kind:"insert", value:" "}}
+	case term.KeyTab:
+		return []*Action{&Action{kind:"insert", value:"\t"}}
+	// delete : value will added after actual deletion.
+	case term.KeyDelete:
+		if sel.on {
+			return []*Action{&Action{kind:"deleteSelection"}}
+		} else {
+			return []*Action{&Action{kind:"delete"}}
+		}
+	case term.KeyBackspace, term.KeyBackspace2:
+		if sel.on {
+			return []*Action{&Action{kind:"deleteSelection"}}
+		} else {
+			return []*Action{&Action{kind:"backspace"}}
+		}
+	case term.KeyCtrlZ:
+		return []*Action{&Action{kind:"undo"}}
+	case term.KeyCtrlY:
+		return []*Action{&Action{kind:"redo"}}
+	default:
+		if ev.Ch == 0 {
+			return []*Action{&Action{kind:"unknown"}}
+		}
+		if ev.Mod & term.ModAlt != 0 {
+			kind := "move"
+			if withShift(ev.Ch) {
+				kind = "select"
 			}
-			return false
+			switch ev.Ch {
+			case 'j', 'J':
+				return []*Action{&Action{kind:kind, value:"left"}}
+			case 'l', 'L':
+				return []*Action{&Action{kind:kind, value:"right"}}
+			case 'i', 'I':
+				return []*Action{&Action{kind:kind, value:"up"}}
+			case 'k', 'K':
+				return []*Action{&Action{kind:kind, value:"down"}}
+			case 'm', 'M':
+				return []*Action{&Action{kind:kind, value:"bow"}}
+			case '.', '>':
+				return []*Action{&Action{kind:kind, value:"eow"}}
+			case 'u', 'U':
+				return []*Action{&Action{kind:kind, value:"bol"}}
+			case 'o', 'O':
+				return []*Action{&Action{kind:kind, value:"eol"}}
+			case 'h', 'H':
+				return []*Action{&Action{kind:kind, value:"pageup"}}
+			case 'n', 'N':
+				return []*Action{&Action{kind:kind, value:"pagedown"}}
+			case 'a', 'A':
+				return []*Action{&Action{kind:kind, value:"bof"}}
+			case 'z', 'Z':
+				return []*Action{&Action{kind:kind, value:"eof"}}
+			default:
+				return []*Action{&Action{kind:"none"}}
+			}
+		}
+		return []*Action{&Action{kind:"insert", value:string(ev.Ch)}}
+	}
+}
+
+func do(a *Action, c *Cursor, sel *Selection, history *History) {
+	if a.kind != "select" {
+		sel.on=false
+	}
+	switch a.kind {
+	case "none":
+		return
+	case "move", "select":
+		if a.kind == "select" && !sel.on {
+			sel.on = true
+			sel.SetStart(c)
+		}
+		switch a.value {
+		case "left":
+			c.MoveLeft()
+		case "right":
+			c.MoveRight()
+		case "up":
+			c.MoveUp()
+		case "down":
+			c.MoveDown()
+		case "bow":
+			c.MoveBow()
+		case "eow":
+			c.MoveEow()
+		case "bol":
+			c.MoveBol()
+		case "eol":
+			c.MoveEol()
+		case "pageup":
+			c.PageUp()
+		case "pagedown":
+			c.PageDown()
+		case "bof":
+			c.MoveBof()
+		case "eof":
+			c.MoveEof()
+		default:
+			panic(fmt.Sprintln("what the..", a.value, "move?"))
+		}
+		if a.kind == "select" {
+				sel.SetEnd(c)
+		}
+	case "insert":
+		c.Insert(a.value)
+	case "delete":
+		a.value = c.Delete()
+	case "backspace":
+		a.value = c.Backspace()
+	case "deleteSelection":
+		a.value = c.DeleteSelection(sel)
+	case "undo":
+		if history.head == 0 {
+			return
+		}
+		history.head--
+		action := history.At(history.head)
+		// status = fmt.Sprintf("undo : %v", action)
+		// holdStatus = true
+		switch action.kind {
+		case "insert":
+			c.Copy(action.afterCursor)
+			for range action.value {
+				c.Backspace()
+			}
+		case "backspace":
+			c.Copy(action.afterCursor)
+			for _, r := range action.value {
+				c.Insert(string(r))
+			}
+		case "delete", "deleteSelection":
+			c.Copy(action.afterCursor)
+			for _, r := range action.value {
+				c.Insert(string(r))
+			}
+		default:
+			panic(fmt.Sprintln("what the..", action.kind, "history?"))
+		}
+	case "redo":
+		if history.head == history.Len() {
+			return
+		}
+		action := history.At(history.head)
+		// status = fmt.Sprintf("redo : %v", action)
+		// holdStatus = true
+		history.head++
+		switch action.kind {
+		case "insert":
+			c.Copy(action.beforeCursor)
+			for _, r := range action.value {
+				c.Insert(string(r))
+			}
+		case "backspace":
+			c.Copy(action.beforeCursor)
+			for range action.value {
+				c.Backspace()
+			}
+		case "delete", "deleteSelection":
+			c.Copy(action.beforeCursor)
+			for range action.value {
+				c.Delete()
+			}
+		default:
+			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
 	default:
-		return false
+		panic(fmt.Sprintln("what the..", a.kind, "action?"))
 	}
 }
-
-// Add keys are...
-// KeyEnter, KeySpace, KeyTab, (any character)
-func isAddEvent(ev term.Event) bool {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyEnter, term.KeySpace, term.KeyTab:
-			return true
-		default:
-			if ev.Mod & term.ModAlt != 0 {
-				return false
-			}
-			if ev.Ch == 0 {
-				return false
-			}
-			return true
-		}
-	default:
-		return false
-	}
-}
-
-// Delete keys are...
-// KeyDelete, KeyBackspace, KeyBackspace2
-func isDeleteEvent(ev term.Event) bool {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyDelete, term.KeyBackspace, term.KeyBackspace2:
-			return true
-		default:
-			return false
-		}
-	default:
-		return false
-	}
-}
-
-func handleMoveEvent(ev term.Event, cursor *Cursor) {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyArrowLeft:
-			cursor.MoveLeft()
-		case term.KeyArrowRight:
-			cursor.MoveRight()
-		case term.KeyArrowUp:
-			cursor.MoveUp()
-		case term.KeyArrowDown:
-			cursor.MoveDown()
-		default:
-			if ev.Mod & term.ModAlt != 0 {
-				switch ev.Ch {
-				case 'j', 'J':
-					cursor.MoveLeft()
-				case 'l', 'L':
-					cursor.MoveRight()
-				case 'i', 'I':
-					cursor.MoveUp()
-				case 'k', 'K':
-					cursor.MoveDown()
-				case 'm', 'M':
-					cursor.MoveBow()
-				case '.', '>':
-					cursor.MoveEow()
-				case 'u', 'U':
-					cursor.MoveBol()
-				case 'o', 'O':
-					cursor.MoveEol()
-				case 'h', 'H':
-					cursor.PageUp()
-				case 'n', 'N':
-					cursor.PageDown()
-				case 'a', 'A':
-					cursor.MoveBof()
-				case 'z', 'Z':
-					cursor.MoveEof()
-				}
-			}
-		}
-	}
-}
-
-func handleAddEvent(ev term.Event, cursor *Cursor) string {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyEnter:
-			cursor.SplitLine()
-			return "\n"
-		case term.KeySpace:
-			cursor.Insert(' ')
-			return " "
-		case term.KeyTab:
-			cursor.Insert('\t')
-			return "\t"
-		default:
-			if ev.Mod & term.ModAlt != 0 {
-				return ""
-			}
-			if ev.Ch == 0 {
-				return ""
-			}
-			cursor.Insert(ev.Ch)
-			return string(ev.Ch)
-		}
-	}
-	return ""
-}
-
-func handleDeleteEvent(ev term.Event, cursor *Cursor, selection *Selection) (string, string) {
-	switch ev.Type {
-	case term.EventKey:
-		switch ev.Key {
-		case term.KeyDelete:
-			if selection.on {
-				return cursor.DeleteSelection(selection), "deleteSelection"
-			} else {
-				return cursor.Delete(), "delete"
-			}
-		case term.KeyBackspace, term.KeyBackspace2:
-			if selection.on {
-				return cursor.DeleteSelection(selection), "deleteSelection"
-			} else {
-				return cursor.Backspace(), "backspace"
-			}
-		}
-	}
-	return "", "deleteSelection"
-}
-
 
 
 func main() {
@@ -298,167 +339,65 @@ func main() {
 		case ev := <-events:
 			switch ev.Type {
 			case term.EventKey:
-				// on every key input, we should determine we need to keep selection.
-				// all key with SHIFT will keep selection.
-				keepSelection := false
-
-				if isMoveEvent(ev) {
-					if withShift(ev.Ch) {
-						if !selection.on {
-							selection.on = true
-							selection.SetStart(cursor)
-						}
-						keepSelection = true
-					}
-					handleMoveEvent(ev, cursor)
-					lastActStr = "move"
-				} else if isAddEvent(ev) {
+				actions := parseEvent(ev, selection)
+				for _, a := range actions {
+					// keepSelection := false
 					beforeCursor := *cursor
-					addedBefore := ""
-					addedNow := handleAddEvent(ev, cursor)
-					actContinue := false
-					history.Cut(history.head)
-					if lastActStr == "add" {
-						actContinue = true
-						lastAct := history.Last()
-						addedBefore = lastAct.value
-						beforeCursor = lastAct.beforeCursor
-						history.RemoveLast()
-					}
-					history.Add(&Action{kind:"add", value:addedBefore+addedNow, beforeCursor:beforeCursor, afterCursor:*cursor})
-					if !actContinue {
-						history.head++
-					}
-					lastActStr = "add"
-				} else if isDeleteEvent(ev) {
-					deletedBefore := ""
-					beforeCursor := *cursor
-					// afterCursor := *cursor
-					actContinue := false
-					history.Cut(history.head)
 
-					deletedNow, kind := handleDeleteEvent(ev, cursor, selection)
-
-					var deleted string
-					if kind == "backspace" && lastActStr == "backspace"  {
-						actContinue = true
-						deletedBefore = history.Last().value
-						beforeCursor = history.Last().beforeCursor
-						history.RemoveLast()
-						deleted = deletedNow + deletedBefore
-						lastActStr = "backspace"
-					} else if kind == "delete" && lastActStr == "delete" {
-						actContinue = true
-						deletedBefore = history.Last().value
-						beforeCursor = history.Last().beforeCursor
-						history.RemoveLast()
-						deleted = deletedBefore + deletedNow
-						lastActStr = "delete"
-					} else if kind == "deleteSelection" {
-						// "deleteSelection" will always treat as discontinued action.
-						kind = "delete"
-						deleted = deletedNow
-						min, _ := selection.MinMax()
-						beforeCursor = min
-						lastActStr = "deleteSelection"
-					} else {
-						// all other situation will fall off here.
-						deleted = deletedNow
-						lastActStr = kind
-					}
-					history.Add(&Action{kind:kind, value:deleted, beforeCursor:beforeCursor, afterCursor:*cursor})
-					if !actContinue {
-						history.head++
-					}
-				} else {
-					switch ev.Key {
-					case term.KeyCtrlW:
+					if a.kind == "exit" {
 						return
-					// case term.KeyCtrlC:
-						// copySelection()
-					case term.KeyCtrlS:
+					}
+					if a.kind == "save" {
 						err := save(f, text)
 						if err != nil {
-							status = fmt.Sprintf("%v", err)
-							holdStatus = true
-							continue
+							panic(err)
 						}
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
-					case term.KeyCtrlZ:
-						// undo
-						if history.head == 0 {
-							continue
+						continue
+					}
+					do(a, cursor, selection, history)
+
+					switch a.kind {
+					case "insert", "delete", "backspace", "deleteSelection":
+						// remember the action.
+						nc := history.Cut(history.head)
+						if nc != 0 {
+							lastActStr = ""
 						}
-						history.head--
-						action := history.At(history.head)
-						status = fmt.Sprintf("undo : %v", action)
-						holdStatus = true
-						switch action.kind {
-						case "add":
-							cursor.Copy(action.afterCursor)
-							for range action.value {
-								cursor.Backspace()
+						if a.kind == lastActStr {
+							lastAct, err := history.Pop()
+							if err != nil {
+								panic(err)
 							}
-						case "backspace":
-							cursor.Copy(action.afterCursor)
-							for _, r := range action.value {
-								cursor.Insert(r)
-							}
-						case "delete":
-							cursor.Copy(action.afterCursor)
-							for _, r := range action.value {
-								cursor.Insert(r)
+							history.head--
+							beforeCursor = lastAct.beforeCursor
+							if a.kind == "insert" || a.kind == "delete" {
+								a.value = lastAct.value + a.value
+							} else if a.kind == "backspace" {
+								a.value = a.value + lastAct.value
 							}
 						}
-						lastActStr = "undo"
-					case term.KeyCtrlY:
-						// redo
-						if history.head == history.Len() {
-							continue
+						a.beforeCursor = beforeCursor
+						if a.kind == "deleteSelection" {
+							a.beforeCursor, _ = selection.MinMax();
 						}
-						action := history.At(history.head)
-						status = fmt.Sprintf("redo : %v", action)
-						holdStatus = true
+						a.afterCursor = *cursor
+						history.Add(a)
 						history.head++
-						switch action.kind {
-						case "add":
-							cursor.Copy(action.beforeCursor)
-							for _, r := range action.value {
-								cursor.Insert(r)
-							}
-						case "backspace":
-							cursor.Copy(action.beforeCursor)
-							for range action.value {
-								cursor.Backspace()
-							}
-						case "delete":
-							cursor.Copy(action.beforeCursor)
-							for range action.value {
-								cursor.Delete()
-							}
-						}
-						lastActStr = "redo"
-					default:
-						panic("what the")
 					}
-				}
-				if !keepSelection {
-					selection.on = false
-				}
-				if selection.on {
-					selection.SetEnd(cursor)
-				}
-				lastAct := history.Last()
-				if lastAct != nil {
-					historyFileString := ""
-					for i, a := range history.actions {
-						if i != 0 {
-							historyFileString += "\n"
+					lastActStr = a.kind
+					lastAct := history.Last()
+					if lastAct != nil {
+						historyFileString := ""
+						for i, a := range history.actions {
+							if i != 0 {
+								historyFileString += "\n"
+							}
+							historyFileString += fmt.Sprintf("%v, %v", a, history.head)
 						}
-						historyFileString += fmt.Sprintf("%v", a)
+						ioutil.WriteFile(extendFileName(f, ".history"), []byte(historyFileString), 0755)
 					}
-					ioutil.WriteFile(extendFileName(f, ".history"), []byte(historyFileString), 0755)
 				}
 			}
 		case <-time.After(time.Second):

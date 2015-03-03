@@ -377,8 +377,8 @@ func (c *Cursor) SplitLine() {
 	c.SetOffsets(0)
 }
 
-func (c *Cursor) Insert(r rune) {
-	if r == '\n' {
+func (c *Cursor) Insert(r string) {
+	if r == "\n" {
 		c.SplitLine()
 		return
 	}

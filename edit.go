@@ -5,8 +5,8 @@ type Line struct {
 	data string
 }
 
-func (ln *Line) Insert(r rune, b int) {
-	ln.data = ln.data[:b] + string(r) + ln.data[b:]
+func (ln *Line) Insert(r string, b int) {
+	ln.data = ln.data[:b] + r + ln.data[b:]
 }
 
 func (ln *Line) Remove(from, to int) string {
@@ -71,7 +71,7 @@ func (t *Text) RemoveRange(min, max Point) string {
 	return deleted
 }
 
-func (t *Text) Insert(r rune, l, b int) {
+func (t *Text) Insert(r string, l, b int) {
 	t.lines[l].Insert(r, b)
 }
 
