@@ -158,7 +158,11 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:"none"}}
 			}
 		}
-		return []*Action{&Action{kind:"insert", value:string(ev.Ch)}}
+		if sel.on {
+			return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"insert", value:string(ev.Ch)}}
+		} else {
+			return []*Action{&Action{kind:"insert", value:string(ev.Ch)}}
+		}
 	}
 }
 
