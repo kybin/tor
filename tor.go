@@ -174,9 +174,6 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 }
 
 func do(a *Action, c *Cursor, sel *Selection, history *History) {
-	if a.kind != "select" {
-		sel.on=false
-	}
 	switch a.kind {
 	case "none":
 		return
@@ -356,24 +353,23 @@ func main() {
 					// keepSelection := false
 					beforeCursor := *cursor
 
+					if a.kind != "select" {
+						selection.on=false
+					}
+
 					if a.kind == "exit" {
 						return
-					}
-					if a.kind == "save" {
+					} else if a.kind == "save" {
 						err := save(f, text)
 						if err != nil {
 							panic(err)
 						}
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
-						continue
-					}
-					if a.kind == "copy" {
+					} else if a.kind == "copy" {
 						minc, maxc := selection.MinMax()
 						copied = text.DataInside(minc, maxc)
-						continue
-					}
-					if a.kind == "paste" {
+					} else if a.kind == "paste" {
 						plines := strings.Split(copied, "\n")
 						plen := len(plines)
 						for i, l := range plines {
@@ -382,10 +378,9 @@ func main() {
 								cursor.SplitLine()
 							}
 						}
-						continue
+					} else {
+						do(a, cursor, selection, history)
 					}
-					do(a, cursor, selection, history)
-
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection":
 						// remember the action.
