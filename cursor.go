@@ -383,7 +383,9 @@ func (c *Cursor) Insert(r string) {
 		return
 	}
 	c.t.Insert(r, c.l, c.b)
-	c.MoveRight()
+	for range r {
+		c.MoveRight()
+	}
 }
 
 func (c *Cursor) Delete() string {

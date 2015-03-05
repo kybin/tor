@@ -6,6 +6,7 @@ import (
 	"time"
 	term "github.com/nsf/termbox-go"
 	"io/ioutil"
+	"strings"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -116,10 +117,16 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		} else {
 			return []*Action{&Action{kind:"backspace"}}
 		}
+	// undo, redo
 	case term.KeyCtrlZ:
 		return []*Action{&Action{kind:"undo"}}
 	case term.KeyCtrlY:
 		return []*Action{&Action{kind:"redo"}}
+	// copy, paste
+	case term.KeyCtrlC:
+		return []*Action{&Action{kind:"copy"}}
+	case term.KeyCtrlV:
+		return []*Action{&Action{kind:"paste"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"unknown"}}
@@ -314,6 +321,7 @@ func main() {
 	status := ""
 	holdStatus := false
 	lastActStr := ""
+	copied := ""
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -358,6 +366,22 @@ func main() {
 						}
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
+						continue
+					}
+					if a.kind == "copy" {
+						minc, maxc := selection.MinMax()
+						copied = text.DataInside(minc, maxc)
+						continue
+					}
+					if a.kind == "paste" {
+						plines := strings.Split(copied, "\n")
+						plen := len(plines)
+						for i, l := range plines {
+							cursor.Insert(l)
+							if i != plen-1 {
+								cursor.SplitLine()
+							}
+						}
 						continue
 					}
 					do(a, cursor, selection, history)

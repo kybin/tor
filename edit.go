@@ -86,3 +86,23 @@ func (t *Text) RemoveFrom(l, from int) string {
 func (t *Text) RemoveTo(l, to int) string {
 	return t.lines[l].RemoveTo(to)
 }
+
+func (t *Text) DataInside(min, max Cursor) string {
+	if min.l == max.l {
+		return t.lines[min.l].data[min.b:max.b]
+	}
+	data := ""
+	for l:=min.l; l<max.l+1; l++ {
+		if l == min.l {
+			data += t.lines[l].data[min.b:]
+		} else if l == max.l {
+			data += t.lines[l].data[:max.b]
+		} else {
+			data += t.lines[l].data
+		}
+		if l != max.l {
+			data += "\n"
+		}
+	}
+	return data
+}
