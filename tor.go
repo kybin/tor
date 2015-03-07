@@ -372,7 +372,6 @@ func main() {
 						copied = text.DataInside(minc, maxc)
 					} else if a.kind == "paste" {
 						cursor.Insert(copied)
-						cursor.Copy(beforeCursor)
 						a.value = copied
 					} else {
 						do(a, cursor, selection, history)
