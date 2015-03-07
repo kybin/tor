@@ -6,7 +6,6 @@ import (
 	"time"
 	term "github.com/nsf/termbox-go"
 	"io/ioutil"
-	"strings"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -242,14 +241,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			}
 		case "backspace":
 			c.Copy(action.afterCursor)
-			for _, r := range action.value {
-				c.Insert(string(r))
-			}
+			c.Insert(action.value)
 		case "delete", "deleteSelection":
 			c.Copy(action.afterCursor)
-			for _, r := range action.value {
-				c.Insert(string(r))
-			}
+			c.Insert(action.value)
 		default:
 			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
@@ -264,14 +259,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		switch action.kind {
 		case "insert":
 			c.Copy(action.beforeCursor)
-			for _, r := range action.value {
-				c.Insert(string(r))
-			}
+			c.Insert(action.value)
 		case "paste":
 			c.Copy(action.beforeCursor)
-			for _, r := range action.value {
-				c.Insert(string(r))
-			}
+			c.Insert(action.value)
 		case "backspace":
 			c.Copy(action.beforeCursor)
 			for range action.value {
@@ -380,14 +371,7 @@ func main() {
 						minc, maxc := selection.MinMax()
 						copied = text.DataInside(minc, maxc)
 					} else if a.kind == "paste" {
-						plines := strings.Split(copied, "\n")
-						plen := len(plines)
-						for i, l := range plines {
-							cursor.Insert(l)
-							if i != plen-1 {
-								cursor.SplitLine()
-							}
-						}
+						cursor.Insert(copied)
 						cursor.Copy(beforeCursor)
 						a.value = copied
 					} else {

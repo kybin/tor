@@ -377,13 +377,13 @@ func (c *Cursor) SplitLine() {
 	c.SetOffsets(0)
 }
 
-func (c *Cursor) Insert(r string) {
-	if r == "\n" {
-		c.SplitLine()
-		return
-	}
-	c.t.Insert(r, c.l, c.b)
-	for range r {
+func (c *Cursor) Insert(str string) {
+	for _, r := range str {
+		if r == '\n' {
+			c.SplitLine()
+			continue
+		}
+		c.t.Insert(string(r), c.l, c.b)
 		c.MoveRight()
 	}
 }
