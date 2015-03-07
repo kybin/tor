@@ -235,6 +235,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			for range action.value {
 				c.Backspace()
 			}
+		case "paste":
+			c.Copy(action.beforeCursor)
+			for range action.value {
+				c.Delete()
+			}
 		case "backspace":
 			c.Copy(action.afterCursor)
 			for _, r := range action.value {
@@ -258,6 +263,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		history.head++
 		switch action.kind {
 		case "insert":
+			c.Copy(action.beforeCursor)
+			for _, r := range action.value {
+				c.Insert(string(r))
+			}
+		case "paste":
 			c.Copy(action.beforeCursor)
 			for _, r := range action.value {
 				c.Insert(string(r))
@@ -378,27 +388,31 @@ func main() {
 								cursor.SplitLine()
 							}
 						}
+						cursor.Copy(beforeCursor)
+						a.value = copied
 					} else {
 						do(a, cursor, selection, history)
 					}
 					switch a.kind {
-					case "insert", "delete", "backspace", "deleteSelection":
+					case "insert", "delete", "backspace", "deleteSelection", "paste":
 						// remember the action.
 						nc := history.Cut(history.head)
 						if nc != 0 {
 							lastActStr = ""
 						}
-						if a.kind == lastActStr {
-							lastAct, err := history.Pop()
-							if err != nil {
-								panic(err)
-							}
-							history.head--
-							beforeCursor = lastAct.beforeCursor
-							if a.kind == "insert" || a.kind == "delete" {
-								a.value = lastAct.value + a.value
-							} else if a.kind == "backspace" {
-								a.value = a.value + lastAct.value
+						if a.kind == "insert" || a.kind == "backspace" || a.kind == "backspace" {
+							if a.kind == lastActStr {
+								lastAct, err := history.Pop()
+								if err != nil {
+									panic(err)
+								}
+								history.head--
+								beforeCursor = lastAct.beforeCursor
+								if a.kind == "insert" || a.kind == "delete" {
+									a.value = lastAct.value + a.value
+								} else if a.kind == "backspace" {
+									a.value = a.value + lastAct.value
+								}
 							}
 						}
 						a.beforeCursor = beforeCursor
