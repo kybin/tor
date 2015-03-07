@@ -384,7 +384,7 @@ func main() {
 						if nc != 0 {
 							lastActStr = ""
 						}
-						if a.kind == "insert" || a.kind == "backspace" || a.kind == "backspace" {
+						if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
 							if a.kind == lastActStr {
 								lastAct, err := history.Pop()
 								if err != nil {
