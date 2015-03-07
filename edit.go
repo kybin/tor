@@ -55,16 +55,20 @@ func (t *Text) RemoveLine(l int) string {
 
 func (t *Text) RemoveRange(min, max Point) string {
 	deleted := ""
-	focusLines := t.lines[min.l:max.l+1]
-	for i, line := range focusLines {
-		if i == 0 {
-			deleted += line.data[min.o:]
-		} else if i == len(focusLines)-1 {
-			deleted += "\n"
-			deleted += line.data[:max.o]
-		} else {
-			deleted += "\n"
-			deleted += line.data
+	if min.l == max.l {
+		deleted = t.lines[min.l].data[min.o:max.o]
+	} else {
+		focusLines := t.lines[min.l:max.l+1]
+		for i, line := range focusLines {
+			if i == 0 {
+				deleted += line.data[min.o:]
+			} else if i == len(focusLines)-1 {
+				deleted += "\n"
+				deleted += line.data[:max.o]
+			} else {
+				deleted += "\n"
+				deleted += line.data
+			}
 		}
 	}
 	t.lines = append(append(append([]Line{}, t.lines[:min.l]...), Line{t.lines[min.l].data[:min.o]+t.lines[max.l].data[max.o:]}), t.lines[max.l+1:]...)
