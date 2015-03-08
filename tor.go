@@ -344,9 +344,9 @@ func main() {
 
 		if !holdStatus {
 			if selection.on {
-				status = "selection on - " + fmt.Sprintf("(%v, %v) - (%v, %v)", selection.start.l, selection.start.o, selection.end.l, selection.end.o)
+				status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l, selection.start.o, selection.end.l, selection.end.o)
 			} else {
-				status = fmt.Sprintf("linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v, vpos:(%v,%v, %v,%v)", cursor.l, cursor.b, cursor.v, cursor.o, win.min.l, win.min.o, win.max.l, win.max.o)
+				status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l, cursor.b, cursor.v, cursor.o)
 			}
 		}
 		printStatus(status)
