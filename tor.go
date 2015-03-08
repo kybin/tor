@@ -130,7 +130,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"paste"}}
 	default:
 		if ev.Ch == 0 {
-			return []*Action{&Action{kind:"unknown"}}
+			return []*Action{&Action{kind:"none"}}
 		}
 		if ev.Mod & term.ModAlt != 0 {
 			kind := "move"
