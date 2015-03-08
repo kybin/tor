@@ -316,20 +316,6 @@ func (c *Cursor) MoveEol() {
 		c.MoveDown()
 	}
 
-	remain := c.LineData()
-	b := 0 // where line contents start
-	for len(remain)>0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		if !unicode.IsSpace(r) {
-			break
-		}
-		b += rlen
-	}
-	if c.b < b {
-		c.SetOffsets(b)
-		return
-	}
 	c.SetOffsets(c.LineByteLength())
 }
 
