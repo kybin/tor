@@ -6,6 +6,8 @@ import (
 	"time"
 	term "github.com/nsf/termbox-go"
 	"io/ioutil"
+	"strings"
+	"flag"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -283,13 +285,22 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 
 
 func main() {
-	// check there is an destination file. ex)tor some.file
-	args := os.Args[1:]
-	if len(args)==0 {
+	var f string
+	if len(os.Args) == 1 {
 		fmt.Println("please, set text file")
-		return
+		os.Exit(1)
+	} else {
+		maybeFile := os.Args[len(os.Args)-1]
+		if strings.ContainsAny(maybeFile, "-=") {
+			fmt.Println("please, set text file")
+			os.Exit(1)
+		} else {
+			f = maybeFile
+		}
 	}
-	f := args[0]
+	var debug bool
+	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
+	flag.Parse()
 
 	text, err := open(f)
 	if err != nil {
@@ -408,7 +419,7 @@ func main() {
 					}
 					lastActStr = a.kind
 					lastAct := history.Last()
-					if lastAct != nil {
+					if debug && lastAct != nil {
 						historyFileString := ""
 						for i, a := range history.actions {
 							if i != 0 {
