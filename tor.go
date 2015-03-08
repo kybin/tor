@@ -153,11 +153,13 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"undo"}}
 	case term.KeyCtrlY:
 		return []*Action{&Action{kind:"redo"}}
-	// copy, paste
+	// copy, paste, cut
 	case term.KeyCtrlC:
 		return []*Action{&Action{kind:"copy"}}
 	case term.KeyCtrlV:
 		return []*Action{&Action{kind:"paste"}}
+	case term.KeyCtrlX:
+		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
