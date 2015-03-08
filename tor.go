@@ -41,7 +41,12 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 		if l < w.min.l || l >= w.max.l {
 			continue
 		}
+		inStr := false
+		inStrStarter := ' '
+		inStrFinished := false
 		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
+		oldOldCh := ' '
+		oldCh := ' '
 		for _, ch := range ln.data {
 			if o >= w.max.o {
 				break
@@ -50,20 +55,45 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
 			}
+			if inStrFinished {
+				inStr = false
+				inStrStarter = ' '
+			}
+			if ch == '\'' || ch == '"' {
+				if !(oldCh == '\\' && oldOldCh != '\\') {
+					if !inStr {
+						inStr = true
+						inStrStarter = ch
+						inStrFinished = false
+					} else if inStrStarter == ch {
+						inStrFinished = true
+					}
+				}
+			}
+			fgColor := term.ColorWhite
+			if inStr {
+				if inStrStarter == '\'' {
+					fgColor = term.ColorRed
+				} else {
+					fgColor = term.ColorYellow
+				}
+			}
 			// append cell to buffer
 			if ch == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
-						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), term.ColorWhite, bgColor)
+						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), fgColor, bgColor)
 					}
 					o += 1
 				}
 			} else {
 				if o >= w.min.o {
-					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), term.ColorWhite, bgColor)
+					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), fgColor, bgColor)
 				}
 				o += 1
 			}
+			oldOldCh = oldCh
+			oldCh = ch
 		}
 	}
 }
