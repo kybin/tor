@@ -3,6 +3,7 @@ package main
 import (
 	"unicode"
 	"unicode/utf8"
+	"strings"
 )
 
 var (
@@ -417,4 +418,32 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 	c.l = min.l
 	c.SetOffsets(bmin.o)
 	return deleted
+}
+
+func (c *Cursor) GotoNextDefinition(defn string) {
+	nextLines := c.t.lines[c.l+1:]
+	for i, line := range nextLines {
+		l := c.l + 1 + i
+		if strings.HasPrefix(string(line.data), defn) {
+			c.l = l
+			c.SetOffsets(0)
+			break
+		}
+	}
+}
+
+func (c *Cursor) GotoPrevDefinition(defn string) {
+	var startLine int
+	if c.b == 0 {
+		startLine = c.l - 1
+	} else {
+		startLine = c.l
+	}
+	for l := startLine; l >= 0; l-- {
+		if strings.HasPrefix(string(c.t.lines[l].data), defn) {
+			c.l = l
+			c.SetOffsets(0)
+			break
+		}
+	}
 }

@@ -198,6 +198,10 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"bof"}}
 			case 'z', 'Z':
 				return []*Action{&Action{kind:kind, value:"eof"}}
+			case ',':
+				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
+			case 'x':
+				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -246,6 +250,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			c.MoveBof()
 		case "eof":
 			c.MoveEof()
+		case "nextDefinition":
+			c.GotoNextDefinition("func")
+		case "prevDefinition":
+			c.GotoPrevDefinition("func")
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}
