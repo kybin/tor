@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strings"
+)
+
 // Line
 type Line struct {
 	data string
@@ -109,4 +113,18 @@ func (t *Text) DataInside(min, max Cursor) string {
 		}
 	}
 	return data
+}
+
+func (t *Text) InsertTab(min, max int) {
+	for l:=min; l<max+1; l++ {
+		t.lines[l].data = "\t" + t.lines[l].data
+	}
+}
+
+func (t *Text) RemoveTab(min, max int) {
+	for l:=min; l<max+1; l++ {
+		if strings.HasPrefix(t.lines[l].data, "\t") {
+			t.lines[l].data = t.lines[l].data[1:]
+		}
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"flag"
+	"strconv"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -134,6 +135,9 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 	case term.KeySpace:
 		return []*Action{&Action{kind:"insert", value:" "}}
 	case term.KeyTab:
+		if sel.on {
+			return []*Action{&Action{kind:"insertTab"}}
+		}
 		return []*Action{&Action{kind:"insert", value:"\t"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
@@ -211,9 +215,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 	case "none":
 		return
 	case "move", "select":
-		if a.kind == "select" && !sel.on {
-			sel.on = true
-			sel.SetStart(c)
+		if a.kind == "select" {
+			if !sel.on {
+				sel.on = true
+				sel.SetStart(c)
+			}
 		}
 		switch a.value {
 		case "left":
@@ -248,6 +254,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		}
 	case "insert":
 		c.Insert(a.value)
+	case "insertTab":
+		c.Tab(sel)
+		sel.SetEnd(c)
+		min, max := sel.MinMax()
+		a.value = strconv.Itoa(min.l) + "-" + strconv.Itoa(max.l)
 	case "delete":
 		a.value = c.Delete()
 	case "backspace":
@@ -268,6 +279,18 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			for range action.value {
 				c.Backspace()
 			}
+		case "insertTab":
+			lines := strings.Split(action.value, "-")
+			minl, err := strconv.Atoi(lines[0])
+			if err != nil {
+				panic(err)
+			}
+			maxl, err := strconv.Atoi(lines[1])
+			if err != nil {
+				panic(err)
+			}
+			c.t.RemoveTab(minl, maxl)
+			c.Copy(action.afterCursor)
 		case "paste":
 			c.Copy(action.beforeCursor)
 			for range action.value {
@@ -294,6 +317,18 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		case "insert":
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
+		case "insertTab":
+			lines := strings.Split(action.value, "-")
+			minl, err := strconv.Atoi(lines[0])
+			if err != nil {
+				panic(err)
+			}
+			maxl, err := strconv.Atoi(lines[1])
+			if err != nil {
+				panic(err)
+			}
+			c.t.InsertTab(minl, maxl)
+			c.Copy(action.beforeCursor)
 		case "paste":
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
@@ -363,6 +398,7 @@ func main() {
 	holdStatus := false
 	lastActStr := ""
 	copied := ""
+
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -394,11 +430,10 @@ func main() {
 			case term.EventKey:
 				actions := parseEvent(ev, selection)
 				for _, a := range actions {
-					// keepSelection := false
 					beforeCursor := *cursor
 
-					if a.kind != "select" {
-						selection.on=false
+					if !(a.kind == "select" || a.kind == "insertTab") {
+						selection.on = false
 					}
 
 					if a.kind == "exit" {
@@ -420,7 +455,7 @@ func main() {
 						do(a, cursor, selection, history)
 					}
 					switch a.kind {
-					case "insert", "delete", "backspace", "deleteSelection", "paste":
+					case "insert", "insertTab", "delete", "backspace", "deleteSelection", "paste":
 						// remember the action.
 						nc := history.Cut(history.head)
 						if nc != 0 {

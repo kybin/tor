@@ -374,6 +374,20 @@ func (c *Cursor) Insert(str string) {
 	}
 }
 
+func (c *Cursor) Tab(sel *Selection) {
+	min, max := sel.MinMax()
+	c.t.InsertTab(min.l, max.l)
+	c.MoveRight()
+}
+
+func (c *Cursor) UnTab(sel *Selection) {
+	min, max := sel.MinMax()
+	c.t.RemoveTab(min.l, max.l)
+	if !c.AtBol() {
+		c.MoveLeft()
+	}
+}
+
 func (c *Cursor) Delete() string {
 	if c.AtEof() {
 		return ""
