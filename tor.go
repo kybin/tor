@@ -194,14 +194,18 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"pageup"}}
 			case 'n', 'N':
 				return []*Action{&Action{kind:kind, value:"pagedown"}}
-			case 'a', 'A':
+			case 'q', 'Q':
 				return []*Action{&Action{kind:kind, value:"bof"}}
-			case 'z', 'Z':
+			case 'e', 'E':
 				return []*Action{&Action{kind:kind, value:"eof"}}
-			case ',':
+			case 's', 'S':
 				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
-			case 'x':
+			case 'w', 'W':
 				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
+			case ',', '<':
+				return []*Action{&Action{kind:kind, value:"nextArg"}}
+			case 'x', 'X':
+				return []*Action{&Action{kind:kind, value:"prevArg"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -254,6 +258,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			c.GotoNextDefinition("func")
 		case "prevDefinition":
 			c.GotoPrevDefinition("func")
+		case "nextArg":
+			c.GotoNextAny("(,)")
+		case "prevArg":
+			c.GotoPrevAny("(,)")
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}

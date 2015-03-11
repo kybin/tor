@@ -420,6 +420,72 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 	return deleted
 }
 
+func (c *Cursor) GotoNext(find string) {
+	nextLines := c.t.lines[c.l+1:]
+	for i, line := range nextLines {
+		l := c.l + 1 + i
+		b := strings.Index(string(line.data), find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			break
+		}
+	}
+}
+
+func (c *Cursor) GotoPrev(find string) {
+	var startLine int
+	if c.b == 0 {
+		startLine = c.l - 1
+	} else {
+		startLine = c.l
+	}
+	for l := startLine; l >= 0; l-- {
+		b := strings.LastIndex(string(c.t.lines[l].data), find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			break
+		}
+	}
+}
+
+
+func (c *Cursor) GotoNextAny(chars string) {
+	for l := c.l; l < len(c.t.lines); l++ {
+		linedata := string(c.t.lines[l].data)
+		offset := 0
+		if l == c.l {
+			if c.b == len(linedata) {
+				continue
+			}
+			linedata = linedata[c.b+1:]
+			offset = c.b+1
+		}		
+		b := strings.IndexAny(linedata, chars)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b+offset)
+			break
+		}
+	}
+}
+
+func (c *Cursor) GotoPrevAny(chars string) {
+	for l := c.l; l >= 0; l-- {
+		linedata := string(c.t.lines[l].data)
+		if l == c.l {
+			linedata = linedata[:c.b]
+		}
+		b := strings.LastIndexAny(linedata, chars)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			break
+		}
+	}
+}
+
 func (c *Cursor) GotoNextDefinition(defn string) {
 	nextLines := c.t.lines[c.l+1:]
 	for i, line := range nextLines {
