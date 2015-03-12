@@ -375,18 +375,40 @@ func (c *Cursor) Insert(str string) {
 	}
 }
 
-func (c *Cursor) Tab(sel *Selection) {
+func (c *Cursor) Tab(sel *Selection) []int {
+	tabed := make([]int, 0)
+	if sel == nil {
+		c.t.lines[c.l].InsertTab()
+		tabed = append(tabed, c.l)
+		return tabed
+	}
 	min, max := sel.MinMax()
-	c.t.InsertTab(min.l, max.l)
+	for l := min.l; l < max.l + 1; l++ {
+		c.t.lines[l].InsertTab()
+		tabed = append(tabed, l)
+	}
 	c.MoveRight()
+	return tabed
 }
 
-func (c *Cursor) UnTab(sel *Selection) {
+func (c *Cursor) UnTab(sel *Selection) []int {
+	untabed := make([]int, 0)
+	if sel == nil {
+		if err := c.t.lines[c.l].RemoveTab(); err == nil {
+			untabed = append(untabed, c.l)
+		}
+		return untabed
+	}
 	min, max := sel.MinMax()
-	c.t.RemoveTab(min.l, max.l)
+	for l := min.l; l < max.l+1; l++ {
+		if err := c.t.lines[l].RemoveTab(); err == nil {
+			untabed = append(untabed, l)
+		}
+	}
 	if !c.AtBol() {
 		c.MoveLeft()
 	}
+	return untabed
 }
 
 func (c *Cursor) Delete() string {

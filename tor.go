@@ -135,10 +135,11 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 	case term.KeySpace:
 		return []*Action{&Action{kind:"insert", value:" "}}
 	case term.KeyTab:
-		if sel.on {
-			return []*Action{&Action{kind:"insertTab"}}
-		}
 		return []*Action{&Action{kind:"insert", value:"\t"}}
+	case term.KeyCtrlU:
+		return []*Action{&Action{kind:"removeTab"}}
+	case term.KeyCtrlO:
+		return []*Action{&Action{kind:"insertTab"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
 		if sel.on {
@@ -270,13 +271,40 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		}
 	case "insert":
 		c.Insert(a.value)
-	case "insertTab":
-		c.Tab(sel)
-		sel.SetEnd(c)
-		min, max := sel.MinMax()
-		a.value = strconv.Itoa(min.l) + "-" + strconv.Itoa(max.l)
 	case "delete":
 		a.value = c.Delete()
+	case "insertTab":
+		var tabed []int
+		if sel.on {
+			tabed = c.Tab(sel)
+		} else {
+			tabed = c.Tab(nil)
+		}
+		sel.SetEnd(c)
+		tabedStr := ""
+		for _, l := range tabed {
+			if tabedStr != "" {
+				tabedStr += ","
+			}
+			tabedStr += strconv.Itoa(l)
+		}		
+		a.value = tabedStr
+	case "removeTab":
+		var untabed []int
+		if sel.on {
+			untabed = c.UnTab(sel)
+		} else {
+			untabed = c.UnTab(nil)
+		}
+		sel.SetEnd(c)
+		untabedStr := ""
+		for _, l := range untabed {
+			if untabedStr != "" {
+				untabedStr += ","
+			}
+			untabedStr += strconv.Itoa(l)
+		}
+		a.value = untabedStr
 	case "backspace":
 		a.value = c.Backspace()
 	case "deleteSelection":
@@ -296,16 +324,20 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 				c.Backspace()
 			}
 		case "insertTab":
-			lines := strings.Split(action.value, "-")
-			minl, err := strconv.Atoi(lines[0])
-			if err != nil {
-				panic(err)
+			lines := strings.Split(action.value, ",")
+			for _, lStr := range lines {
+				if lStr == "" {
+					continue
+				}
+				l, err := strconv.Atoi(lStr)
+				if err != nil {
+					panic(err)
+				}
+				err = c.t.lines[l].RemoveTab()
+				if err != nil {
+					panic(err)
+				}
 			}
-			maxl, err := strconv.Atoi(lines[1])
-			if err != nil {
-				panic(err)
-			}
-			c.t.RemoveTab(minl, maxl)
 			c.Copy(action.afterCursor)
 		case "paste":
 			c.Copy(action.beforeCursor)
@@ -318,6 +350,19 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 		case "delete", "deleteSelection":
 			c.Copy(action.afterCursor)
 			c.Insert(action.value)
+		case "removeTab":
+			lines := strings.Split(action.value, ",")
+			for _, lStr := range lines {
+				if lStr == "" {
+					continue
+				}
+				l, err := strconv.Atoi(lStr)
+				if err != nil {
+					panic(err)
+				}
+				c.t.lines[l].InsertTab()
+			}
+			c.Copy(action.afterCursor)
 		default:
 			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
@@ -334,17 +379,18 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
 		case "insertTab":
-			lines := strings.Split(action.value, "-")
-			minl, err := strconv.Atoi(lines[0])
-			if err != nil {
-				panic(err)
+			lines := strings.Split(action.value, ",")
+			for _, lStr := range lines {
+				if lStr == "" {
+					continue
+				}
+				l, err := strconv.Atoi(lStr)
+				if err != nil {
+					panic(err)
+				}
+				c.t.lines[l].InsertTab()
 			}
-			maxl, err := strconv.Atoi(lines[1])
-			if err != nil {
-				panic(err)
-			}
-			c.t.InsertTab(minl, maxl)
-			c.Copy(action.beforeCursor)
+			c.Copy(action.afterCursor)
 		case "paste":
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
@@ -358,6 +404,22 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			for range action.value {
 				c.Delete()
 			}
+		case "removeTab":
+			lines := strings.Split(action.value, ",")
+			for _, lStr := range lines {
+				if lStr == "" {
+					continue
+				}
+				l, err := strconv.Atoi(lStr)
+				if err != nil {
+					panic(err)
+				}
+				err = c.t.lines[l].RemoveTab()
+				if err != nil {
+					panic(err)
+				}
+			}
+			c.Copy(action.afterCursor)
 		default:
 			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
@@ -448,7 +510,7 @@ func main() {
 				for _, a := range actions {
 					beforeCursor := *cursor
 
-					if !(a.kind == "select" || a.kind == "insertTab") {
+					if !(a.kind == "select" || a.kind == "insertTab" || a.kind == "removeTab") {
 						selection.on = false
 					}
 
@@ -471,7 +533,7 @@ func main() {
 						do(a, cursor, selection, history)
 					}
 					switch a.kind {
-					case "insert", "insertTab", "delete", "backspace", "deleteSelection", "paste":
+					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":
 						// remember the action.
 						nc := history.Cut(history.head)
 						if nc != 0 {
