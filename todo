@@ -1,4 +1,4 @@
-copy, paste
+insertTab, removeTab makes cursor place odd. fix it.
 Better status print.
 Logger for tor. Without this, it is hard to find what is an error.
 Offset changers for other than cursor line.
