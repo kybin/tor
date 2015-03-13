@@ -406,7 +406,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 		}
 	}
 	for _, l := range untabed {
-		if l == c.l {
+		if l == c.l && !c.AtBol() {
 			c.SetOffsets(c.b-1)
 		}
 	}
