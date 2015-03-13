@@ -384,10 +384,19 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	}
 	min, max := sel.MinMax()
 	for l := min.l; l < max.l + 1; l++ {
+		if l == min.l && min.b == len(c.t.lines[min.l].data) {
+			continue
+		} else if l == max.l && max.b == 0 {
+			continue
+		}
 		c.t.lines[l].InsertTab()
 		tabed = append(tabed, l)
 	}
-	c.SetOffsets(c.b+1)
+	for _, l := range tabed {
+		if l == c.l && !c.AtBol() {
+			c.SetOffsets(c.b+1)
+		}
+	}
 	return tabed
 }
 
@@ -401,6 +410,11 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 	}
 	min, max := sel.MinMax()
 	for l := min.l; l < max.l+1; l++ {
+		if l == min.l && min.b == len(c.t.lines[min.l].data) {
+			continue
+		} else if l == max.l && max.b == 0 {
+			continue
+		}
 		if err := c.t.lines[l].RemoveTab(); err == nil {
 			untabed = append(untabed, l)
 		}
