@@ -387,7 +387,7 @@ func (c *Cursor) Tab(sel *Selection) []int {
 		c.t.lines[l].InsertTab()
 		tabed = append(tabed, l)
 	}
-	c.MoveRight()
+	c.SetOffsets(c.b+1)
 	return tabed
 }
 
@@ -405,8 +405,10 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 			untabed = append(untabed, l)
 		}
 	}
-	if !c.AtBol() {
-		c.MoveLeft()
+	for _, l := range untabed {
+		if l == c.l {
+			c.SetOffsets(c.b-1)
+		}
 	}
 	return untabed
 }

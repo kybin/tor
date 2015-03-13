@@ -338,7 +338,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 					panic(err)
 				}
 			}
-			c.Copy(action.afterCursor)
+			c.Copy(action.beforeCursor)
 		case "paste":
 			c.Copy(action.beforeCursor)
 			for range action.value {
@@ -362,7 +362,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 				}
 				c.t.lines[l].InsertTab()
 			}
-			c.Copy(action.afterCursor)
+			c.Copy(action.beforeCursor)
 		default:
 			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
