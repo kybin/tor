@@ -185,7 +185,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"down"}}
 			case 'm', 'M':
 				return []*Action{&Action{kind:kind, value:"bow"}}
-			case '.', '>':
+			case '/', '?':
 				return []*Action{&Action{kind:kind, value:"eow"}}
 			case 'u', 'U':
 				return []*Action{&Action{kind:kind, value:"bol"}}
@@ -197,15 +197,15 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"pagedown"}}
 			case 'q', 'Q':
 				return []*Action{&Action{kind:kind, value:"bof"}}
-			case 'e', 'E':
+			case 'w', 'W':
 				return []*Action{&Action{kind:kind, value:"eof"}}
 			case 's', 'S':
 				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
-			case 'w', 'W':
+			case 'a', 'A':
 				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
-			case ',', '<':
+			case '.', '>':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
-			case 'x', 'X':
+			case ',', '<':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
