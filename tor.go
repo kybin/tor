@@ -562,13 +562,7 @@ func main() {
 					if ev.Key == term.KeyEsc {
 						gotolineStr = ""
 						mode = "normal"
-						continue
-					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
-						if gotolineStr == "" {
-							continue
-						}
-						_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
-						gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
+						term.SetInputMode(term.InputAlt)
 						continue
 					} else if ev.Key == term.KeyEnter {
 						l, err := strconv.Atoi(gotolineStr)
@@ -578,16 +572,28 @@ func main() {
 						cursor.GotoLine(l)
 						gotolineStr = ""
 						mode = "normal"
+						term.SetInputMode(term.InputAlt)
+						continue
+					} else {
+						if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
+							if gotolineStr == "" {
+								mode = "normal"
+								term.SetInputMode(term.InputAlt)
+								continue
+							} else {
+								_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
+								gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
+							}
+						} else if ev.Ch != 0 {
+							_, err := strconv.Atoi(string(ev.Ch))
+							if err == nil {
+								gotolineStr += string(ev.Ch)
+							}
+						}
+						status = fmt.Sprintf("goto : %v", gotolineStr)
+						holdStatus = true
 						continue
 					}
-					_, err := strconv.Atoi(string(ev.Ch))
-					if err != nil {
-						continue
-					}
-					gotolineStr += string(ev.Ch)
-					status = fmt.Sprintf("goto : %v", gotolineStr)
-					holdStatus = true
-					continue
 				}
 
 				actions := parseEvent(ev, selection)
@@ -596,6 +602,7 @@ func main() {
 						mode = a.value
 						status = "goto : "
 						holdStatus = true
+						term.SetInputMode(term.InputEsc)
 						continue
 					}
 
