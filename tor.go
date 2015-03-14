@@ -9,6 +9,7 @@ import (
 	"strings"
 	"flag"
 	"strconv"
+	"unicode/utf8"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -172,6 +173,8 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"move", value:"nextFindWord"}}
 	case term.KeyCtrlB:
 		return []*Action{&Action{kind:"move", value:"prevFindWord"}}
+	case term.KeyCtrlG:
+		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
@@ -517,11 +520,14 @@ func main() {
 	history := newHistory()
 	SetCursor(mainview.min.l, mainview.min.o)
 
+	mode := "normal"
+
 	status := ""
 	holdStatus := false
 	lastActStr := ""
 	findStr := ""
 	copied := ""
+	gotolineStr := ""
 
 	events := make(chan term.Event, 20)
 	go func() {
@@ -552,8 +558,47 @@ func main() {
 		case ev := <-events:
 			switch ev.Type {
 			case term.EventKey:
+				if mode == "gotoline" {
+					if ev.Key == term.KeyEsc {
+						gotolineStr = ""
+						mode = "normal"
+						continue
+					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
+						if gotolineStr == "" {
+							continue
+						}
+						_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
+						gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
+						continue
+					} else if ev.Key == term.KeyEnter {
+						l, err := strconv.Atoi(gotolineStr)
+						if err != nil {
+							panic(err)
+						}
+						cursor.GotoLine(l)
+						gotolineStr = ""
+						mode = "normal"
+						continue
+					}
+					_, err := strconv.Atoi(string(ev.Ch))
+					if err != nil {
+						continue
+					}
+					gotolineStr += string(ev.Ch)
+					status = fmt.Sprintf("goto : %v", gotolineStr)
+					holdStatus = true
+					continue
+				}
+
 				actions := parseEvent(ev, selection)
 				for _, a := range actions {
+					if a.kind == "modeChange" {
+						mode = a.value
+						status = "goto : "
+						holdStatus = true
+						continue
+					}
+
 					beforeCursor := *cursor
 
 					if !(a.kind == "select" || a.kind == "insertTab" || a.kind == "removeTab") {

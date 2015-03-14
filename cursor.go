@@ -556,6 +556,14 @@ func (c *Cursor) GotoPrevDefinition(defn string) {
 	}
 }
 
+func (c *Cursor) GotoLine(l int) {
+	if l >= len(c.t.lines) {
+		l = len(c.t.lines)-1
+	}
+	c.l = l
+	c.SetOffsets(0)
+}
+
 func (c *Cursor) Word() string {
 	// check cursor is on a word
 	r, _ := c.RuneAfter()
