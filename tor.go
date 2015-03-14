@@ -261,8 +261,20 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			c.GotoPrevDefinition("func")
 		case "nextArg":
 			c.GotoNextAny("(,)")
+			r, _ := c.RuneAfter()
+			if r == '(' {
+				c.MoveRight()
+			}
 		case "prevArg":
+			r, _ := c.RuneBefore()
+			if r == '(' {
+				c.MoveLeft()
+			}
 			c.GotoPrevAny("(,)")
+			r, _ = c.RuneAfter()
+			if r == '(' {
+				c.MoveRight()
+			}
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}
