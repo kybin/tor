@@ -165,6 +165,13 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"paste"}}
 	case term.KeyCtrlX:
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
+	// find
+	case term.KeyCtrlD:
+		return []*Action{&Action{kind:"move", value:"saveFindWord"}}
+	case term.KeyCtrlF:
+		return []*Action{&Action{kind:"move", value:"nextFindWord"}}
+	case term.KeyCtrlB:
+		return []*Action{&Action{kind:"move", value:"prevFindWord"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
@@ -207,6 +214,10 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
 			case ',', '<':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
+			case 'f', 'F':
+				return []*Action{&Action{kind:kind, value:"nextCursorWord"}}
+			case 'b', 'B':
+				return []*Action{&Action{kind:kind, value:"prevCursorWord"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -219,7 +230,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 	}
 }
 
-func do(a *Action, c *Cursor, sel *Selection, history *History) {
+func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string, status *string, holdStatus *bool) {
 	switch a.kind {
 	case "none":
 		return
@@ -274,6 +285,28 @@ func do(a *Action, c *Cursor, sel *Selection, history *History) {
 			r, _ = c.RuneAfter()
 			if r == '(' {
 				c.MoveRight()
+			}
+		case "saveFindWord":
+			*findStr = c.Word()
+			*status = fmt.Sprintf("find string : %v", *findStr)
+			*holdStatus = true
+		case "nextFindWord":
+			if *findStr != "" {
+				c.GotoNext(*findStr)
+			}
+		case "prevFindWord":
+			if *findStr != "" {
+				c.GotoPrev(*findStr)
+			}
+		case "nextCursorWord":
+			w :=c.Word()
+			if w != "" {
+				c.GotoNext(w)
+			}
+		case "prevCursorWord":
+			w := c.Word()
+			if w != "" {
+				c.GotoPrev(w)
 			}
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
@@ -487,6 +520,7 @@ func main() {
 	status := ""
 	holdStatus := false
 	lastActStr := ""
+	findStr := ""
 	copied := ""
 
 	events := make(chan term.Event, 20)
@@ -542,7 +576,7 @@ func main() {
 						cursor.Insert(copied)
 						a.value = copied
 					} else {
-						do(a, cursor, selection, history)
+						do(a, cursor, selection, history, &findStr, &status, &holdStatus)
 					}
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":

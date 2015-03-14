@@ -459,27 +459,32 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 }
 
 func (c *Cursor) GotoNext(find string) {
-	nextLines := c.t.lines[c.l+1:]
-	for i, line := range nextLines {
-		l := c.l + 1 + i
-		b := strings.Index(string(line.data), find)
+	for l := c.l; l < len(c.t.lines); l++ {
+		linedata := string(c.t.lines[l].data)
+		offset := 0
+		if l == c.l {
+			if c.b == len(linedata) {
+				continue
+			}
+			linedata = linedata[c.b+1:]
+			offset = c.b+1
+		}
+		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetOffsets(b+offset)
 			break
 		}
 	}
 }
 
 func (c *Cursor) GotoPrev(find string) {
-	var startLine int
-	if c.b == 0 {
-		startLine = c.l - 1
-	} else {
-		startLine = c.l
-	}
-	for l := startLine; l >= 0; l-- {
-		b := strings.LastIndex(string(c.t.lines[l].data), find)
+	for l := c.l; l >= 0; l-- {
+		linedata := string(c.t.lines[l].data)
+		if l == c.l {
+			linedata = linedata[:c.b]
+		}
+		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
 			c.SetOffsets(b)
@@ -487,7 +492,6 @@ func (c *Cursor) GotoPrev(find string) {
 		}
 	}
 }
-
 
 func (c *Cursor) GotoNextAny(chars string) {
 	for l := c.l; l < len(c.t.lines); l++ {
@@ -550,4 +554,41 @@ func (c *Cursor) GotoPrevDefinition(defn string) {
 			break
 		}
 	}
+}
+
+func (c *Cursor) Word() string {
+	// check cursor is on a word
+	r, _ := c.RuneAfter()
+	if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
+		return ""
+	}
+	// find min byte offset
+	bmin := c.b
+	remain := c.LineDataUntilCursor()
+	for {
+		if len(remain) == 0 {
+			break
+		}
+		r, rlen := utf8.DecodeLastRuneInString(remain)
+		remain = remain[:len(remain)-rlen]
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
+			break
+		}
+		bmin -= rlen
+	}
+	// find max byte offset
+	bmax := c.b
+	remain = c.LineDataFromCursor()
+	for {
+		if len(remain) == 0 {
+			break
+		}
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
+			break
+		}
+		bmax += rlen
+	}
+	return c.LineData()[bmin:bmax]
 }
