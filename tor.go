@@ -195,7 +195,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"down"}}
 			case 'm', 'M':
 				return []*Action{&Action{kind:kind, value:"bow"}}
-			case '/', '?':
+			case '.', '>':
 				return []*Action{&Action{kind:kind, value:"eow"}}
 			case 'u', 'U':
 				return []*Action{&Action{kind:kind, value:"bocBolAdvance"}}
