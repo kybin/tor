@@ -213,9 +213,9 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
 			case 'a', 'A':
 				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
-			case '.', '>':
+			case ']', '}':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
-			case ',', '<':
+			case '[', '{':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
 			case 'f', 'F':
 				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
@@ -278,19 +278,19 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		case "prevDefinition":
 			c.GotoPrevDefinition("func")
 		case "nextArg":
-			c.GotoNextAny("(,)")
+			c.GotoNextAny("{(,)}")
 			r, _ := c.RuneAfter()
-			if r == '(' {
+			if r == '(' || r == '{'  {
 				c.MoveRight()
 			}
 		case "prevArg":
 			r, _ := c.RuneBefore()
-			if r == '(' {
+			if r == '(' || r == '{'  {
 				c.MoveLeft()
 			}
-			c.GotoPrevAny("(,)")
+			c.GotoPrevAny("{(,)}")
 			r, _ = c.RuneAfter()
-			if r == '(' {
+			if r == '(' || r == '{' {
 				c.MoveRight()
 			}
 		case "saveFindWord":
