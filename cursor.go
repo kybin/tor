@@ -288,6 +288,10 @@ func (c *Cursor) MoveEow() {
 }
 
 func (c *Cursor) MoveBol() {
+	c.SetOffsets(0)
+}
+
+func (c *Cursor) MoveBocBolAdvance() {
 	// if already bol, move cursor to prev line
 	if c.AtBol() && !c.OnFirstLine() {
 		c.MoveUp()
@@ -312,6 +316,10 @@ func (c *Cursor) MoveBol() {
 }
 
 func (c *Cursor) MoveEol() {
+	c.SetOffsets(len(c.LineData()))
+}
+
+func (c *Cursor) MoveEolAdvance() {
 	// if already eol, move to next line
 	if c.AtEol() && !c.OnLastLine() {
 		c.MoveDown()

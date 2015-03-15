@@ -198,9 +198,9 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 			case '/', '?':
 				return []*Action{&Action{kind:kind, value:"eow"}}
 			case 'u', 'U':
-				return []*Action{&Action{kind:kind, value:"bol"}}
+				return []*Action{&Action{kind:kind, value:"bocBolAdvance"}}
 			case 'o', 'O':
-				return []*Action{&Action{kind:kind, value:"eol"}}
+				return []*Action{&Action{kind:kind, value:"eolAdvance"}}
 			case 'h', 'H':
 				return []*Action{&Action{kind:kind, value:"pageup"}}
 			case 'n', 'N':
@@ -261,6 +261,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			c.MoveBol()
 		case "eol":
 			c.MoveEol()
+		case "bocBolAdvance":
+			c.MoveBocBolAdvance()
+		case "eolAdvance":
+			c.MoveEolAdvance()
 		case "pageup":
 			c.PageUp()
 		case "pagedown":
