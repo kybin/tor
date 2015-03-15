@@ -554,11 +554,16 @@ func main() {
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
 
-		if !holdStatus {
-			if selection.on {
-				status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l, selection.start.o, selection.end.l, selection.end.o)
-			} else {
-				status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l, cursor.b, cursor.v, cursor.o)
+
+		if mode == "gotoline" {
+			status = fmt.Sprintf("goto : %v", gotolineStr)
+		} else {
+			if !holdStatus {
+				if selection.on {
+					status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l, selection.start.o, selection.end.l, selection.end.o)
+				} else {
+					status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l, cursor.b, cursor.v, cursor.o)
+				}
 			}
 		}
 		printStatus(status)
@@ -588,24 +593,18 @@ func main() {
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
 						continue
-					} else {
-						if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
-							if gotolineStr == "" {
-								mode = "normal"
-								term.SetInputMode(term.InputAlt)
-								continue
-							} else {
-								_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
-								gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
-							}
-						} else if ev.Ch != 0 {
-							_, err := strconv.Atoi(string(ev.Ch))
-							if err == nil {
-								gotolineStr += string(ev.Ch)
-							}
+					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
+						if gotolineStr == "" {
+							continue
 						}
-						status = fmt.Sprintf("goto : %v", gotolineStr)
-						holdStatus = true
+						_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
+						gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
+						continue
+					} else if ev.Ch != 0 {
+						_, err := strconv.Atoi(string(ev.Ch))
+						if err == nil {
+							gotolineStr += string(ev.Ch)
+						}
 						continue
 					}
 				}
@@ -614,8 +613,6 @@ func main() {
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						mode = a.value
-						status = "goto : "
-						holdStatus = true
 						term.SetInputMode(term.InputEsc)
 						continue
 					}
