@@ -175,6 +175,8 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"move", value:"prevFindWord"}}
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
+	case term.KeyCtrlL:
+		return []*Action{&Action{kind:"selectLine"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
@@ -361,6 +363,14 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		a.value = c.Backspace()
 	case "deleteSelection":
 		a.value = c.DeleteSelection(sel)
+	case "selectLine":
+		c.MoveBol()
+		if !sel.on {
+			sel.on = true
+			sel.SetStart(c)
+		}
+		c.MoveDown()
+		sel.SetEnd(c)
 	case "undo":
 		if history.head == 0 {
 			return
@@ -612,7 +622,10 @@ func main() {
 
 					beforeCursor := *cursor
 
-					if !(a.kind == "select" || a.kind == "insertTab" || a.kind == "removeTab") {
+					switch a.kind {
+					case "select", "selectLine", "insertTab", "removeTab":
+						// hold selection
+					default:
 						selection.on = false
 					}
 
