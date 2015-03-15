@@ -170,9 +170,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 	case term.KeyCtrlD:
 		return []*Action{&Action{kind:"move", value:"saveFindWord"}}
 	case term.KeyCtrlF:
-		return []*Action{&Action{kind:"move", value:"nextFindWord"}}
-	case term.KeyCtrlB:
-		return []*Action{&Action{kind:"move", value:"prevFindWord"}}
+		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
 	case term.KeyCtrlL:
@@ -220,9 +218,9 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 			case ',', '<':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
 			case 'f', 'F':
-				return []*Action{&Action{kind:kind, value:"nextCursorWord"}}
+				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
 			case 'b', 'B':
-				return []*Action{&Action{kind:kind, value:"prevCursorWord"}}
+				return []*Action{&Action{kind:kind, value:"prevFindWord"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -539,6 +537,7 @@ func main() {
 	status := ""
 	holdStatus := false
 	lastActStr := ""
+	oldFindStr := ""
 	findStr := ""
 	copied := ""
 	gotolineStr := ""
@@ -557,6 +556,8 @@ func main() {
 
 		if mode == "gotoline" {
 			status = fmt.Sprintf("goto : %v", gotolineStr)
+		} else if mode == "find" {
+			status = fmt.Sprintf("find : %v", findStr)
 		} else {
 			if !holdStatus {
 				if selection.on {
@@ -607,11 +608,41 @@ func main() {
 						}
 						continue
 					}
+					continue
+				} else if mode == "find" {
+					if ev.Key == term.KeyEsc {
+						findStr = oldFindStr
+						mode = "normal"
+						term.SetInputMode(term.InputAlt)
+						continue
+					} else if ev.Key == term.KeyEnter {
+						mode = "normal"
+						term.SetInputMode(term.InputAlt)
+						continue
+					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
+						if findStr == "" {
+							continue
+						}
+						_, rlen := utf8.DecodeLastRuneInString(findStr)
+						findStr = findStr[:len(findStr)-rlen]
+						continue
+					} else if ev.Key == term.KeySpace {
+						findStr += " "
+						continue
+					} else if ev.Ch != 0 {
+						findStr += string(ev.Ch)
+						continue
+					}
+					continue
 				}
 
 				actions := parseEvent(ev, selection)
 				for _, a := range actions {
 					if a.kind == "modeChange" {
+						if a.value == "find" {
+							oldFindStr = findStr
+							findStr = ""
+						}
 						mode = a.value
 						term.SetInputMode(term.InputEsc)
 						continue
