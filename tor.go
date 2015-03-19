@@ -133,6 +133,8 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 	// insert
 	case term.KeyEnter:
 		return []*Action{&Action{kind:"insert", value:"\n"}}
+	case term.KeyCtrlN:
+		return []*Action{&Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}}
 	case term.KeySpace:
 		return []*Action{&Action{kind:"insert", value:" "}}
 	case term.KeyTab:
