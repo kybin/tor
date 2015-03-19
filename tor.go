@@ -214,17 +214,17 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 				return []*Action{&Action{kind:kind, value:"bof"}}
 			case 'w', 'W':
 				return []*Action{&Action{kind:kind, value:"eof"}}
-			case 's', 'S':
+			case 'x', 'X':
 				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
-			case 'a', 'A':
+			case 'z', 'Z':
 				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
 			case ']', '}':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
 			case '[', '{':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
-			case 'f', 'F':
+			case 's', 'S':
 				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
-			case 'b', 'B':
+			case 'a', 'A':
 				return []*Action{&Action{kind:kind, value:"prevFindWord"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
