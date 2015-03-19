@@ -173,6 +173,8 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
+	case term.KeyCtrlJ:
+		return []*Action{&Action{kind:"modeChange", value:"move"}}
 	case term.KeyCtrlL:
 		return []*Action{&Action{kind:"selectLine"}}
 	default:
@@ -634,6 +636,13 @@ func main() {
 						continue
 					}
 					continue
+				} else if mode == "move" {
+					if ev.Key == term.KeyEsc {
+						mode = "normal"
+						term.SetInputMode(term.InputAlt)
+						continue
+					}
+					ev.Mod = ev.Mod | term.ModAlt
 				}
 
 				actions := parseEvent(ev, selection)
