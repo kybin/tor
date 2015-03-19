@@ -111,7 +111,7 @@ func printStatus(status string) {
 	}
 }
 
-func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
+func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -177,14 +177,14 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
 	case term.KeyCtrlJ:
-		return []*Action{&Action{kind:"modeChange", value:"move"}}
+		return []*Action{&Action{kind:"moveMode"}}
 	case term.KeyCtrlL:
 		return []*Action{&Action{kind:"selectLine"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
 		}
-		if (*mode == "move") || (ev.Mod & term.ModAlt != 0) {
+		if (*moveMode) || (ev.Mod & term.ModAlt != 0) {
 			kind := "move"
 			if withShift(ev.Ch) {
 				kind = "select"
@@ -538,6 +538,7 @@ func main() {
 	SetCursor(mainview.min.l, mainview.min.o)
 
 	mode := "normal"
+	moveMode := false
 
 	status := ""
 	holdStatus := false
@@ -565,7 +566,7 @@ func main() {
 			status = fmt.Sprintf("find : %v", findStr)
 		} else {
 			moveModeStr := ""
-			if mode == "move" {
+			if moveMode {
 				moveModeStr = "(move mode)"
 			}
 			if !holdStatus {
@@ -643,15 +644,16 @@ func main() {
 						continue
 					}
 					continue
-				} else if mode == "move" {
+				} 
+
+				if moveMode {
 					if ev.Key == term.KeyCtrlJ {
-						mode = "normal"
-						term.SetInputMode(term.InputAlt)
+						moveMode = false
 						continue
 					}
 				}
 
-				actions := parseEvent(ev, selection, &mode)
+				actions := parseEvent(ev, selection, &moveMode)
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
@@ -660,6 +662,9 @@ func main() {
 						}
 						mode = a.value
 						term.SetInputMode(term.InputEsc)
+						continue
+					} else if a.kind == "moveMode" {
+						moveMode = true
 						continue
 					}
 
