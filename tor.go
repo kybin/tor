@@ -111,7 +111,7 @@ func printStatus(status string) {
 	}
 }
 
-func parseEvent(ev term.Event, sel *Selection) []*Action {
+func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -184,7 +184,7 @@ func parseEvent(ev term.Event, sel *Selection) []*Action {
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
 		}
-		if ev.Mod & term.ModAlt != 0 {
+		if (*mode == "move") || (ev.Mod & term.ModAlt != 0) {
 			kind := "move"
 			if withShift(ev.Ch) {
 				kind = "select"
@@ -644,15 +644,14 @@ func main() {
 					}
 					continue
 				} else if mode == "move" {
-					if ev.Key == term.KeyEsc {
+					if ev.Key == term.KeyCtrlJ {
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
 						continue
 					}
-					ev.Mod = ev.Mod | term.ModAlt
 				}
 
-				actions := parseEvent(ev, selection)
+				actions := parseEvent(ev, selection, &mode)
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
