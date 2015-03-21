@@ -46,16 +46,22 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 		inStr := false
 		inStrStarter := ' '
 		inStrFinished := false
-		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
+		commented := false
 		oldOldCh := ' '
 		oldCh := ' '
+		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
 		for _, ch := range ln.data {
 			if o >= w.max.o {
 				break
 			}
+			// check what color it should be.
 			bgColor := term.ColorDefault
 			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
+			}
+			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
+				commented = true
+				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', 31, bgColor) // hacky way to color the first '/' cell.
 			}
 			if inStrFinished {
 				inStr = false
@@ -73,11 +79,18 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 				}
 			}
 			fgColor := term.ColorWhite
-			if inStr {
+			if commented {
+				fgColor = 31
+			} else if inStr {
 				if inStrStarter == '\'' {
-					fgColor = term.ColorRed
-				} else {
 					fgColor = term.ColorYellow
+				} else {
+					fgColor = term.ColorRed
+				}
+			} else {
+				_, err := strconv.Atoi(string(ch))
+				if err == nil {
+					fgColor = 169
 				}
 			}
 			// append cell to buffer
@@ -526,6 +539,7 @@ func main() {
 	}
 	defer term.Close()
 	term.SetInputMode(term.InputAlt)
+	term.SetOutputMode(term.Output256)
 	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 
