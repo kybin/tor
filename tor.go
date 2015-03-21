@@ -557,7 +557,7 @@ func main() {
 		}
 	}()
 	for {
-		win.Follow(cursor)
+		win.Follow(cursor, 3)
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
 
