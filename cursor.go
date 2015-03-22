@@ -388,6 +388,7 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	if sel == nil {
 		c.t.lines[c.l].InsertTab()
 		tabed = append(tabed, c.l)
+		c.SetOffsets(c.b+1)
 		return tabed
 	}
 	min, max := sel.MinMax()
@@ -414,6 +415,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 		if err := c.t.lines[c.l].RemoveTab(); err == nil {
 			untabed = append(untabed, c.l)
 		}
+		c.SetOffsets(c.b-1)
 		return untabed
 	}
 	min, max := sel.MinMax()
