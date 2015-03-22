@@ -556,6 +556,7 @@ func main() {
 	mode := "normal"
 	moveMode := false
 
+	edited := false
 	status := ""
 	holdStatus := false
 	lastActStr := ""
@@ -577,8 +578,9 @@ func main() {
 		clearScreen(layout)
 		drawScreen(layout, win, text, selection)
 
-
-		if mode == "gotoline" {
+		if mode == "exit" {
+			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
+		} else if mode == "gotoline" {
 			status = fmt.Sprintf("goto : %v", gotolineStr)
 		} else if mode == "find" {
 			status = fmt.Sprintf("find(%v) : %v", findDirection, findStr)
@@ -606,7 +608,15 @@ func main() {
 		case ev := <-events:
 			switch ev.Type {
 			case term.EventKey:
-				if mode == "gotoline" {
+				if mode == "exit" {
+					if ev.Ch == 'y' {
+						return
+					} else if ev.Ch == 'n' || ev.Key == term.KeyEsc {
+						mode = "normal"
+						term.SetInputMode(term.InputAlt)
+					}
+					continue
+				} else if mode == "gotoline" {
 					if ev.Key == term.KeyEsc {
 						gotolineStr = ""
 						mode = "normal"
@@ -713,12 +723,18 @@ func main() {
 					}
 
 					if a.kind == "exit" {
-						return
+						if !edited {
+							return
+						}
+						mode = "exit"
+						term.SetInputMode(term.InputEsc)
+						continue
 					} else if a.kind == "save" {
 						err := save(f, text)
 						if err != nil {
 							panic(err)
 						}
+						edited = false
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
 					} else if a.kind == "copy" {
@@ -733,6 +749,7 @@ func main() {
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":
 						// remember the action.
+						edited = true
 						nc := history.Cut(history.head)
 						if nc != 0 {
 							lastActStr = ""
