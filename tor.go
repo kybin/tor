@@ -562,6 +562,7 @@ func main() {
 	oldFindStr := ""
 	findStr := ""
 	findDirection := ""
+	findJustStart := false
 	copied := ""
 	gotolineStr := ""
 
@@ -654,12 +655,16 @@ func main() {
 						if findStr == "" {
 							continue
 						}
+						if findJustStart {
+							findStr = ""
+						}
 						_, rlen := utf8.DecodeLastRuneInString(findStr)
 						findStr = findStr[:len(findStr)-rlen]
 					} else if ev.Key == term.KeySpace {
 						findStr += " "
 					} else if ev.Ch != 0 {
 						findStr += string(ev.Ch)
+						findJustStart = false
 					} else if ev.Key == term.KeyEnter {
 						if findStr == "" {
 							continue
@@ -670,6 +675,7 @@ func main() {
 							cursor.GotoPrev(findStr)
 						}
 						oldFindStr = findStr // so next time we can run find mode with current findStr.
+						findJustStart = false
 					}
 					continue
 				}
@@ -687,6 +693,7 @@ func main() {
 						if a.value == "find" {
 							oldFindStr = findStr
 							findDirection = "next"
+							findJustStart = true
 						}
 						mode = a.value
 						term.SetInputMode(term.InputEsc)
