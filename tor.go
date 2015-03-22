@@ -561,6 +561,7 @@ func main() {
 	lastActStr := ""
 	oldFindStr := ""
 	findStr := ""
+	findDirection := ""
 	copied := ""
 	gotolineStr := ""
 
@@ -579,7 +580,7 @@ func main() {
 		if mode == "gotoline" {
 			status = fmt.Sprintf("goto : %v", gotolineStr)
 		} else if mode == "find" {
-			status = fmt.Sprintf("find : %v", findStr)
+			status = fmt.Sprintf("find(%v) : %v", findDirection, findStr)
 		} else {
 			moveModeStr := ""
 			if moveMode {
@@ -640,27 +641,38 @@ func main() {
 						findStr = oldFindStr
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
-						continue
-					} else if ev.Key == term.KeyEnter {
-						mode = "normal"
-						term.SetInputMode(term.InputAlt)
-						continue
+					} else if ev.Key == term.KeyCtrlF {
+						if findDirection != "next" && findDirection != "prev" {
+							panic("what kind of find direction?")
+						}
+						if findDirection == "next" {
+							findDirection = "prev"
+						} else {
+							findDirection = "next"
+						}
 					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
 						if findStr == "" {
 							continue
 						}
 						_, rlen := utf8.DecodeLastRuneInString(findStr)
 						findStr = findStr[:len(findStr)-rlen]
-						continue
 					} else if ev.Key == term.KeySpace {
 						findStr += " "
-						continue
 					} else if ev.Ch != 0 {
 						findStr += string(ev.Ch)
-						continue
+					} else if ev.Key == term.KeyEnter {
+						if findStr == "" {
+							continue
+						}
+						if findDirection == "next"{
+							cursor.GotoNext(findStr)
+						} else if findDirection == "prev" {
+							cursor.GotoPrev(findStr)
+						}
+						oldFindStr = findStr // so next time we can run find mode with current findStr.
 					}
 					continue
-				} 
+				}
 
 				if moveMode {
 					if ev.Key == term.KeyCtrlJ {
@@ -674,7 +686,7 @@ func main() {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
 							oldFindStr = findStr
-							findStr = ""
+							findDirection = "next"
 						}
 						mode = a.value
 						term.SetInputMode(term.InputEsc)
