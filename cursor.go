@@ -182,6 +182,24 @@ func (c *Cursor) OnLastLine() bool {
 	return c.l == len(c.t.lines)-1
 }
 
+func (c *Cursor) AtBow() bool {
+	r, _ := c.RuneAfter()
+	rb, _ := c.RuneBefore() // is it not panic on bof?
+	if (unicode.IsLetter(r) || unicode.IsDigit(r))  && !(unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
+		return true
+	}
+	return false
+}
+
+func (c *Cursor) AtEow() bool {
+	r, _ := c.RuneAfter()
+	rb, _ := c.RuneBefore() // is it not panic on bof?
+	if !(unicode.IsLetter(r) || unicode.IsDigit(r)) && (unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
+		return true
+	}
+	return false
+}
+
 func (c *Cursor) AtBof() bool {
 	return c.OnFirstLine() && c.AtBol()
 }
@@ -232,57 +250,82 @@ func (c *Cursor) MoveDown() {
 	c.RecalculateOffsets()
 }
 
-func (c *Cursor) MoveBow() {
+func (c *Cursor) MovePrevBowEow() {
 	if c.AtBof() {
 		return
 	}
-	// First we should pass every space character.
-	for {
-		r, _ := c.RuneBefore()
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			break
+	if c.AtBow() {
+		for {
+			c.MoveLeft()
+			if c.AtEow() || c.AtBof() {
+				return
+			}
 		}
-		c.MoveLeft()
-		if c.AtBof() {
-			return
+	} else if c.AtEow() || c.AtBof() {
+		for {
+			c.MoveLeft()
+			if c.AtBow() {
+				return
+			}
 		}
-	}
-	// Then we will find first space charactor and stop.
-	for {
-		r, _ := c.RuneBefore()
+	} else {
+		r, _ := c.RuneAfter()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
-			return
-		}
-		c.MoveLeft()
-		if c.AtBof() {
-			return
+			// we are in the middle of non-words. find eow.
+			for {
+				c.MoveLeft()
+				if c.AtEow() || c.AtBof() {
+					return
+				}
+			}
+		} else {
+			// we are in the middle of a word. find bow.
+			for {
+				c.MoveLeft()
+				if c.AtBow() || c.AtBof() {
+					return
+				}
+			}
 		}
 	}
 }
 
-// See moveEow for the algorithm.
-func (c *Cursor) MoveEow() {
+func (c *Cursor) MoveNextBowEow() {
 	if c.AtEof() {
 		return
 	}
-	for {
-		r, _ := c.RuneAfter()
-		if unicode.IsLetter(r) || unicode.IsDigit(r) {
-			break
+	if c.AtBow() {
+		for {
+			c.MoveRight()
+			if c.AtEow() || c.AtEof() {
+				return
+			}
 		}
-		c.MoveRight()
-		if c.AtEof() {
-			return
+	} else if c.AtEow() {
+		for {
+			c.MoveRight()
+			if c.AtBow() || c.AtEof() {
+				return
+			}
 		}
-	}
-	for {
+	} else {
 		r, _ := c.RuneAfter()
 		if !(unicode.IsLetter(r) || unicode.IsDigit(r)) {
-			return
-		}
-		c.MoveRight()
-		if c.AtEof() {
-			return
+			// we are in the middle of non-words. find bow.
+			for {
+				c.MoveRight()
+				if c.AtBow() || c.AtEof() {
+					return
+				}
+			}
+		} else {
+			// we are in the middle of a word. find eow.
+			for {
+				c.MoveRight()
+				if c.AtEow() || c.AtEof() {
+					return
+				}
+			}
 		}
 	}
 }
