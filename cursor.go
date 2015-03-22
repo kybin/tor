@@ -536,11 +536,18 @@ func (c *Cursor) GotoPrevAny(chars string) {
 	}
 }
 
-func (c *Cursor) GotoNextDefinition(defn string) {
+func (c *Cursor) GotoNextDefinition(defn []string) {
 	nextLines := c.t.lines[c.l+1:]
 	for i, line := range nextLines {
 		l := c.l + 1 + i
-		if strings.HasPrefix(string(line.data), defn) {
+		find := false
+		for _, d := range defn {
+			if strings.HasPrefix(string(line.data), d) {
+				find = true
+				break
+			}
+		}
+		if find {
 			c.l = l
 			c.SetOffsets(0)
 			break
@@ -548,15 +555,22 @@ func (c *Cursor) GotoNextDefinition(defn string) {
 	}
 }
 
-func (c *Cursor) GotoPrevDefinition(defn string) {
+func (c *Cursor) GotoPrevDefinition(defn []string) {
 	var startLine int
 	if c.b == 0 {
 		startLine = c.l - 1
 	} else {
 		startLine = c.l
 	}
+	find := false
 	for l := startLine; l >= 0; l-- {
-		if strings.HasPrefix(string(c.t.lines[l].data), defn) {
+		for _, d := range defn {
+			if strings.HasPrefix(string(c.t.lines[l].data), d) {
+				find = true
+				break
+			}
+		}
+		if find {
 			c.l = l
 			c.SetOffsets(0)
 			break

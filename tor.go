@@ -294,9 +294,9 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		case "eof":
 			c.MoveEof()
 		case "nextDefinition":
-			c.GotoNextDefinition("func")
+			c.GotoNextDefinition([]string{"package", "import", "type", "func", "var"})
 		case "prevDefinition":
-			c.GotoPrevDefinition("func")
+			c.GotoPrevDefinition([]string{"package", "import", "type", "func", "var"})
 		case "nextArg":
 			c.GotoNextAny("{(,)}")
 			r, _ := c.RuneAfter()
