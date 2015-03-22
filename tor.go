@@ -516,7 +516,7 @@ func main() {
 		os.Exit(1)
 	} else {
 		maybeFile := os.Args[len(os.Args)-1]
-		if strings.ContainsAny(maybeFile, "-=") {
+		if strings.HasPrefix(maybeFile, "-") || strings.ContainsAny(maybeFile, "=") {
 			fmt.Println("please, set text file")
 			os.Exit(1)
 		} else {
