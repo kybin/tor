@@ -221,25 +221,25 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 				return []*Action{&Action{kind:kind, value:"bocBolAdvance"}}
 			case 'o', 'O':
 				return []*Action{&Action{kind:kind, value:"eolAdvance"}}
-			case 'h', 'H':
-				return []*Action{&Action{kind:kind, value:"pageup"}}
-			case 'n', 'N':
-				return []*Action{&Action{kind:kind, value:"pagedown"}}
-			case 'q', 'Q':
-				return []*Action{&Action{kind:kind, value:"bof"}}
 			case 'w', 'W':
-				return []*Action{&Action{kind:kind, value:"eof"}}
-			case 'x', 'X':
-				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
+				return []*Action{&Action{kind:kind, value:"pageup"}}
+			case 's', 'S':
+				return []*Action{&Action{kind:kind, value:"pagedown"}}
+			case 'a', 'A':
+				return []*Action{&Action{kind:kind, value:"bof"}}
 			case 'z', 'Z':
+				return []*Action{&Action{kind:kind, value:"eof"}}
+			case 'n', 'N':
+				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
+			case 'h', 'H':
 				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
 			case ']', '}':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
 			case '[', '{':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
-			case 's', 'S':
+			case 'f', 'F':
 				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
-			case 'a', 'A':
+			case 'b', 'B':
 				return []*Action{&Action{kind:kind, value:"prevFindWord"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
