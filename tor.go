@@ -61,7 +61,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			}
 			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
 				commented = true
-				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', 31, bgColor) // hacky way to color the first '/' cell.
+				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', term.ColorMagenta, bgColor) // hacky way to color the first '/' cell.
 			}
 			if inStrFinished {
 				inStr = false
@@ -80,7 +80,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			}
 			fgColor := term.ColorWhite
 			if commented {
-				fgColor = 31
+				fgColor = term.ColorMagenta
 			} else if inStr {
 				if inStrStarter == '\'' {
 					fgColor = term.ColorYellow
@@ -90,7 +90,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			} else {
 				_, err := strconv.Atoi(string(ch))
 				if err == nil {
-					fgColor = 252|term.AttrBold
+					fgColor = term.AttrBold
 				}
 			}
 			// append cell to buffer
@@ -359,7 +359,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 				tabedStr += ","
 			}
 			tabedStr += strconv.Itoa(l)
-		}		
+		}
 		a.value = tabedStr
 	case "removeTab":
 		var untabed []int
@@ -539,7 +539,7 @@ func main() {
 	}
 	defer term.Close()
 	term.SetInputMode(term.InputAlt)
-	term.SetOutputMode(term.Output256)
+	// term.SetOutputMode(term.Output256)
 	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 
