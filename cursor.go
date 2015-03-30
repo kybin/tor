@@ -4,6 +4,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"strings"
+	"github.com/mattn/go-runewidth"
 )
 
 var (
@@ -155,7 +156,7 @@ func RuneVisualLength(r rune) int {
 	if r=='\t' {
 		return taboffset
 	}
-	return 1
+	return runewidth.RuneWidth(r)
 }
 
 func (c *Cursor) LineByteLength() int {

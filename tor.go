@@ -10,6 +10,7 @@ import (
 	"flag"
 	"strconv"
 	"unicode/utf8"
+	"github.com/mattn/go-runewidth"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -105,7 +106,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 				if o >= w.min.o {
 					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), fgColor, bgColor)
 				}
-				o += 1
+				o += runewidth.RuneWidth(ch)
 			}
 			oldOldCh = oldCh
 			oldCh = ch
