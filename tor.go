@@ -230,9 +230,9 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 			case 'z', 'Z':
 				return []*Action{&Action{kind:kind, value:"eof"}}
 			case 'n', 'N':
-				return []*Action{&Action{kind:kind, value:"nextDefinition"}}
+				return []*Action{&Action{kind:kind, value:"nextGlobal"}}
 			case 'h', 'H':
-				return []*Action{&Action{kind:kind, value:"prevDefinition"}}
+				return []*Action{&Action{kind:kind, value:"prevGlobal"}}
 			case ']', '}':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
 			case '[', '{':
@@ -293,10 +293,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			c.MoveBof()
 		case "eof":
 			c.MoveEof()
-		case "nextDefinition":
-			c.GotoNextDefinition([]string{"package", "import", "type", "func", "var"})
-		case "prevDefinition":
-			c.GotoPrevDefinition([]string{"package", "import", "type", "func", "var"})
+		case "nextGlobal":
+			c.GotoNextGlobalLineWithout(" \t#/{}()")
+		case "prevGlobal":
+			c.GotoPrevGlobalLineWithout(" \t#/{}()")
 		case "nextArg":
 			c.GotoNextAny("{(,)}")
 			r, _ := c.RuneAfter()

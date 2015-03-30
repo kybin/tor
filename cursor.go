@@ -581,6 +581,58 @@ func (c *Cursor) GotoPrevAny(chars string) {
 	}
 }
 
+func (c *Cursor) GotoNextGlobalLineWithout(str string) {
+	findLine := -1
+	for l := c.l+1; l < len(c.t.lines); l++ {
+		find := true
+		for _, r := range str {
+			if c.t.lines[l].data == "" {
+				find = false
+			} else if strings.HasPrefix(c.t.lines[l].data, string(r)) {
+				find = false
+			}
+		}
+		if find {
+			findLine = l
+			break
+		}
+	}
+	if findLine != -1 {
+		c.l = findLine
+		c.SetOffsets(0)
+		return
+	}
+}
+
+func (c *Cursor) GotoPrevGlobalLineWithout(str string) {
+	var startLine int
+	if c.b == 0 {
+		startLine = c.l - 1
+	} else {
+		startLine = c.l
+	}
+	findLine := -1
+	for l := startLine; l >= 0; l-- {
+		find := true
+		for _, r := range str {
+			if c.t.lines[l].data == "" {
+				find = false
+			} else if strings.HasPrefix(c.t.lines[l].data, string(r)) {
+				find = false
+			}
+		}
+		if find {
+			findLine = l
+			break
+		}
+	}
+	if findLine != -1 {
+		c.l = findLine
+		c.SetOffsets(0)
+		return
+	}
+}
+
 func (c *Cursor) GotoNextDefinition(defn []string) {
 	nextLines := c.t.lines[c.l+1:]
 	for i, line := range nextLines {
