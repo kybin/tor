@@ -187,7 +187,7 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
 	// find
 	case term.KeyCtrlB:
-		return []*Action{&Action{kind:"move", value:"saveFindWord"}}
+		return []*Action{&Action{kind:"saveFindWord"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
@@ -314,10 +314,6 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			if r == '(' || r == '{' {
 				c.MoveRight()
 			}
-		case "saveFindWord":
-			*findStr = c.Word()
-			*status = fmt.Sprintf("find string : %v", *findStr)
-			*holdStatus = true
 		case "nextFindWord":
 			if *findStr != "" {
 				c.GotoNext(*findStr)
@@ -342,6 +338,10 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		if a.kind == "select" {
 				sel.SetEnd(c)
 		}
+	case "saveFindWord":
+		*findStr = c.Word()
+		*status = fmt.Sprintf("find string : %v", *findStr)
+		*holdStatus = true
 	case "insert":
 		c.Insert(a.value)
 	case "delete":
