@@ -158,7 +158,7 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 	case term.KeyCtrlO:
 		return []*Action{&Action{kind:"insertTab"}}
 	// delete : value will added after actual deletion.
-	case term.KeyDelete, term.KeyCtrlD:
+	case term.KeyDelete:
 		if sel.on {
 			return []*Action{&Action{kind:"deleteSelection"}}
 		} else {
@@ -186,7 +186,7 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 	case term.KeyCtrlX:
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
 	// find
-	case term.KeyCtrlB:
+	case term.KeyCtrlD:
 		return []*Action{&Action{kind:"saveFindWord"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
