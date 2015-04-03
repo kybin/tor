@@ -662,20 +662,27 @@ func main() {
 						} else {
 							findDirection = "next"
 						}
+					} else if ev.Key == term.KeyCtrlJ {
+						findDirection = "prev"
+						cursor.GotoPrev(findStr)
+					} else if ev.Key == term.KeyCtrlL {
+						findDirection = "next"
+						cursor.GotoNext(findStr)
 					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
-						if findStr == "" {
-							continue
-						}
 						if findJustStart {
 							findStr = ""
+							continue
 						}
 						_, rlen := utf8.DecodeLastRuneInString(findStr)
 						findStr = findStr[:len(findStr)-rlen]
 					} else if ev.Key == term.KeySpace {
 						findStr += " "
 					} else if ev.Ch != 0 {
+						if findJustStart {
+							findJustStart = false
+							findStr = ""
+						}
 						findStr += string(ev.Ch)
-						findJustStart = false
 					} else if ev.Key == term.KeyEnter {
 						if findStr == "" {
 							continue
@@ -686,7 +693,6 @@ func main() {
 							cursor.GotoPrev(findStr)
 						}
 						oldFindStr = findStr // so next time we can run find mode with current findStr.
-						findJustStart = false
 					}
 					continue
 				}
