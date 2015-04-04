@@ -146,7 +146,7 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 		return []*Action{&Action{kind:"move", value:"down"}}
 	// insert
 	case term.KeyEnter:
-		return []*Action{&Action{kind:"insert", value:"\n"}}
+		return []*Action{&Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
 	case term.KeyCtrlN:
 		return []*Action{&Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}}
 	case term.KeySpace:
@@ -343,6 +343,14 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		*status = fmt.Sprintf("find string : %v", *findStr)
 		*holdStatus = true
 	case "insert":
+		if a.value == "autoIndent" {
+			prevline := c.t.lines[c.l-1].data
+			trimed := strings.TrimLeft(prevline, " \t")
+			indent := prevline[:len(prevline)-len(trimed)]
+			c.Insert(indent)
+			a.value = indent
+			return
+		}
 		c.Insert(a.value)
 	case "delete":
 		a.value = c.Delete()
