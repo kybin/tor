@@ -242,6 +242,8 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
 			case 'b', 'B':
 				return []*Action{&Action{kind:kind, value:"prevFindWord"}}
+			case 'c', 'C':
+				return []*Action{&Action{kind:kind, value:"matchingBracket"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -332,6 +334,8 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			if w != "" {
 				c.GotoPrev(w)
 			}
+		case "matchingBracket":
+			c.GotoMatchingBracket()
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}

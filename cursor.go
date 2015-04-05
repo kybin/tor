@@ -676,6 +676,60 @@ func (c *Cursor) GotoPrevDefinition(defn []string) {
 	}
 }
 
+func (c *Cursor) GotoMatchingBracket() {
+	r, _ := c.RuneAfter()
+	if !strings.Contains("{}[]()", string(r)) {
+		return
+	}
+	var dir string
+	if strings.Contains("{[(", string(r)) {
+		dir = "right"
+	} else {
+		dir = "left"
+	}
+	// rune for matching.
+	var m rune
+	switch r {
+	case '{':
+		m = '}'
+	case '}':
+		m = '{'
+	case '[':
+		m = ']'
+	case ']':
+		m = '['
+	case '(':
+		m = ')'
+	case ')':
+		m = '('
+	}
+	set := string(r) + string(m)
+	depth := 0
+	origc := *c
+	for {
+		bc := *c
+		if dir == "right" {
+			c.GotoNextAny(set)
+		} else {
+			c.GotoPrevAny(set)
+		}
+		cr, _ := c.RuneAfter()
+		if cr == r {
+			depth++
+		} else if cr == m {
+			if depth == 0 {
+				return
+			}
+			depth--
+		}
+		if c.l == bc.l && c.o == bc.o {
+			// did not find next set.
+			c.Copy(origc)
+			return
+		}
+	}
+}
+
 func (c *Cursor) GotoLine(l int) {
 	if l >= len(c.t.lines) {
 		l = len(c.t.lines)-1
