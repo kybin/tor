@@ -187,7 +187,7 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
 	// find
 	case term.KeyCtrlD:
-		return []*Action{&Action{kind:"saveFindWord"}}
+		return []*Action{&Action{kind:"saveFindWord"}, &Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
