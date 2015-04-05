@@ -209,6 +209,25 @@ func (c *Cursor) AtEof() bool {
 	return c.OnLastLine() && c.AtEol()
 }
 
+func (c *Cursor) InStrings() bool {
+	instr := false
+	var starter rune
+	var old rune
+	var oldold rune
+	for _, r := range c.LineDataUntilCursor() {
+		if !instr && strings.ContainsAny(string(r), "'\"") && !(old == '\\' && oldold != '\\') {
+			instr = true
+			starter = r
+		} else if instr && (r == starter) && !(old == '\\' && oldold != '\\') {
+			instr = false
+			starter = ' '
+		}
+		oldold = old
+		old = r
+	}
+	return instr
+}
+
 func (c *Cursor) MoveLeft() {
 	if c.AtBof() {
 		return
@@ -677,15 +696,20 @@ func (c *Cursor) GotoPrevDefinition(defn []string) {
 }
 
 func (c *Cursor) GotoMatchingBracket() {
-	r, _ := c.RuneAfter()
-	if !strings.Contains("{}[]()", string(r)) {
-		return
-	}
-	var dir string
-	if strings.Contains("{[(", string(r)) {
+	rb, _ := c.RuneBefore()
+	ra, _ := c.RuneAfter()
+	var r rune
+	dir := ""
+	if strings.Contains("{[(", string(rb)) {
+		r = rb
 		dir = "right"
-	} else {
+	}
+	if strings.Contains("}])", string(ra)) {
+		r = ra
 		dir = "left"
+	}
+	if dir == "" {
+		return
 	}
 	// rune for matching.
 	var m rune
@@ -703,6 +727,11 @@ func (c *Cursor) GotoMatchingBracket() {
 	case ')':
 		m = '('
 	}
+	if dir == "left" && rb == m {
+		return
+	} else if dir == "right" && ra == m {
+		return
+	}
 	set := string(r) + string(m)
 	depth := 0
 	origc := *c
@@ -713,19 +742,25 @@ func (c *Cursor) GotoMatchingBracket() {
 		} else {
 			c.GotoPrevAny(set)
 		}
+		if c.l == bc.l && c.o == bc.o {
+			// did not find next set.
+			c.Copy(origc)
+			return
+		}
+		if c.InStrings() {
+			continue
+		}
 		cr, _ := c.RuneAfter()
 		if cr == r {
 			depth++
 		} else if cr == m {
 			if depth == 0 {
+				if dir == "left" {
+					c.MoveRight()
+				}
 				return
 			}
 			depth--
-		}
-		if c.l == bc.l && c.o == bc.o {
-			// did not find next set.
-			c.Copy(origc)
-			return
 		}
 	}
 }
