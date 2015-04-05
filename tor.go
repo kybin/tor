@@ -210,9 +210,9 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 				return []*Action{&Action{kind:kind, value:"left"}}
 			case 'l', 'L':
 				return []*Action{&Action{kind:kind, value:"right"}}
-			case 'i', 'I':
+			case 'i', 'I', 'q', 'Q':
 				return []*Action{&Action{kind:kind, value:"up"}}
-			case 'k', 'K':
+			case 'k', 'K', 'a', 'A':
 				return []*Action{&Action{kind:kind, value:"down"}}
 			case 'm', 'M':
 				return []*Action{&Action{kind:kind, value:"prevBowEow"}}
@@ -226,17 +226,17 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 				return []*Action{&Action{kind:kind, value:"pageup"}}
 			case 's', 'S':
 				return []*Action{&Action{kind:kind, value:"pagedown"}}
-			case 'a', 'A':
+			case 'e', 'E':
 				return []*Action{&Action{kind:kind, value:"bof"}}
-			case 'z', 'Z':
+			case 'd', 'D':
 				return []*Action{&Action{kind:kind, value:"eof"}}
 			case 'n', 'N':
 				return []*Action{&Action{kind:kind, value:"nextGlobal"}}
 			case 'h', 'H':
 				return []*Action{&Action{kind:kind, value:"prevGlobal"}}
-			case ']', '}':
+			case ']', '}', 'x', 'X':
 				return []*Action{&Action{kind:kind, value:"nextArg"}}
-			case '[', '{':
+			case '[', '{', 'z', 'Z':
 				return []*Action{&Action{kind:kind, value:"prevArg"}}
 			case 'f', 'F':
 				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
