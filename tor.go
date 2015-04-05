@@ -604,9 +604,9 @@ func main() {
 			}
 			if !holdStatus {
 				if selection.on {
-					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, moveModeStr, selection.start.l, selection.start.o, selection.end.l, selection.end.o)
+					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, moveModeStr, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
 				} else {
-					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, moveModeStr, cursor.l, cursor.b, cursor.v, cursor.o)
+					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, moveModeStr, cursor.l+1, cursor.b, cursor.v, cursor.o)
 				}
 			}
 		}
@@ -639,6 +639,9 @@ func main() {
 						l, err := strconv.Atoi(gotolineStr)
 						if err != nil {
 							panic(err)
+						}
+						if l != 0 {
+							l-- // internal line number and showing line number are different.
 						}
 						cursor.GotoLine(l)
 						gotolineStr = ""
