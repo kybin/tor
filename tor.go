@@ -637,13 +637,12 @@ func main() {
 						continue
 					} else if ev.Key == term.KeyEnter {
 						l, err := strconv.Atoi(gotolineStr)
-						if err != nil {
-							panic(err)
+						if err == nil {
+							if l != 0 {
+								l-- // internal line number and showing line number are different.
+							}
+							cursor.GotoLine(l)
 						}
-						if l != 0 {
-							l-- // internal line number and showing line number are different.
-						}
-						cursor.GotoLine(l)
 						gotolineStr = ""
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
