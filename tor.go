@@ -715,6 +715,16 @@ func main() {
 							continue
 						}
 						cursor.GotoLast(findStr)
+					} else if ev.Key == term.KeyCtrlU {
+						if findStr == "" {
+							continue
+						}
+						cursor.GotoPrevWord(findStr)
+					} else if ev.Key == term.KeyCtrlO {
+						if findStr == "" {
+							continue
+						}
+						cursor.GotoNextWord(findStr)
 					} else if ev.Key == term.KeyEnter {
 						if findStr == "" {
 							continue

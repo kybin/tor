@@ -566,6 +566,49 @@ func (c *Cursor) GotoPrev(find string) {
 	}
 }
 
+func (c *Cursor) GotoNextWord(find string) {
+	oldc := *c
+	for l := c.l; l < len(c.t.lines); l++ {
+		linedata := string(c.t.lines[l].data)
+		offset := 0
+		if l == c.l {
+			if c.b == len(linedata) {
+				continue
+			}
+			linedata = linedata[c.b+1:]
+			offset = c.b+1
+		}
+		b := strings.Index(linedata, find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b+offset)
+			if c.Word() == find {
+				return
+			}
+		}
+	}
+	c.Copy(oldc)
+}
+
+func (c *Cursor) GotoPrevWord(find string) {
+	oldc := *c
+	for l := c.l; l >= 0; l-- {
+		linedata := string(c.t.lines[l].data)
+		if l == c.l {
+			linedata = linedata[:c.b]
+		}
+		b := strings.LastIndex(linedata, find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			if c.Word() == find {
+				return
+			}
+		}
+	}
+	c.Copy(oldc)
+}
+
 func (c *Cursor) GotoFirst(find string) {
 	for l := 0; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
