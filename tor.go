@@ -705,6 +705,16 @@ func main() {
 						}
 						cursor.GotoNext(findStr)
 						oldFindStr = findStr // so next time we can run find mode with current findStr.
+					} else if ev.Key == term.KeyCtrlI {
+						if findStr == "" {
+							continue
+						}
+						cursor.GotoFirst(findStr)
+					} else if ev.Key == term.KeyCtrlK {
+						if findStr == "" {
+							continue
+						}
+						cursor.GotoLast(findStr)
 					} else if ev.Key == term.KeyEnter {
 						if findStr == "" {
 							continue

@@ -566,6 +566,30 @@ func (c *Cursor) GotoPrev(find string) {
 	}
 }
 
+func (c *Cursor) GotoFirst(find string) {
+	for l := 0; l < len(c.t.lines); l++ {
+		linedata := string(c.t.lines[l].data)
+		b := strings.Index(linedata, find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			break
+		}
+	}
+}
+
+func (c *Cursor) GotoLast(find string) {
+	for l := len(c.t.lines)-1; l >= 0; l-- {
+		linedata := string(c.t.lines[l].data)
+		b := strings.LastIndex(linedata, find)
+		if b != -1 {
+			c.l = l
+			c.SetOffsets(b)
+			break
+		}
+	}
+}
+
 func (c *Cursor) GotoNextAny(chars string) {
 	for l := c.l; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
