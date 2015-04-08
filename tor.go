@@ -9,6 +9,7 @@ import (
 	"strings"
 	"flag"
 	"strconv"
+	"unicode"
 	"unicode/utf8"
 	"github.com/mattn/go-runewidth"
 )
@@ -50,6 +51,38 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 		commented := false
 		oldOldCh := ' '
 		oldCh := ' '
+
+		// find end offset of non-space runes
+		eoc := 0
+		if ln.data != "" {
+			// check line vis-length
+			for _, r := range ln.data {
+				if r == '\t' {
+					eoc += 4
+				} else {
+					eoc += runewidth.RuneWidth(r)
+				}
+			}
+			// find last non-space rune.
+			remain := ln.data
+			for {
+				if remain == "" {
+					break
+				}
+				r, rlen := utf8.DecodeLastRuneInString(remain)
+				remain = remain[:len(remain)-rlen]
+				if !unicode.IsSpace(r) {
+					break
+				}
+				if r == '\t' {
+					eoc -= taboffset
+				} else {
+					eoc -= runewidth.RuneWidth(r)
+				}
+			}
+		}
+
+		// drawing
 		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
 		for _, ch := range ln.data {
 			if o >= w.max.o {
@@ -57,6 +90,9 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			}
 			// check what color it should be.
 			bgColor := term.ColorDefault
+			if o >= eoc {
+				bgColor = term.ColorYellow
+			}
 			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
 			}
