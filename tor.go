@@ -58,7 +58,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			// check line vis-length
 			for _, r := range ln.data {
 				if r == '\t' {
-					eoc += 4
+					eoc += taboffset
 				} else {
 					eoc += runewidth.RuneWidth(r)
 				}
