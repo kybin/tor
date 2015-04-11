@@ -39,7 +39,7 @@ func clearScreen(l *Layout) {
 }
 
 // draw text inside of window at mainviewer
-func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
+func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
 	viewer := l.MainViewerBound()
 	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
@@ -95,6 +95,11 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection) {
 			}
 			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
+			}
+			if l == c.l && o == c.o {
+				if mode != "normal" || moveMode {
+					bgColor = term.ColorCyan
+				}
 			}
 			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
 				commented = true
@@ -630,7 +635,7 @@ func main() {
 	for {
 		win.Follow(cursor, 3)
 		clearScreen(layout)
-		drawScreen(layout, win, text, selection)
+		drawScreen(layout, win, text, selection, cursor, mode, moveMode)
 
 		if mode == "exit" {
 			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
