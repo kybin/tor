@@ -429,7 +429,12 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 	case "backspace":
 		a.value = c.Backspace()
 	case "deleteSelection":
-		a.value = c.DeleteSelection(sel)
+		if sel.on {
+			a.value = c.DeleteSelection(sel)
+			sel.on = false
+		} else {
+			a.value = c.Delete()
+		}
 	case "selectLine":
 		c.MoveBol()
 		if !sel.on {
@@ -804,7 +809,7 @@ func main() {
 					beforeCursor := *cursor
 
 					switch a.kind {
-					case "select", "selectLine", "insertTab", "removeTab":
+					case "select", "selectLine", "insertTab", "removeTab", "copy", "deleteSelection":
 						// hold selection
 					default:
 						selection.on = false
@@ -826,8 +831,13 @@ func main() {
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
 					} else if a.kind == "copy" {
-						minc, maxc := selection.MinMax()
-						copied = text.DataInside(minc, maxc)
+						if selection.on {
+							minc, maxc := selection.MinMax()
+							copied = text.DataInside(minc, maxc)
+						} else {
+							r, _ := cursor.RuneAfter()
+							copied = string(r)
+						}
 					} else if a.kind == "paste" {
 						cursor.Insert(copied)
 						a.value = copied
