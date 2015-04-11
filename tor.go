@@ -96,7 +96,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			if sel.on && sel.Contains(Point{l,o}) {
 				bgColor = term.ColorGreen
 			}
-			if l == c.l && o == c.o {
+			if l == c.l {
 				if mode != "normal" || moveMode {
 					bgColor = term.ColorCyan
 				}
