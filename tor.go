@@ -173,41 +173,41 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 
 	switch ev.Key {
 	case term.KeyCtrlW:
-		return []*Action{&Action{kind:"exit"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"exit"}}
 	case term.KeyCtrlS:
-		return []*Action{&Action{kind:"save"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"save"}}
 	// move
 	case term.KeyArrowLeft:
-		return []*Action{&Action{kind:"move", value:"left"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"left"}}
 	case term.KeyArrowRight:
-		return []*Action{&Action{kind:"move", value:"right"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"right"}}
 	case term.KeyArrowUp:
-		return []*Action{&Action{kind:"move", value:"up"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"up"}}
 	case term.KeyArrowDown:
-		return []*Action{&Action{kind:"move", value:"down"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"down"}}
 	// insert
 	case term.KeyEnter:
-		return []*Action{&Action{kind:"insert", value:"\n"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}}
 	case term.KeyCtrlN:
-		return []*Action{&Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
 	case term.KeySpace:
-		return []*Action{&Action{kind:"insert", value:" "}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:" "}}
 	case term.KeyTab:
-		return []*Action{&Action{kind:"insert", value:"\t"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\t"}}
 	case term.KeyCtrlU:
-		return []*Action{&Action{kind:"removeTab"}}
+		return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"removeTab"}}
 	case term.KeyCtrlO:
-		return []*Action{&Action{kind:"insertTab"}}
+		return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"insertTab"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
 		if sel.on {
-			return []*Action{&Action{kind:"deleteSelection"}}
+			return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
 		} else {
 			return []*Action{&Action{kind:"delete"}}
 		}
 	case term.KeyBackspace, term.KeyBackspace2:
 		if sel.on {
-			return []*Action{&Action{kind:"deleteSelection"}}
+			return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
 		} else {
 			return []*Action{&Action{kind:"backspace"}}
 		}
@@ -218,14 +218,14 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 		return []*Action{&Action{kind:"redo"}}
 	// copy, paste, cut
 	case term.KeyCtrlC:
-		return []*Action{&Action{kind:"copy"}}
+		return []*Action{&Action{kind:"copy"}, &Action{kind:"selection", value:"off"}}
 	case term.KeyCtrlV:
 		if sel.on {
-			return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"paste"}}
+			return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"paste"}}
 		}
 		return []*Action{&Action{kind:"paste"}}
 	case term.KeyCtrlX:
-		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}}
+		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
 	// find
 	case term.KeyCtrlD:
 		return []*Action{&Action{kind:"saveFindWord"}, &Action{kind:"modeChange", value:"find"}}
@@ -242,49 +242,83 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 			return []*Action{&Action{kind:"none"}}
 		}
 		if (*moveMode) || (ev.Mod & term.ModAlt != 0) {
-			kind := "move"
-			if withShift(ev.Ch) {
-				kind = "select"
-			}
 			switch ev.Ch {
-			case 'j', 'J':
-				return []*Action{&Action{kind:kind, value:"left"}}
-			case 'l', 'L':
-				return []*Action{&Action{kind:kind, value:"right"}}
-			case 'i', 'I', 'q', 'Q':
-				return []*Action{&Action{kind:kind, value:"up"}}
-			case 'k', 'K', 'a', 'A':
-				return []*Action{&Action{kind:kind, value:"down"}}
-			case 'm', 'M':
-				return []*Action{&Action{kind:kind, value:"prevBowEow"}}
-			case '.', '>':
-				return []*Action{&Action{kind:kind, value:"nextBowEow"}}
-			case 'u', 'U':
-				return []*Action{&Action{kind:kind, value:"bocBolAdvance"}}
-			case 'o', 'O':
-				return []*Action{&Action{kind:kind, value:"eolAdvance"}}
-			case 'w', 'W':
-				return []*Action{&Action{kind:kind, value:"pageup"}}
-			case 's', 'S':
-				return []*Action{&Action{kind:kind, value:"pagedown"}}
-			case 'e', 'E':
-				return []*Action{&Action{kind:kind, value:"bof"}}
-			case 'd', 'D':
-				return []*Action{&Action{kind:kind, value:"eof"}}
-			case 'n', 'N':
-				return []*Action{&Action{kind:kind, value:"nextGlobal"}}
-			case 'h', 'H':
-				return []*Action{&Action{kind:kind, value:"prevGlobal"}}
-			case ']', '}', 'x', 'X':
-				return []*Action{&Action{kind:kind, value:"nextArg"}}
-			case '[', '{', 'z', 'Z':
-				return []*Action{&Action{kind:kind, value:"prevArg"}}
-			case 'f', 'F':
-				return []*Action{&Action{kind:kind, value:"nextFindWord"}}
-			case 'b', 'B':
-				return []*Action{&Action{kind:kind, value:"prevFindWord"}}
-			case 'c', 'C':
-				return []*Action{&Action{kind:kind, value:"matchingBracket"}}
+			case 'j':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"left"}}
+			case 'J':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"left"}}
+			case 'l':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"right"}}
+			case 'L':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"right"}}
+			case 'i', 'q':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"up"}}
+			case 'I', 'Q':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"up"}}
+			case 'k', 'a':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"down"}}
+			case 'K', 'A':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"down"}}
+			case 'm':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevBowEow"}}
+			case 'M':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevBowEow"}}
+			case '.':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextBowEow"}}
+			case '>':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextBowEow"}}
+			case 'u':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bocBolAdvance"}}
+			case 'U':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bocBolAdvance"}}
+			case 'o':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eolAdvance"}}
+			case 'O':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"eolAdvance"}}
+			case 'w':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pageup"}}
+			case 'W':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"pageup"}}
+			case 's':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pagedown"}}
+			case 'S':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"pagedown"}}
+			case 'e':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bof"}}
+			case 'E':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bof"}}
+			case 'd':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eof"}}
+			case 'D':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"eof"}}
+			case 'n':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextGlobal"}}
+			case 'N':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextGlobal"}}
+			case 'h':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevGlobal"}}
+			case 'H':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevGlobal"}}
+			case ']', 'x':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextArg"}}
+			case '}', 'X':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextArg"}}
+			case '[', 'z':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevArg"}}
+			case '{', 'Z':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevArg"}}
+			case 'f':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextFindWord"}}
+			case 'F':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextFindWord"}}
+			case 'b':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevFindWord"}}
+			case 'B':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevFindWord"}}
+			case 'c':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"matchingBracket"}}
+			case 'C':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"matchingBracket"}}
 			default:
 				return []*Action{&Action{kind:"none"}}
 			}
@@ -298,16 +332,22 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 }
 
 func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string, status *string, holdStatus *bool) {
+	defer func() {
+		if sel.on {
+			sel.SetEnd(c)
+		}
+	}()
 	switch a.kind {
 	case "none":
 		return
-	case "move", "select":
-		if a.kind == "select" {
-			if !sel.on {
-				sel.on = true
-				sel.SetStart(c)
-			}
+	case "selection":
+		if a.value == "on" && !sel.on {
+			sel.on = true
+			sel.SetStart(c)
+		} else if a.value == "off" {
+			sel.on = false
 		}
+	case "move":
 		switch a.value {
 		case "left":
 			c.MoveLeft()
@@ -379,9 +419,6 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			c.GotoMatchingBracket()
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
-		}
-		if a.kind == "select" {
-				sel.SetEnd(c)
 		}
 	case "saveFindWord":
 		*findStr = c.Word()
@@ -813,13 +850,6 @@ func main() {
 					}
 
 					beforeCursor := *cursor
-
-					switch a.kind {
-					case "select", "selectLine", "insertTab", "removeTab", "copy", "deleteSelection":
-						// hold selection
-					default:
-						selection.on = false
-					}
 
 					if a.kind == "exit" {
 						if !edited {
