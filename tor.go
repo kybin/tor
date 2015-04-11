@@ -440,10 +440,14 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		var tabed []int
 		if sel.on {
 			tabed = c.Tab(sel)
+			for _, l := range tabed {
+				if l == sel.start.l {
+					sel.start.o += taboffset
+				}
+			}
 		} else {
 			tabed = c.Tab(nil)
 		}
-		sel.SetEnd(c)
 		tabedStr := ""
 		for _, l := range tabed {
 			if tabedStr != "" {
@@ -456,10 +460,14 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		var untabed []int
 		if sel.on {
 			untabed = c.UnTab(sel)
+			for _, l := range untabed {
+				if l == sel.start.l {
+					sel.start.o -= taboffset
+				}
+			}
 		} else {
 			untabed = c.UnTab(nil)
 		}
-		sel.SetEnd(c)
 		untabedStr := ""
 		for _, l := range untabed {
 			if untabedStr != "" {
