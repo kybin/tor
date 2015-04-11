@@ -670,13 +670,13 @@ func main() {
 				if mode == "exit" {
 					if ev.Ch == 'y' {
 						return
-					} else if ev.Ch == 'n' || ev.Key == term.KeyEsc {
+					} else if ev.Ch == 'n' || ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
 					}
 					continue
 				} else if mode == "gotoline" {
-					if ev.Key == term.KeyEsc {
+					if ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
 						gotolineStr = ""
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
@@ -709,7 +709,7 @@ func main() {
 					}
 					continue
 				} else if mode == "find" {
-					if ev.Key == term.KeyEsc {
+					if ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
 						findStr = oldFindStr
 						mode = "normal"
 						term.SetInputMode(term.InputAlt)
@@ -786,7 +786,7 @@ func main() {
 				}
 
 				if moveMode {
-					if ev.Key == term.KeyCtrlJ {
+					if ev.Key == term.KeyCtrlJ || ev.Key == term.KeyCtrlK {
 						moveMode = false
 						continue
 					}
@@ -804,6 +804,7 @@ func main() {
 							findJustStart = true
 						}
 						mode = a.value
+						moveMode = false
 						term.SetInputMode(term.InputEsc)
 						continue
 					} else if a.kind == "moveMode" {
