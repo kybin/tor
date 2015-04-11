@@ -786,7 +786,10 @@ func main() {
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
-							oldFindStr = findStr
+							if selection.on {
+								min, max := selection.MinMax()
+								findStr = text.DataInside(min, max)
+							}
 							findDirection = "next"
 							findJustStart = true
 						}
