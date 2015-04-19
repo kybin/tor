@@ -41,10 +41,12 @@ func clearScreen(l *Layout) {
 // draw text inside of window at mainviewer
 func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
 	viewer := l.MainViewerBound()
+
 	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
 		}
+
 		inStr := false
 		inStrStarter := ' '
 		inStrFinished := false
@@ -53,10 +55,9 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 		oldOldR := ' '
 		var oldBg term.Attribute
 
-		// find end offset of non-space runes
 		eoc := 0
 		if ln.data != "" {
-			// check line vis-length
+			// ++
 			for _, r := range ln.data {
 				if r == '\t' {
 					eoc += taboffset
@@ -64,7 +65,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					eoc += runewidth.RuneWidth(r)
 				}
 			}
-			// find last non-space rune.
+			// --
 			remain := ln.data
 			for {
 				if remain == "" {
@@ -83,13 +84,13 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			}
 		}
 
-		// drawing
-		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
+		// draw
+		o := 0
 		for _, r := range ln.data {
 			if o >= w.max.o {
 				break
 			}
-			// check what color it should be.
+
 			bg := term.ColorDefault
 			if o >= eoc {
 				bg = term.ColorYellow
@@ -121,6 +122,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					}
 				}
 			}
+
 			fg := term.ColorWhite
 			if commented {
 				fg = term.ColorMagenta
@@ -136,7 +138,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					fg = term.ColorCyan
 				}
 			}
-			// append cell to buffer
+
 			if r == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
@@ -150,6 +152,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 				}
 				o += runewidth.RuneWidth(r)
 			}
+
 			oldOldR = oldR
 			oldR = r
 			oldBg = bg
