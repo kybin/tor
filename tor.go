@@ -51,6 +51,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 		commented := false
 		oldOldCh := ' '
 		oldCh := ' '
+		var oldBg term.Attribute
 
 		// find end offset of non-space runes
 		eoc := 0
@@ -103,7 +104,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			}
 			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
 				commented = true
-				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', term.ColorMagenta, bgColor) // hacky way to color the first '/' cell.
+				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
 			}
 			if inStrFinished {
 				inStr = false
@@ -151,6 +152,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			}
 			oldOldCh = oldCh
 			oldCh = ch
+			oldBg = bgColor
 		}
 	}
 }
