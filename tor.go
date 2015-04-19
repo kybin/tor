@@ -36,7 +36,7 @@ func clearScreen(ar *Area) {
 	}
 }
 
-// draw text inside of window at mainviewer
+// draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
 	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
@@ -650,13 +650,13 @@ func main() {
 
 
 	layout := NewLayout()
-	mainview := layout.MainViewerBound()
-	win := NewWindow(mainview.Size())
+	mainarea := layout.MainViewerBound()
+	win := NewWindow(mainarea.Size())
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := NewCursor(text)
 	selection := NewSelection()
 	history := newHistory()
-	SetCursor(mainview.min.l, mainview.min.o)
+	SetCursor(mainarea.min.l, mainarea.min.o)
 
 	mode := "normal"
 	moveMode := false
@@ -680,8 +680,8 @@ func main() {
 	}()
 	for {
 		win.Follow(cursor, 3)
-		clearScreen(mainview)
-		drawScreen(mainview, win, text, selection, cursor, mode, moveMode)
+		clearScreen(mainarea)
+		drawScreen(mainarea, win, text, selection, cursor, mode, moveMode)
 
 		if mode == "exit" {
 			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
@@ -705,7 +705,7 @@ func main() {
 		printStatus(status)
 		holdStatus = false
 
-		SetTermboxCursor(cursor, win, mainview)
+		SetTermboxCursor(cursor, win, mainarea)
 		term.Flush()
 
 		// wait for keyboard input
@@ -934,10 +934,10 @@ func main() {
 					}
 				}
 			case term.EventResize:
-				min := mainview.min
+				min := mainarea.min
 				o, l := term.Size()
-				mainview = &Area{min, Point{min.l+l, min.o+o}}
-				win.Resize(mainview.Size())
+				mainarea = &Area{min, Point{min.l+l, min.o+o}}
+				win.Resize(mainarea.Size())
 			}
 		case <-time.After(time.Second):
 			holdStatus = true
