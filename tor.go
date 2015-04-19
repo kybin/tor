@@ -19,8 +19,8 @@ func SetCursor(l, o int) {
 	term.SetCursor(o, l)
 }
 
-func SetCell(l, o int, ch rune, fg, bg term.Attribute) {
-	term.SetCell(o, l, ch, fg, bg)
+func SetCell(l, o int, r rune, fg, bg term.Attribute) {
+	term.SetCell(o, l, r, fg, bg)
 }
 
 func SetTermboxCursor(c *Cursor, w *Window, l *Layout) {
@@ -49,8 +49,8 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 		inStrStarter := ' '
 		inStrFinished := false
 		commented := false
-		oldOldCh := ' '
-		oldCh := ' '
+		oldR := ' '
+		oldOldR := ' '
 		var oldBg term.Attribute
 
 		// find end offset of non-space runes
@@ -85,7 +85,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 
 		// drawing
 		o := 0 // we cannot use index of line([]rune) because some rune have multiple-visible length. ex) tab, korean
-		for _, ch := range ln.data {
+		for _, r := range ln.data {
 			if o >= w.max.o {
 				break
 			}
@@ -102,7 +102,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					bg = term.ColorCyan
 				}
 			}
-			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
+			if r == '/' && oldR == '/' && oldOldR != '\\' {
 				commented = true
 				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
 			}
@@ -110,13 +110,13 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 				inStr = false
 				inStrStarter = ' '
 			}
-			if ch == '\'' || ch == '"' {
-				if !(oldCh == '\\' && oldOldCh != '\\') {
+			if r == '\'' || r == '"' {
+				if !(oldR == '\\' && oldOldR != '\\') {
 					if !inStr {
 						inStr = true
-						inStrStarter = ch
+						inStrStarter = r
 						inStrFinished = false
-					} else if inStrStarter == ch {
+					} else if inStrStarter == r {
 						inStrFinished = true
 					}
 				}
@@ -131,13 +131,13 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					fg = term.ColorRed
 				}
 			} else {
-				_, err := strconv.Atoi(string(ch))
+				_, err := strconv.Atoi(string(r))
 				if err == nil {
 					fg = term.ColorCyan
 				}
 			}
 			// append cell to buffer
-			if ch == '\t' {
+			if r == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
 						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), fg, bg)
@@ -146,12 +146,12 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 				}
 			} else {
 				if o >= w.min.o {
-					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), fg, bg)
+					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(r), fg, bg)
 				}
-				o += runewidth.RuneWidth(ch)
+				o += runewidth.RuneWidth(r)
 			}
-			oldOldCh = oldCh
-			oldCh = ch
+			oldOldR = oldR
+			oldR = r
 			oldBg = bg
 		}
 	}
@@ -163,8 +163,8 @@ func printStatus(status string) {
 	for off:=0 ; off<termw ; off++ {
 		SetCell(statusLine, off, ' ', term.ColorBlack, term.ColorWhite)
 	}
-	for off, ch := range status {
-		SetCell(statusLine, off, rune(ch), term.ColorBlack, term.ColorWhite)
+	for off, r := range status {
+		SetCell(statusLine, off, r, term.ColorBlack, term.ColorWhite)
 	}
 }
 
