@@ -23,25 +23,21 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, r, fg, bg)
 }
 
-func SetTermboxCursor(c *Cursor, w *Window, l *Layout) {
-	view := l.MainViewerBound()
+func SetTermboxCursor(c *Cursor, w *Window, ar *Area) {
 	p := c.PositionInWindow(w)
-	SetCursor(view.min.l+p.l, view.min.o+p.o)
+	SetCursor(ar.min.l+p.l, ar.min.o+p.o)
 }
 
-func clearScreen(l *Layout) {
-	viewer := l.MainViewerBound()
-	for l := viewer.min.l ; l < viewer.max.l ; l++ {
-		for o := viewer.min.o ; o < viewer.max.o ; o++ {
+func clearScreen(ar *Area) {
+	for l := ar.min.l ; l < ar.max.l ; l++ {
+		for o := ar.min.o ; o < ar.max.o ; o++ {
 			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
 }
 
 // draw text inside of window at mainviewer
-func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
-	viewer := l.MainViewerBound()
-
+func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
 	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
@@ -105,7 +101,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			}
 			if r == '/' && oldR == '/' && oldOldR != '\\' {
 				commented = true
-				SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
+				SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
 			}
 			if inStrFinished {
 				inStr = false
@@ -142,13 +138,13 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			if r == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
-						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), fg, bg)
+						SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
 					}
 					o += 1
 				}
 			} else {
 				if o >= w.min.o {
-					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(r), fg, bg)
+					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(r), fg, bg)
 				}
 				o += runewidth.RuneWidth(r)
 			}
@@ -655,7 +651,7 @@ func main() {
 
 	layout := NewLayout()
 	mainview := layout.MainViewerBound()
-	win := NewWindow(layout)
+	win := NewWindow(mainview.Size())
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := NewCursor(text)
 	selection := NewSelection()
@@ -684,8 +680,8 @@ func main() {
 	}()
 	for {
 		win.Follow(cursor, 3)
-		clearScreen(layout)
-		drawScreen(layout, win, text, selection, cursor, mode, moveMode)
+		clearScreen(mainview)
+		drawScreen(mainview, win, text, selection, cursor, mode, moveMode)
 
 		if mode == "exit" {
 			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
@@ -709,7 +705,7 @@ func main() {
 		printStatus(status)
 		holdStatus = false
 
-		SetTermboxCursor(cursor, win, layout)
+		SetTermboxCursor(cursor, win, mainview)
 		term.Flush()
 
 		// wait for keyboard input
@@ -937,13 +933,14 @@ func main() {
 						ioutil.WriteFile(extendFileName(f, ".history"), []byte(historyFileString), 0755)
 					}
 				}
+			case term.EventResize:
+				min := mainview.min
+				o, l := term.Size()
+				mainview = &Area{min, Point{min.l+l, min.o+o}}
+				win.Resize(mainview.Size())
 			}
 		case <-time.After(time.Second):
 			holdStatus = true
-		// case term.EventResize:
-		//	win.resize()
-		//	win.clear()
-		//	win.draw()
 		}
 	}
 }

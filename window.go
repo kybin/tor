@@ -12,11 +12,13 @@ type Window struct {
 	max Point
 }
 
-func NewWindow(l *Layout) *Window {
-	maxpt := l.MainViewerBound().Size()
-	minpt := Point{0, 0}
-	w := Window{minpt, maxpt}
+func NewWindow(size Point) *Window {
+	w := Window{Point{0, 0}, size}
 	return &w
+}
+
+func (w *Window) Resize(size Point) {
+	w.max = Point{w.min.l + size.l, w.min.o + size.o}
 }
 
 func (w *Window) Set(min, max Point) {
