@@ -90,16 +90,16 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 				break
 			}
 			// check what color it should be.
-			bgColor := term.ColorDefault
+			bg := term.ColorDefault
 			if o >= eoc {
-				bgColor = term.ColorYellow
+				bg = term.ColorYellow
 			}
 			if sel.on && sel.Contains(Point{l,o}) {
-				bgColor = term.ColorGreen
+				bg = term.ColorGreen
 			}
 			if l == c.l {
 				if mode != "normal" || moveMode {
-					bgColor = term.ColorCyan
+					bg = term.ColorCyan
 				}
 			}
 			if ch == '/' && oldCh == '/' && oldOldCh != '\\' {
@@ -121,38 +121,38 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 					}
 				}
 			}
-			fgColor := term.ColorWhite
+			fg := term.ColorWhite
 			if commented {
-				fgColor = term.ColorMagenta
+				fg = term.ColorMagenta
 			} else if inStr {
 				if inStrStarter == '\'' {
-					fgColor = term.ColorYellow
+					fg = term.ColorYellow
 				} else {
-					fgColor = term.ColorRed
+					fg = term.ColorRed
 				}
 			} else {
 				_, err := strconv.Atoi(string(ch))
 				if err == nil {
-					fgColor = term.ColorCyan
+					fg = term.ColorCyan
 				}
 			}
 			// append cell to buffer
 			if ch == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
-						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), fgColor, bgColor)
+						SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(' '), fg, bg)
 					}
 					o += 1
 				}
 			} else {
 				if o >= w.min.o {
-					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), fgColor, bgColor)
+					SetCell(l-w.min.l+viewer.min.l, o-w.min.o+viewer.min.o, rune(ch), fg, bg)
 				}
 				o += runewidth.RuneWidth(ch)
 			}
 			oldOldCh = oldCh
 			oldCh = ch
-			oldBg = bgColor
+			oldBg = bg
 		}
 	}
 }
