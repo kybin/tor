@@ -455,17 +455,18 @@ func (c *Cursor) Tab(sel *Selection) []int {
 		return tabed
 	}
 	min, max := sel.MinMax()
+	if min.b == len(c.t.lines[min.l].data) {
+		min.l++
+	}
+	if max.b == 0 {
+		max.l--
+	}
 	for l := min.l; l < max.l + 1; l++ {
-		if l == min.l && min.b == len(c.t.lines[min.l].data) {
-			continue
-		} else if l == max.l && max.b == 0 {
-			continue
-		}
 		c.t.lines[l].InsertTab()
 		tabed = append(tabed, l)
 	}
 	for _, l := range tabed {
-		if l == c.l && !c.AtBol() {
+		if l == c.l {
 			c.SetOffsets(c.b+1)
 		}
 	}
@@ -475,19 +476,23 @@ func (c *Cursor) Tab(sel *Selection) []int {
 func (c *Cursor) UnTab(sel *Selection) []int {
 	untabed := make([]int, 0)
 	if sel == nil {
-		if err := c.t.lines[c.l].RemoveTab(); err == nil {
-			untabed = append(untabed, c.l)
+		if err := c.t.lines[c.l].RemoveTab(); err != nil {
+			return untabed
 		}
-		c.SetOffsets(c.b-1)
+		if c.b != 0 {
+			c.SetOffsets(c.b-1)
+		}
+		untabed = append(untabed, c.l)
 		return untabed
 	}
 	min, max := sel.MinMax()
+	if min.b == len(c.t.lines[min.l].data) {
+		min.l++
+	}
+	if max.b == 0 {
+		max.l--
+	}
 	for l := min.l; l < max.l+1; l++ {
-		if l == min.l && min.b == len(c.t.lines[min.l].data) {
-			continue
-		} else if l == max.l && max.b == 0 {
-			continue
-		}
 		if err := c.t.lines[l].RemoveTab(); err == nil {
 			untabed = append(untabed, l)
 		}
