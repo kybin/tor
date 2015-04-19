@@ -1,4 +1,4 @@
-Better status print.
-Logger for tor. Without this, it is hard to find what is an error.
+draw one more cell at the end of lines for indicate selection.
+Logger?
 Offset changers for other than cursor line.
 
