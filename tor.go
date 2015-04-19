@@ -132,7 +132,7 @@ func drawScreen(l *Layout, w *Window, t *Text, sel *Selection, c *Cursor, mode s
 			} else {
 				_, err := strconv.Atoi(string(ch))
 				if err == nil {
-					fgColor = term.AttrBold
+					fgColor = term.ColorCyan
 				}
 			}
 			// append cell to buffer
