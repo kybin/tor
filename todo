@@ -1,3 +1,6 @@
+make move-mode just one of modes.
+ctrlK for quit any special mode.
+correct comment parser per languages. (at least go and python)
 draw one more cell at the end of lines for indicate selection.
 Logger?
 Offset changers for other than cursor line.
