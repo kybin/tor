@@ -2,6 +2,7 @@ if -> switch for some places.
 some do event parsing now exist outside of do() func.
 find mode place?
 replace mode?
+c.o c.O()
 correct comment parser per languages. (at least go and python)
 shoud a cursor edit it's text directly?
 window resize handling does not working on maximize event.
