@@ -715,16 +715,14 @@ func main() {
 				if mode == "exit" {
 					if ev.Ch == 'y' {
 						return
-					} else if ev.Ch == 'n' || ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
+					} else if ev.Ch == 'n' || ev.Key == term.KeyCtrlK {
 						mode = "normal"
-						term.SetInputMode(term.InputAlt)
 					}
 					continue
 				} else if mode == "gotoline" {
-					if ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
+					if ev.Key == term.KeyCtrlK {
 						gotolineStr = ""
 						mode = "normal"
-						term.SetInputMode(term.InputAlt)
 						continue
 					} else if ev.Key == term.KeyEnter {
 						l, err := strconv.Atoi(gotolineStr)
@@ -736,7 +734,6 @@ func main() {
 						}
 						gotolineStr = ""
 						mode = "normal"
-						term.SetInputMode(term.InputAlt)
 						continue
 					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
 						if gotolineStr == "" {
@@ -754,10 +751,9 @@ func main() {
 					}
 					continue
 				} else if mode == "find" {
-					if ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
+					if ev.Key == term.KeyCtrlK {
 						findStr = oldFindStr
 						mode = "normal"
-						term.SetInputMode(term.InputAlt)
 					} else if ev.Key == term.KeyCtrlF {
 						if findDirection != "next" && findDirection != "prev" {
 							panic("what kind of find direction?")
@@ -829,7 +825,7 @@ func main() {
 					}
 					continue
 				} else if mode == "move" {
-					if ev.Key == term.KeyCtrlJ || ev.Key == term.KeyCtrlK {
+					if ev.Key == term.KeyCtrlK {
 						mode = "normal"
 						continue
 					}
@@ -847,7 +843,6 @@ func main() {
 							findJustStart = true
 						}
 						mode = a.value
-						term.SetInputMode(term.InputEsc)
 						continue
 					}
 
@@ -858,7 +853,6 @@ func main() {
 							return
 						}
 						mode = "exit"
-						term.SetInputMode(term.InputEsc)
 						continue
 					} else if a.kind == "save" {
 						err := save(f, text)
