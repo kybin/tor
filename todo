@@ -1,4 +1,3 @@
-make move-mode just one of modes.
 ctrlK for quit any special mode.
 correct comment parser per languages. (at least go and python)
 shoud a cursor edit it's text directly?

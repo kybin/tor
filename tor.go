@@ -37,7 +37,7 @@ func clearScreen(ar *Area) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string, moveMode bool) {
+func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string) {
 	for l , ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
@@ -95,7 +95,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 				bg = term.ColorGreen
 			}
 			if l == c.l {
-				if mode != "normal" || moveMode {
+				if mode != "normal" {
 					bg = term.ColorCyan
 				}
 			}
@@ -167,7 +167,7 @@ func printStatus(status string) {
 	}
 }
 
-func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
+func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -235,14 +235,14 @@ func parseEvent(ev term.Event, sel *Selection, moveMode *bool) []*Action {
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
 	case term.KeyCtrlJ:
-		return []*Action{&Action{kind:"moveMode"}}
+		return []*Action{&Action{kind:"modeChange", value:"move"}}
 	case term.KeyCtrlL:
 		return []*Action{&Action{kind:"selectLine"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
 		}
-		if (*moveMode) || (ev.Mod & term.ModAlt != 0) {
+		if ev.Mod & term.ModAlt != 0 || *mode == "move" {
 			switch ev.Ch {
 			case 'j':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"left"}}
@@ -659,7 +659,6 @@ func main() {
 	SetCursor(mainarea.min.l, mainarea.min.o)
 
 	mode := "normal"
-	moveMode := false
 
 	edited := false
 	status := ""
@@ -681,7 +680,7 @@ func main() {
 	for {
 		win.Follow(cursor, 3)
 		clearScreen(mainarea)
-		drawScreen(mainarea, win, text, selection, cursor, mode, moveMode)
+		drawScreen(mainarea, win, text, selection, cursor, mode)
 
 		if mode == "exit" {
 			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
@@ -690,15 +689,15 @@ func main() {
 		} else if mode == "find" {
 			status = fmt.Sprintf("find(%v) : %v", findDirection, findStr)
 		} else {
-			moveModeStr := ""
-			if moveMode {
-				moveModeStr = "(move mode)"
+			mm := ""
+			if mode == "move" {
+				mm = "(move mode)"
 			}
 			if !holdStatus {
 				if selection.on {
-					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, moveModeStr, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
+					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, mm, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
 				} else {
-					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, moveModeStr, cursor.l+1, cursor.b, cursor.v, cursor.o)
+					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, mm, cursor.l+1, cursor.b, cursor.v, cursor.o)
 				}
 			}
 		}
@@ -829,16 +828,14 @@ func main() {
 						oldFindStr = findStr // so next time we can run find mode with current findStr.
 					}
 					continue
-				}
-
-				if moveMode {
+				} else if mode == "move" {
 					if ev.Key == term.KeyCtrlJ || ev.Key == term.KeyCtrlK {
-						moveMode = false
+						mode = "normal"
 						continue
 					}
 				}
 
-				actions := parseEvent(ev, selection, &moveMode)
+				actions := parseEvent(ev, selection, &mode)
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
@@ -850,11 +847,7 @@ func main() {
 							findJustStart = true
 						}
 						mode = a.value
-						moveMode = false
 						term.SetInputMode(term.InputEsc)
-						continue
-					} else if a.kind == "moveMode" {
-						moveMode = true
 						continue
 					}
 
