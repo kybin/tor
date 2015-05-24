@@ -95,7 +95,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 				bg = term.ColorGreen
 			}
 			if l == c.l {
-				if mode != "normal" {
+				if mode == "find" || mode == "gotoline" {
 					bg = term.ColorCyan
 				}
 			}
@@ -138,7 +138,11 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			if r == '\t' {
 				for i:=0 ; i<taboffset ; i++ {
 					if o >= w.min.o {
-						SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
+						if mode == "move" && i == 0 {
+							SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune('.'), term.ColorCyan, bg)
+						} else {
+							SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
+						}
 					}
 					o += 1
 				}
