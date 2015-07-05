@@ -501,7 +501,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			sel.on = true
 			sel.SetStart(c)
 		}
-		c.MoveDown()
+		if c.OnLastLine() {
+			c.MoveEol()
+		} else {
+			c.MoveDown()
+		}
 		sel.SetEnd(c)
 	case "undo":
 		if history.head == 0 {
