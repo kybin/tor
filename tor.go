@@ -36,6 +36,13 @@ func clearScreen(ar *Area) {
 	}
 }
 
+func resizeScreen(ar *Area, w *Window) {
+	min := ar.min
+	o, l := term.Size()
+	*ar = Area{min, Point{min.l+l, min.o+o}}
+	w.Resize(ar.Size())
+}
+
 // draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string) {
 	for l , ln := range t.lines {
@@ -925,13 +932,14 @@ func main() {
 					}
 				}
 			case term.EventResize:
-				min := mainarea.min
-				o, l := term.Size()
-				mainarea = &Area{min, Point{min.l+l, min.o+o}}
-				win.Resize(mainarea.Size())
+				resizeScreen(mainarea, win)
 			}
 		case <-time.After(time.Second):
 			holdStatus = true
+			// It seems maximize the terminal
+			// doesn't call term.EventResize.
+			// So manually do it.
+			resizeScreen(mainarea, win)
 		}
 	}
 }
