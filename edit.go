@@ -3,11 +3,27 @@ package main
 import (
 	"strings"
 	"errors"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Line
 type Line struct {
 	data string
+}
+
+func (ln *Line) Boc() int {
+	remain := ln.data
+	b := 0
+	for len(remain) > 0 {
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		if !unicode.IsSpace(r) {
+			break
+		}
+		b += rlen
+	}
+	return b
 }
 
 func (ln *Line) Insert(r string, b int) {

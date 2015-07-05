@@ -130,6 +130,10 @@ func (c *Cursor) LineData() string {
 	return c.t.lines[c.l].data
 }
 
+func (c *Cursor) LineBoc() int {
+	return c.t.lines[c.l].Boc()
+}
+
 func (c *Cursor) LineDataUntilCursor() string {
 	return c.LineData()[:c.b]
 }
@@ -354,41 +358,22 @@ func (c *Cursor) MoveBol() {
 	c.SetOffsets(0)
 }
 
-func (c *Cursor) MoveBocBolAdvance() {
-	// if already bol, move cursor to prev line
-	if c.AtBol() && !c.OnFirstLine() {
-		c.MoveUp()
-		return
-	}
+func (c *Cursor) MoveBoc() {
+	c.SetOffsets(c.LineBoc())
+}
 
-	remain := c.LineData()
-	b := 0 // where line contents start
-	for len(remain)>0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		if !unicode.IsSpace(r) {
-			break
-		}
-		b += rlen
+func (c *Cursor) MoveBocBolRepeat() {
+	if c.AtBol() {
+		c.MoveBoc()
+	} else if c.b <= c.LineBoc() {
+		c.MoveBol()
+	} else {
+		c.MoveBoc()
 	}
-	if c.b > b {
-		c.SetOffsets(b)
-		return
-	}
-	c.SetOffsets(0)
 }
 
 func (c *Cursor) MoveEol() {
 	c.SetOffsets(len(c.LineData()))
-}
-
-func (c *Cursor) MoveEolAdvance() {
-	// if already eol, move to next line
-	if c.AtEol() && !c.OnLastLine() {
-		c.MoveDown()
-	}
-
-	c.SetOffsets(c.LineByteLength())
 }
 
 func (c *Cursor) PageUp() {

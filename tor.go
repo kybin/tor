@@ -280,13 +280,13 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 			case '>':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextBowEow"}}
 			case 'u':
-				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bocBolAdvance"}}
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bocBolRepeat"}}
 			case 'U':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bocBolAdvance"}}
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bocBolRepeat"}}
 			case 'o':
-				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eolAdvance"}}
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eol"}}
 			case 'O':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"eolAdvance"}}
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"eol"}}
 			case 'w':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pageup"}}
 			case 'W':
@@ -377,10 +377,8 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			c.MoveBol()
 		case "eol":
 			c.MoveEol()
-		case "bocBolAdvance":
-			c.MoveBocBolAdvance()
-		case "eolAdvance":
-			c.MoveEolAdvance()
+		case "bocBolRepeat":
+			c.MoveBocBolRepeat()
 		case "pageup":
 			c.PageUp()
 		case "pagedown":
