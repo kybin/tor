@@ -675,7 +675,7 @@ func main() {
 	cursor := NewCursor(text)
 	selection := NewSelection()
 	history := newHistory()
-	l, b := lastPosition(workingfile)
+	l, b := loadLastPosition(workingfile)
 	cursor.GotoLine(l)
 	cursor.SetOffsetsMaybe(b)
 	// SetCursor(mainarea.min.l, mainarea.min.o)
@@ -736,7 +736,7 @@ func main() {
 			case term.EventKey:
 				if mode == "exit" {
 					if ev.Ch == 'y' {
-						savePosition(workingfile, cursor.l, cursor.b)
+						saveLastPosition(workingfile, cursor.l, cursor.b)
 						return
 					} else if ev.Ch == 'n' || ev.Key == term.KeyCtrlK {
 						mode = "normal"
@@ -873,7 +873,7 @@ func main() {
 
 					if a.kind == "exit" {
 						if !edited {
-							savePosition(workingfile, cursor.l, cursor.b)
+							saveLastPosition(workingfile, cursor.l, cursor.b)
 							return
 						}
 						mode = "exit"

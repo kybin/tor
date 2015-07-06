@@ -10,18 +10,18 @@ import (
 	"io/ioutil"
 )
 
-func savePosition(workingfile string, l, b int) error {
+func saveLastPosition(workingfile string, l, b int) error {
 	u, err := user.Current()
 	if err != nil {
 		return err
 	}
-	posfile := path.Join(u.HomeDir, ".config", "tor", "lastpos")
-	if _, err = os.Stat(posfile); os.IsNotExist(err) {
-		posdir := path.Join(u.HomeDir, ".config", "tor")
-		os.MkdirAll(posdir, 0777)
-		os.Create(posfile)
+	f := path.Join(u.HomeDir, ".config", "tor", "lastpos")
+	if _, err = os.Stat(f); os.IsNotExist(err) {
+		d := path.Join(u.HomeDir, ".config", "tor")
+		os.MkdirAll(d, 0777)
+		os.Create(f)
 	}
-	input, err := ioutil.ReadFile(posfile)
+	input, err := ioutil.ReadFile(f)
 	if err != nil {
 		return err
 	}
@@ -37,20 +37,20 @@ func savePosition(workingfile string, l, b int) error {
 		lines = append(lines, fmt.Sprintf("%v:%v:%v", workingfile, l, b))
 	}
 	output := strings.Join(lines, "\n")
-	err = ioutil.WriteFile(posfile, []byte(output), 0644)
+	err = ioutil.WriteFile(f, []byte(output), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func lastPosition(workingfile string) (int, int) {
+func loadLastPosition(workingfile string) (int, int) {
 	u, err := user.Current()
 	if err != nil {
 		return 0, 0
 	}
-	posfile := path.Join(u.HomeDir, ".config", "tor", "lastpos")
-	input, err := ioutil.ReadFile(posfile)
+	f := path.Join(u.HomeDir, ".config", "tor", "lastpos")
+	input, err := ioutil.ReadFile(f)
 	if err != nil {
 		return 0, 0
 	}
