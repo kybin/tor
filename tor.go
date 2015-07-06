@@ -12,6 +12,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"github.com/mattn/go-runewidth"
+	"path/filepath"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -645,7 +646,12 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
 	flag.Parse()
 
-	text, err := open(f)
+	workingfile, err := filepath.Abs(f)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	text, err := open(workingfile)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -669,7 +675,10 @@ func main() {
 	cursor := NewCursor(text)
 	selection := NewSelection()
 	history := newHistory()
-	SetCursor(mainarea.min.l, mainarea.min.o)
+	l, b := lastPosition(workingfile)
+	cursor.GotoLine(l)
+	cursor.SetOffsetsMaybe(b)
+	// SetCursor(mainarea.min.l, mainarea.min.o)
 
 	mode := "normal"
 
@@ -727,6 +736,7 @@ func main() {
 			case term.EventKey:
 				if mode == "exit" {
 					if ev.Ch == 'y' {
+						savePosition(workingfile, cursor.l, cursor.b)
 						return
 					} else if ev.Ch == 'n' || ev.Key == term.KeyCtrlK {
 						mode = "normal"
@@ -863,6 +873,7 @@ func main() {
 
 					if a.kind == "exit" {
 						if !edited {
+							savePosition(workingfile, cursor.l, cursor.b)
 							return
 						}
 						mode = "exit"

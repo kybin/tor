@@ -47,6 +47,28 @@ func (c *Cursor) SetOffsets(b int) {
 	c.o = c.v
 }
 
+// if b is from lastpos file, it may less correct.
+func (c *Cursor) SetOffsetsMaybe(b int) {
+	if b > len(c.LineData()) {
+		b = len(c.LineData())
+	} else {
+		o := 0
+		remain := c.LineData()
+		for len(remain) > 0 {
+			if b <= o {
+				b = o
+				break
+			}
+			_, rlen := utf8.DecodeRuneInString(remain)
+			remain = remain[rlen:]
+			o += rlen
+		}
+	}
+	c.b = b
+	c.v = c.VFromB(b)
+	c.o = c.v
+}
+
 // Before shifting, visual offset will matched to cursor offset.
 func (c *Cursor) ShiftOffsets(b, v int) {
 	c.v = c.o
