@@ -14,3 +14,14 @@ func TestSaveAndLoadPosition(t *testing.T) {
 		t.Error("Could not load last position properly.")
 	}
 }
+
+func TestSaveAndLoadCopyString(t *testing.T) {
+	err := saveCopyString("yay")
+	if err != nil {
+		t.Error(err)
+	}
+	copystr := loadCopyString()
+	if copystr != "yay" {
+		t.Error("Could not load copy string.")
+	}
+}

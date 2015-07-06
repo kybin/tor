@@ -894,7 +894,11 @@ func main() {
 							r, _ := cursor.RuneAfter()
 							copied = string(r)
 						}
+						saveCopyString(copied)
 					} else if a.kind == "paste" {
+						if copied == "" {
+							copied = loadCopyString()
+						}
 						cursor.Insert(copied)
 						a.value = copied
 					} else {

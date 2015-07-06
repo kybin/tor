@@ -81,3 +81,32 @@ func lastPosition(workingfile string) (int, int) {
 	return l, b
 }
 
+func saveCopyString(copystr string) error {
+	u, err := user.Current()
+	if err != nil {
+		return err
+	}
+	f := path.Join(u.HomeDir, ".config", "tor", "copy")
+	if _, err = os.Stat(f); os.IsNotExist(err) {
+		d := path.Join(u.HomeDir, ".config", "tor")
+		os.MkdirAll(d, 0777)
+	}
+	err = ioutil.WriteFile(f, []byte(copystr), 0644)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func loadCopyString() string {
+	u, err := user.Current()
+	if err != nil {
+		return ""
+	}
+	f := path.Join(u.HomeDir, ".config", "tor", "copy")
+	copystr, err := ioutil.ReadFile(f)
+	if err != nil {
+		return ""
+	}
+	return string(copystr)
+}
