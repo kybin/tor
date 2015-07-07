@@ -241,7 +241,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
 	// find
 	case term.KeyCtrlD:
-		return []*Action{&Action{kind:"saveFindWord"}, &Action{kind:"modeChange", value:"find"}}
+		return []*Action{&Action{kind:"selectWord"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
@@ -344,7 +344,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	}
 }
 
-func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string, status *string, holdStatus *bool) {
+func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool) {
 	defer func() {
 		if sel.on {
 			sel.SetEnd(c)
@@ -408,33 +408,11 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 			if r == '(' || r == '{' {
 				c.MoveRight()
 			}
-		case "nextFindWord":
-			if *findStr != "" {
-				c.GotoNext(*findStr)
-			}
-		case "prevFindWord":
-			if *findStr != "" {
-				c.GotoPrev(*findStr)
-			}
-		case "nextCursorWord":
-			w :=c.Word()
-			if w != "" {
-				c.GotoNext(w)
-			}
-		case "prevCursorWord":
-			w := c.Word()
-			if w != "" {
-				c.GotoPrev(w)
-			}
 		case "matchingBracket":
 			c.GotoMatchingBracket()
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}
-	case "saveFindWord":
-		*findStr = c.Word()
-		*status = fmt.Sprintf("find string : %v", *findStr)
-		*holdStatus = true
 	case "insert":
 		if a.value == "autoIndent" {
 			prevline := c.t.lines[c.l-1].data
@@ -507,6 +485,16 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, findStr *string,
 		} else {
 			c.MoveDown()
 		}
+		sel.SetEnd(c)
+	case "selectWord":
+		if !c.AtBow() {
+			c.MovePrevBowEow()
+		}
+		if !sel.on {
+			sel.on = true
+			sel.SetStart(c)
+		}
+		c.MoveNextBowEow()
 		sel.SetEnd(c)
 	case "undo":
 		if history.head == 0 {
@@ -673,12 +661,12 @@ func main() {
 	win := NewWindow(mainarea.Size())
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := NewCursor(text)
-	selection := NewSelection()
-	history := newHistory()
 	l, b := loadLastPosition(workingfile)
 	cursor.GotoLine(l)
 	cursor.SetOffsetsMaybe(b)
-	// SetCursor(mainarea.min.l, mainarea.min.o)
+	findmode := &FindMode{}
+	selection := NewSelection()
+	history := newHistory()
 
 	mode := "normal"
 
@@ -686,10 +674,6 @@ func main() {
 	status := ""
 	holdStatus := false
 	lastActStr := ""
-	oldFindStr := ""
-	findStr := ""
-	findDirection := ""
-	findJustStart := false
 	copied := ""
 	gotolineStr := ""
 
@@ -709,7 +693,7 @@ func main() {
 		} else if mode == "gotoline" {
 			status = fmt.Sprintf("goto : %v", gotolineStr)
 		} else if mode == "find" {
-			status = fmt.Sprintf("find(%v) : %v", findDirection, findStr)
+			status = fmt.Sprintf("find : %v", findmode.findstr)
 		} else {
 			mm := ""
 			if mode == "move" {
@@ -775,77 +759,10 @@ func main() {
 					continue
 				} else if mode == "find" {
 					if ev.Key == term.KeyCtrlK {
-						findStr = oldFindStr
 						mode = "normal"
-					} else if ev.Key == term.KeyCtrlF {
-						if findDirection != "next" && findDirection != "prev" {
-							panic("what kind of find direction?")
-						}
-						if findDirection == "next" {
-							findDirection = "prev"
-						} else {
-							findDirection = "next"
-						}
-					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
-						if findJustStart {
-							findStr = ""
-							continue
-						}
-						_, rlen := utf8.DecodeLastRuneInString(findStr)
-						findStr = findStr[:len(findStr)-rlen]
-					} else if ev.Key == term.KeySpace {
-						findStr += " "
-					} else if ev.Ch != 0 {
-						if findJustStart {
-							findJustStart = false
-							findStr = ""
-						}
-						findStr += string(ev.Ch)
-					} else if ev.Key == term.KeyCtrlJ {
-						findDirection = "prev"
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoPrev(findStr)
-						oldFindStr = findStr // so next time we can run find mode with current findStr.
-					} else if ev.Key == term.KeyCtrlL {
-						findDirection = "next"
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoNext(findStr)
-						oldFindStr = findStr // so next time we can run find mode with current findStr.
-					} else if ev.Key == term.KeyCtrlI {
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoFirst(findStr)
-					} else if ev.Key == term.KeyCtrlK {
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoLast(findStr)
-					} else if ev.Key == term.KeyCtrlU {
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoPrevWord(findStr)
-					} else if ev.Key == term.KeyCtrlO {
-						if findStr == "" {
-							continue
-						}
-						cursor.GotoNextWord(findStr)
-					} else if ev.Key == term.KeyEnter {
-						if findStr == "" {
-							continue
-						}
-						if findDirection == "next"{
-							cursor.GotoNext(findStr)
-						} else if findDirection == "prev" {
-							cursor.GotoPrev(findStr)
-						}
-						oldFindStr = findStr // so next time we can run find mode with current findStr.
+						continue
 					}
+					findmode.Handle(ev, cursor)
 					continue
 				} else if mode == "move" {
 					if ev.Key == term.KeyCtrlK {
@@ -860,10 +777,9 @@ func main() {
 						if a.value == "find" {
 							if selection.on {
 								min, max := selection.MinMax()
-								findStr = text.DataInside(min, max)
+								findmode.findstr = text.DataInside(min, max)
+								findmode.juststart = true
 							}
-							findDirection = "next"
-							findJustStart = true
 						}
 						mode = a.value
 						continue
@@ -902,7 +818,7 @@ func main() {
 						cursor.Insert(copied)
 						a.value = copied
 					} else {
-						do(a, cursor, selection, history, &findStr, &status, &holdStatus)
+						do(a, cursor, selection, history, &status, &holdStatus)
 					}
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":
