@@ -284,6 +284,10 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bocBolRepeat"}}
 			case 'U':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bocBolRepeat"}}
+			case 'y':
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bol"}}
+			case 'Y':
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bol"}}
 			case 'o':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eol"}}
 			case 'O':
