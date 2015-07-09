@@ -10,17 +10,17 @@ type FindMode struct {
 	juststart bool
 }
 
-func (f *FindMode) Handle(ev term.Event, cursor *Cursor) {
+func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 	switch ev.Key {
+	case term.KeyCtrlK:
+		*mode = "normal"
 	case term.KeyEnter:
 		if f.findstr == "" {
 			return
 		}
 		cursor.GotoNext(f.findstr)
-		return
 	case term.KeySpace:
 		f.findstr += " "
-		return
 	case term.KeyBackspace, term.KeyBackspace2:
 		if f.juststart {
 			f.findstr = ""
@@ -28,46 +28,46 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor) {
 		}
 		_, rlen := utf8.DecodeLastRuneInString(f.findstr)
 		f.findstr = f.findstr[:len(f.findstr)-rlen]
-		return
-	}
-	if ev.Mod & term.ModAlt != 0 && ev.Ch != 0 {
-		switch ev.Ch {
-		case 'j':
-			if f.findstr == "" {
-				return
+	default:
+		if ev.Mod & term.ModAlt != 0 && ev.Ch != 0 {
+			switch ev.Ch {
+			case 'j':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoPrev(f.findstr)
+			case 'l':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoNext(f.findstr)
+			case 'i':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoFirst(f.findstr)
+			case 'k':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoLast(f.findstr)
+			case 'm':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoPrevWord(f.findstr)
+			case '.':
+				if f.findstr == "" {
+					return
+				}
+				cursor.GotoNextWord(f.findstr)
 			}
-			cursor.GotoPrev(f.findstr)
-		case 'l':
-			if f.findstr == "" {
-				return
+		} else if ev.Ch != 0 {
+			if f.juststart {
+				f.juststart = false
+				f.findstr = ""
 			}
-			cursor.GotoNext(f.findstr)
-		case 'i':
-			if f.findstr == "" {
-				return
-			}
-			cursor.GotoFirst(f.findstr)
-		case 'k':
-			if f.findstr == "" {
-				return
-			}
-			cursor.GotoLast(f.findstr)
-		case 'm':
-			if f.findstr == "" {
-				return
-			}
-			cursor.GotoPrevWord(f.findstr)
-		case '.':
-			if f.findstr == "" {
-				return
-			}
-			cursor.GotoNextWord(f.findstr)
+			f.findstr += string(ev.Ch)
 		}
-	} else if ev.Ch != 0 {
-		if f.juststart {
-			f.juststart = false
-			f.findstr = ""
-		}
-		f.findstr += string(ev.Ch)
 	}
 }

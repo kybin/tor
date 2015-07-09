@@ -669,6 +669,7 @@ func main() {
 	cursor.GotoLine(l)
 	cursor.SetOffsetsMaybe(b)
 	findmode := &FindMode{}
+	gotolinemode := &GotoLineMode{}
 	selection := NewSelection()
 	history := newHistory()
 
@@ -679,7 +680,6 @@ func main() {
 	holdStatus := false
 	lastActStr := ""
 	copied := ""
-	gotolineStr := ""
 
 	events := make(chan term.Event, 20)
 	go func() {
@@ -695,7 +695,7 @@ func main() {
 		if mode == "exit" {
 			status = fmt.Sprintf("Buffer modified. Do you really want to quit? (y/n)")
 		} else if mode == "gotoline" {
-			status = fmt.Sprintf("goto : %v", gotolineStr)
+			status = fmt.Sprintf("goto : %v", gotolinemode.linestr)
 		} else if mode == "find" {
 			status = fmt.Sprintf("find : %v", findmode.findstr)
 		} else {
@@ -731,42 +731,10 @@ func main() {
 					}
 					continue
 				} else if mode == "gotoline" {
-					if ev.Key == term.KeyCtrlK {
-						gotolineStr = ""
-						mode = "normal"
-						continue
-					} else if ev.Key == term.KeyEnter {
-						l, err := strconv.Atoi(gotolineStr)
-						if err == nil {
-							if l != 0 {
-								l-- // internal line number and showing line number are different.
-							}
-							cursor.GotoLine(l)
-						}
-						gotolineStr = ""
-						mode = "normal"
-						continue
-					} else if ev.Key == term.KeyBackspace || ev.Key == term.KeyBackspace2 {
-						if gotolineStr == "" {
-							continue
-						}
-						_, rlen := utf8.DecodeLastRuneInString(gotolineStr)
-						gotolineStr = gotolineStr[:len(gotolineStr)-rlen]
-						continue
-					} else if ev.Ch != 0 {
-						_, err := strconv.Atoi(string(ev.Ch))
-						if err == nil {
-							gotolineStr += string(ev.Ch)
-						}
-						continue
-					}
+					gotolinemode.Handle(ev, cursor, &mode)
 					continue
 				} else if mode == "find" {
-					if ev.Key == term.KeyCtrlK {
-						mode = "normal"
-						continue
-					}
-					findmode.Handle(ev, cursor)
+					findmode.Handle(ev, cursor, &mode)
 					continue
 				} else if mode == "move" {
 					if ev.Key == term.KeyCtrlK {
