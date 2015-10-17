@@ -621,19 +621,47 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 
 
 func main() {
-	var f string
 	if len(os.Args) == 1 {
 		fmt.Println("please, set text file")
 		os.Exit(1)
-	} else {
-		maybeFile := os.Args[len(os.Args)-1]
-		if strings.HasPrefix(maybeFile, "-") || strings.ContainsAny(maybeFile, "=") {
-			fmt.Println("please, set text file")
-			os.Exit(1)
-		} else {
-			f = maybeFile
-		}
 	}
+
+	f := os.Args[len(os.Args)-1]
+	if strings.HasPrefix(f, "-") || strings.ContainsAny(f, "=") {
+		fmt.Println("please, set text file")
+		os.Exit(1)
+	}
+
+	finfo := strings.Split(f, ":")
+	f = finfo[0]
+	initLine := -1
+	initOff := -1
+	switch len(finfo) {
+	case 1:
+	case 2:
+		l, err := strconv.Atoi(finfo[1])
+		if err != nil {
+			fmt.Println("parse file argument error: cannot convert line num to int")
+			os.Exit(1)
+		}
+		initLine = l
+	case 3:
+		l, err := strconv.Atoi(finfo[1])
+		if err != nil {
+			fmt.Println("parse file argument error: cannot convert line num to int")
+			os.Exit(1)
+		}
+		o, err := strconv.Atoi(finfo[2])
+		if err != nil {
+			fmt.Println("parse file argument error: cannot convert line offset to int")
+			os.Exit(1)
+		}
+		initLine, initOff = l, o
+	default:
+		fmt.Println("parse file argument error: too many colons")
+		os.Exit(1)
+	}
+
 	var debug bool
 	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
 	flag.Parse()
@@ -665,9 +693,21 @@ func main() {
 	win := NewWindow(mainarea.Size())
 	// drawbuf := textToDrawBuffer(text, selection)
 	cursor := NewCursor(text)
-	l, b := loadLastPosition(workingfile)
-	cursor.GotoLine(l)
-	cursor.SetOffsetsMaybe(b)
+	if initLine != -1 {
+		l := initLine
+		if l != 0 {
+			l--
+		}
+		cursor.GotoLine(l)
+		if initOff != -1 {
+			cursor.o = cursor.OFromV(initOff)
+			cursor.v = cursor.o
+		}
+	} else {
+		l, b := loadLastPosition(workingfile)
+		cursor.GotoLine(l)
+		cursor.SetOffsetsMaybe(b)
+	}
 	findmode := &FindMode{}
 	gotolinemode := &GotoLineMode{}
 	selection := NewSelection()
