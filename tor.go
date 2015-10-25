@@ -662,9 +662,24 @@ func main() {
 		os.Exit(1)
 	}
 
+
+	var new bool
+	flag.BoolVar(&new, "new", false, "let tor to edit a new file.")
 	var debug bool
 	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
 	flag.Parse()
+
+	exist := true
+	if _, err := os.Stat(f); os.IsNotExist(err) {
+		exist = false
+	}
+	if !exist && !new {
+		fmt.Println("file not exist. please retry with -new flag.")
+		os.Exit(1)
+	} else if exist && new {
+		fmt.Println("file already exist.")
+		os.Exit(1)
+	}
 
 	workingfile, err := filepath.Abs(f)
 	if err != nil {
