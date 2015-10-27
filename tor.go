@@ -9,7 +9,6 @@ import (
 	"strings"
 	"flag"
 	"strconv"
-	"path/filepath"
 )
 
 // we use line, offset style. termbox use o, l style.
@@ -78,12 +77,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	workingfile, err := filepath.Abs(f)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	text, err := open(workingfile)
+	text, err := open(f)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -116,7 +110,7 @@ func main() {
 			cursor.v = cursor.o
 		}
 	} else {
-		l, b := loadLastPosition(workingfile)
+		l, b := loadLastPosition(f)
 		cursor.GotoLine(l)
 		cursor.SetOffsetsMaybe(b)
 	}
@@ -178,7 +172,7 @@ func main() {
 			case term.EventKey:
 				if mode == "exit" {
 					if ev.Ch == 'y' {
-						saveLastPosition(workingfile, cursor.l, cursor.b)
+						saveLastPosition(f, cursor.l, cursor.b)
 						return
 					} else if ev.Ch == 'n' || ev.Key == term.KeyCtrlK {
 						mode = "normal"
@@ -215,7 +209,7 @@ func main() {
 
 					if a.kind == "exit" {
 						if !edited {
-							saveLastPosition(workingfile, cursor.l, cursor.b)
+							saveLastPosition(f, cursor.l, cursor.b)
 							return
 						}
 						mode = "exit"
