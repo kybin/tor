@@ -17,19 +17,22 @@ func SetCursor(l, o int) {
 }
 
 func main() {
-	if len(os.Args) == 1 {
+	var new bool
+	flag.BoolVar(&new, "new", false, "let tor to edit a new file.")
+	var debug bool
+	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) == 0 {
 		fmt.Println("please, set text file")
 		os.Exit(1)
 	}
+	fstr := args[len(args)-1]
 
-	f := os.Args[len(os.Args)-1]
-	if strings.HasPrefix(f, "-") || strings.ContainsAny(f, "=") {
-		fmt.Println("please, set text file")
-		os.Exit(1)
-	}
+	finfo := strings.Split(fstr, ":")
 
-	finfo := strings.Split(f, ":")
-	f = finfo[0]
+	f := finfo[0]
 	initLine := -1
 	initOff := -1
 	switch len(finfo) {
@@ -57,13 +60,6 @@ func main() {
 		fmt.Println("parse file argument error: too many colons")
 		os.Exit(1)
 	}
-
-
-	var new bool
-	flag.BoolVar(&new, "new", false, "let tor to edit a new file.")
-	var debug bool
-	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
-	flag.Parse()
 
 	exist := true
 	if _, err := os.Stat(f); os.IsNotExist(err) {
