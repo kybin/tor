@@ -143,11 +143,6 @@ func (c *Cursor) Position() Point {
 	return Point{c.l, c.o}
 }
 
-// TODO : relativePosition(p Point) Point ?
-func (c *Cursor) PositionInWindow(w *Window) Point {
-	return c.Position().Sub(w.min)
-}
-
 func (c *Cursor) LineData() string {
 	return c.t.lines[c.l].data
 }

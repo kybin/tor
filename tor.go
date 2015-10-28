@@ -156,7 +156,7 @@ func main() {
 		printStatus(status)
 		holdStatus = false
 
-		winP := cursor.PositionInWindow(win)
+		winP := cursor.Position().Sub(win.min)
 		SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
 
 		term.Flush()
