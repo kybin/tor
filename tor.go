@@ -93,7 +93,7 @@ func main() {
 	layout := NewLayout()
 	mainarea := layout.MainViewerBound()
 	win := NewWindow(mainarea.Size())
-	// drawbuf := textToDrawBuffer(text, selection)
+
 	cursor := NewCursor(text)
 	if initLine != -1 {
 		l := initLine
@@ -110,6 +110,7 @@ func main() {
 		cursor.GotoLine(l)
 		cursor.SetOffsetsMaybe(b)
 	}
+
 	findmode := &FindMode{}
 	gotolinemode := &GotoLineMode{}
 	selection := NewSelection()
