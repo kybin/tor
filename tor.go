@@ -33,8 +33,7 @@ func main() {
 	finfo := strings.Split(fstr, ":")
 
 	f := finfo[0]
-	initLine := -1
-	initOff := -1
+	initL, initO := -1, -1
 	switch len(finfo) {
 	case 1:
 	case 2:
@@ -43,7 +42,7 @@ func main() {
 			fmt.Println("parse file argument error: cannot convert line num to int")
 			os.Exit(1)
 		}
-		initLine = l
+		initL = l
 	case 3:
 		l, err := strconv.Atoi(finfo[1])
 		if err != nil {
@@ -55,7 +54,7 @@ func main() {
 			fmt.Println("parse file argument error: cannot convert line offset to int")
 			os.Exit(1)
 		}
-		initLine, initOff = l, o
+		initL, initO = l, o
 	default:
 		fmt.Println("parse file argument error: too many colons")
 		os.Exit(1)
@@ -95,14 +94,14 @@ func main() {
 	win := NewWindow(mainarea.Size())
 
 	cursor := NewCursor(text)
-	if initLine != -1 {
-		l := initLine
+	if initL != -1 {
+		l := initL
 		if l != 0 {
 			l--
 		}
 		cursor.GotoLine(l)
-		if initOff != -1 {
-			cursor.o = initOff
+		if initO != -1 {
+			cursor.o = initO
 		}
 	} else {
 		l, b := loadLastPosition(f)
