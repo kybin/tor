@@ -121,14 +121,6 @@ func (c *Cursor) LineBoc() int {
 	return c.t.lines[c.l].Boc()
 }
 
-func (c *Cursor) LineDataUntilCursor() string {
-	return c.LineData()[:c.b]
-}
-
-func (c *Cursor) LineDataFromCursor() string {
-	return c.LineData()[c.b:]
-}
-
 func (c *Cursor) RuneAfter() (rune, int) {
 	return utf8.DecodeRuneInString(c.LineData()[c.b:])
 }
@@ -202,7 +194,7 @@ func (c *Cursor) InStrings() bool {
 	var starter rune
 	var old rune
 	var oldold rune
-	for _, r := range c.LineDataUntilCursor() {
+	for _, r := range c.LineData()[:c.b] {
 		if !instr && strings.ContainsAny(string(r), "'\"") && !(old == '\\' && oldold != '\\') {
 			instr = true
 			starter = r
@@ -821,7 +813,7 @@ func (c *Cursor) Word() string {
 	}
 	// find min byte offset
 	bmin := c.b
-	remain := c.LineDataUntilCursor()
+	remain := c.LineData()[:c.b]
 	for {
 		if len(remain) == 0 {
 			break
@@ -835,7 +827,7 @@ func (c *Cursor) Word() string {
 	}
 	// find max byte offset
 	bmax := c.b
-	remain = c.LineDataFromCursor()
+	remain = c.LineData()[c.b:]
 	for {
 		if len(remain) == 0 {
 			break
