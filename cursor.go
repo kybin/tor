@@ -148,10 +148,6 @@ func RuneVisualLength(r rune) int {
 	return runewidth.RuneWidth(r)
 }
 
-func (c *Cursor) LineByteLength() int {
-	return len(c.LineData())
-}
-
 func (c *Cursor) LineVisualLength() int {
 	remain := c.LineData()
 	o := 0
@@ -168,7 +164,7 @@ func (c *Cursor) AtBol() bool{
 }
 
 func (c *Cursor) AtEol() bool{
-	return c.b == c.LineByteLength()
+	return c.b == len(c.LineData())
 }
 
 func (c *Cursor) OnFirstLine() bool{
@@ -229,7 +225,7 @@ func (c *Cursor) MoveLeft() {
 		return
 	} else if c.AtBol() {
 		c.l--
-		c.SetB(c.LineByteLength())
+		c.SetB(len(c.LineData()))
 		return
 	}
 	r, rlen := c.RuneBefore()
