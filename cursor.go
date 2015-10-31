@@ -173,7 +173,7 @@ func (c *Cursor) OnLastLine() bool {
 
 func (c *Cursor) AtBow() bool {
 	r, _ := c.RuneAfter()
-	rb, _ := c.RuneBefore() // is it not panic on bof?
+	rb, _ := c.RuneBefore()
 	if (unicode.IsLetter(r) || unicode.IsDigit(r))  && !(unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
 		return true
 	}
@@ -182,7 +182,7 @@ func (c *Cursor) AtBow() bool {
 
 func (c *Cursor) AtEow() bool {
 	r, _ := c.RuneAfter()
-	rb, _ := c.RuneBefore() // is it not panic on bof?
+	rb, _ := c.RuneBefore()
 	if !(unicode.IsLetter(r) || unicode.IsDigit(r)) && (unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
 		return true
 	}
@@ -498,7 +498,6 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
 	bmin := Point{min.l, BFromO(c.t.lines[min.l].data, min.o)}
 	bmax := Point{max.l, BFromO(c.t.lines[max.l].data, max.o)}
-	// TODO : should get deleted strings from RemoveRange
 	deleted := c.t.RemoveRange(bmin, bmax)
 	c.l = min.l
 	c.SetB(bmin.o)
@@ -617,7 +616,7 @@ func (c *Cursor) GotoNextAny(chars string) {
 			}
 			linedata = linedata[c.b+1:]
 			offset = c.b+1
-		}		
+		}
 		b := strings.IndexAny(linedata, chars)
 		if b != -1 {
 			c.l = l
