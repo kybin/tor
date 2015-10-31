@@ -190,6 +190,7 @@ func (c *Cursor) InStrings() bool {
 }
 
 func (c *Cursor) MoveLeft() {
+	c.o = c.O()
 	if c.AtBof() {
 		return
 	} else if c.AtBol() {
@@ -203,6 +204,7 @@ func (c *Cursor) MoveLeft() {
 }
 
 func (c *Cursor) MoveRight() {
+	c.o = c.O()
 	if c.AtEof() {
 		return
 	} else if c.AtEol() {
