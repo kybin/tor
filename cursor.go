@@ -129,10 +129,6 @@ func (c *Cursor) LineDataFromCursor() string {
 	return c.LineData()[c.b:]
 }
 
-func (c *Cursor) ExceededLineLimit() bool {
-	return c.b > len(c.LineData())
-}
-
 func (c *Cursor) RuneAfter() (rune, int) {
 	return utf8.DecodeRuneInString(c.LineData()[c.b:])
 }
@@ -236,7 +232,7 @@ func (c *Cursor) MoveLeft() {
 func (c *Cursor) MoveRight() {
 	if c.AtEof() {
 		return
-	} else if c.AtEol() || c.ExceededLineLimit(){
+	} else if c.AtEol() {
 		c.l++
 		c.SetB(0)
 		return
