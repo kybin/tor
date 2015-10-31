@@ -352,23 +352,15 @@ func (c *Cursor) PageDown() {
 }
 
 func (c *Cursor) MoveBof() {
-	for {
-		if c.OnFirstLine() {
-			break
-		}
-		c.MoveUp()
-	}
-	c.MoveBol()
+	c.l = 0
+	c.b = 0
+	c.o = 0
 }
 
 func (c *Cursor) MoveEof() {
-	for {
-		if c.OnLastLine() {
-			break
-		}
-		c.MoveDown()
-	}
-	c.MoveEol()
+	c.l = len(c.t.lines) - 1
+	c.b = len(c.LineData())
+	c.o = vlen(c.LineData())
 }
 
 func (c *Cursor) SplitLine() {
