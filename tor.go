@@ -102,13 +102,12 @@ func main() {
 		}
 		cursor.GotoLine(l)
 		if initOff != -1 {
-			cursor.o = cursor.OFromV(initOff)
-			cursor.v = cursor.o
+			cursor.o = initOff
 		}
 	} else {
 		l, b := loadLastPosition(f)
 		cursor.GotoLine(l)
-		cursor.SetOffsetsMaybe(b)
+		cursor.SetCloseToB(b)
 	}
 
 	findmode := &FindMode{}
@@ -150,7 +149,7 @@ func main() {
 				if selection.on {
 					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, mm, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
 				} else {
-					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, mm, cursor.l+1, cursor.b, cursor.v, cursor.o)
+					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, mm, cursor.l+1, cursor.b, cursor.o, cursor.O())
 				}
 			}
 		}

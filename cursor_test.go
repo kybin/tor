@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestBFromC(t *testing.T) {
+func TestBFromO(t *testing.T) {
 	cases := []struct{
 		l string
 		in int
@@ -32,9 +32,9 @@ func TestBFromC(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		got := BFromC(c.l, c.in)
+		got := BFromO(c.l, c.in)
 		if  got != c.want {
-			t.Errorf("BFromC(%v, %v) == %v, want %v", c.l, c.in, got, c.want)
+			t.Errorf("BFromO(%v, %v) == %v, want %v", c.l, c.in, got, c.want)
 		}
 	}
 }

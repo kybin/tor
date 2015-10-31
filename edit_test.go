@@ -62,7 +62,7 @@ func TestRemoveRange(t *testing.T) {
 		        Line{"		for o := viewer.min.o ; o < viewer.max.o ; o++ {"},
 				Line{"			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)"},
 			}},
-			Point{0, BFromC("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17)}, Point{1, BFromC("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19)},
+			Point{0, BFromO("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17)}, Point{1, BFromO("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19)},
 			Text{[]Line{
 				Line{"		for o := (l, o, ' ', term.ColorDefault, term.ColorDefault)"},
 			}},

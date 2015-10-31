@@ -14,123 +14,103 @@ var (
 
 type Cursor struct {
 	l int // line offset
-	o int // cursor offset - When MoveUp or MoveDown, it will calculated from visual offset.
-	v int // visual offset - When MoveLeft of MoveRight, it will matched to cursor offset.
 	b int // byte offset
+	o int // visual offset - not always matches with Cursor.O()
 	t *Text
 }
 
 func NewCursor(t *Text) *Cursor {
-	return &Cursor{0, 0, 0, 0, t}
+	return &Cursor{0, 0, 0, t}
 }
 
 func (c *Cursor) Copy(c2 Cursor) {
 	c.l = c2.l
-	c.o = c2.o
-	c.v = c2.v
 	c.b = c2.b
+	c.o = c2.o
 }
 
-func (c *Cursor) SetOffsets(b int) {
-	c.b = b
-	c.v = c.VFromB(b)
-	c.o = c.v
+func (c *Cursor) B() int {
+	return c.b
 }
 
-// if b is from lastpos file, it may less correct.
-func (c *Cursor) SetOffsetsMaybe(b int) {
-	if b > len(c.LineData()) {
-		b = len(c.LineData())
-	} else {
-		o := 0
-		remain := c.LineData()
-		for len(remain) > 0 {
-			if b <= o {
-				b = o
-				break
-			}
-			_, rlen := utf8.DecodeRuneInString(remain)
-			remain = remain[rlen:]
-			o += rlen
-		}
+func (c *Cursor) O() int {
+	maxo := c.LineVisualLength()
+	if c.o >  maxo {
+		return maxo
 	}
-	c.b = b
-	c.v = c.VFromB(b)
-	c.o = c.v
-}
-
-// Before shifting, visual offset will matched to cursor offset.
-func (c *Cursor) ShiftOffsets(b, v int) {
-	c.v = c.o
-	c.b += b
-	c.v += v
-	c.o += v
-}
-
-// After MoveUp or MoveDown, we need reclaculate cursor offsets (except visual offset).
-func (c *Cursor) RecalculateOffsets() {
-	c.o = c.OFromV(c.v)
-	c.b = c.BFromC(c.o)
-}
-
-func (c *Cursor) OFromV(v int) (o int) {
-	// Cursor offset cannot go further than line's maximum visual length.
-	maxv := c.LineVisualLength()
-	if v >  maxv {
-		return maxv
-	}
-	// It's not allowed the cursor is in the middle of multi-length(visual) character.
-	// So we need recaculate the cursors offset.
+	// show cursor as well in mult-vis-character
 	remain := c.LineData()
-	lasto := 0
+	o := 0
 	for {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		lasto = o
+		lasto := o
 		o += RuneVisualLength(r)
-		if o==v {
+		if o == c.o {
 			return o
-		} else if o > v {
+		} else if o > c.o {
 			return lasto
 		}
 	}
+	panic("should not reach here")
 }
 
-
-func (c *Cursor) BFromC(o int) (b int) {
-	remain := c.LineData()
-	for o>0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		b+= rlen
-		o-= RuneVisualLength(r)
-	}
-	return
-}
-
-func BFromC(line string, o int) (b int) {
-	remain := line
-	for o>0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		b+= rlen
-		o-= RuneVisualLength(r)
-	}
-	return
-}
-
-func (c *Cursor) VFromB(b int) (v int){
+func (c *Cursor) SetB(b int) {
+	o := 0
 	remain := c.LineData()[:b]
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		v += RuneVisualLength(r)
+		o += RuneVisualLength(r)
+	}
+	c.o = o
+	c.b = b
+}
+
+
+// if b is from lastpos file, it may less correct.
+func (c *Cursor) SetCloseToB(tb int) {
+	if tb > len(c.LineData()) {
+		tb = len(c.LineData())
+	}
+	o, b := 0, 0
+	remain := c.LineData()
+	for len(remain) > 0 {
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		lasto, lastb := o, b
+		b += rlen
+		o += RuneVisualLength(r)
+		if b == tb {
+			c.b = b
+			c.o = o
+			return
+		} else if b >= tb {
+			c.b = lastb
+			c.o = lasto
+			return
+		}
+	}
+}
+
+// After MoveUp or MoveDown, we need reclaculate byte offset.
+func (c *Cursor) RecalcB() {
+	c.b = BFromO(c.LineData(), c.O())
+}
+
+func BFromO(line string, o int) (b int) {
+	remain := line
+	for o > 0 {
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		b += rlen
+		o -= RuneVisualLength(r)
 	}
 	return
 }
 
 func (c *Cursor) Position() Point {
-	return Point{c.l, c.o}
+	return Point{c.l, c.O()}
 }
 
 func (c *Cursor) LineData() string {
@@ -161,8 +141,6 @@ func (c *Cursor) RuneBefore() (rune, int) {
 	return utf8.DecodeLastRuneInString(c.LineData()[:c.b])
 }
 
-// should refine after
-// may be use dictionary??
 func RuneVisualLength(r rune) int {
 	if r=='\t' {
 		return taboffset
@@ -175,7 +153,14 @@ func (c *Cursor) LineByteLength() int {
 }
 
 func (c *Cursor) LineVisualLength() int {
-	return c.VFromB(c.LineByteLength())
+	remain := c.LineData()
+	o := 0
+	for len(remain) > 0 {
+		r, rlen := utf8.DecodeRuneInString(remain)
+		remain = remain[rlen:]
+		o += RuneVisualLength(r)
+	}
+	return o
 }
 
 func (c *Cursor) AtBol() bool{
@@ -244,12 +229,12 @@ func (c *Cursor) MoveLeft() {
 		return
 	} else if c.AtBol() {
 		c.l--
-		c.SetOffsets(c.LineByteLength())
+		c.SetB(c.LineByteLength())
 		return
 	}
 	r, rlen := c.RuneBefore()
-	vlen := RuneVisualLength(r)
-	c.ShiftOffsets(-rlen, -vlen)
+	c.b -= rlen
+	c.o -= RuneVisualLength(r)
 }
 
 func (c *Cursor) MoveRight() {
@@ -257,12 +242,12 @@ func (c *Cursor) MoveRight() {
 		return
 	} else if c.AtEol() || c.ExceededLineLimit(){
 		c.l++
-		c.SetOffsets(0)
+		c.SetB(0)
 		return
 	}
 	r, rlen := c.RuneAfter()
-	vlen := RuneVisualLength(r)
-	c.ShiftOffsets(rlen, vlen)
+	c.b += rlen
+	c.o += RuneVisualLength(r)
 }
 
 func (c *Cursor) MoveUp() {
@@ -270,7 +255,7 @@ func (c *Cursor) MoveUp() {
 		return
 	}
 	c.l--
-	c.RecalculateOffsets()
+	c.RecalcB()
 }
 
 func (c *Cursor) MoveDown() {
@@ -278,7 +263,7 @@ func (c *Cursor) MoveDown() {
 		return
 	}
 	c.l++
-	c.RecalculateOffsets()
+	c.RecalcB()
 }
 
 func (c *Cursor) MovePrevBowEow() {
@@ -362,11 +347,11 @@ func (c *Cursor) MoveNextBowEow() {
 }
 
 func (c *Cursor) MoveBol() {
-	c.SetOffsets(0)
+	c.SetB(0)
 }
 
 func (c *Cursor) MoveBoc() {
-	c.SetOffsets(c.LineBoc())
+	c.SetB(c.LineBoc())
 }
 
 func (c *Cursor) MoveBocBolRepeat() {
@@ -380,7 +365,7 @@ func (c *Cursor) MoveBocBolRepeat() {
 }
 
 func (c *Cursor) MoveEol() {
-	c.SetOffsets(len(c.LineData()))
+	c.SetB(len(c.LineData()))
 }
 
 func (c *Cursor) PageUp() {
@@ -424,7 +409,7 @@ func (c *Cursor) MoveEof() {
 func (c *Cursor) SplitLine() {
 	c.t.SplitLine(c.l, c.b)
 	c.MoveDown()
-	c.SetOffsets(0)
+	c.SetB(0)
 }
 
 func (c *Cursor) Insert(str string) {
@@ -443,7 +428,7 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	if sel == nil {
 		c.t.lines[c.l].InsertTab()
 		tabed = append(tabed, c.l)
-		c.SetOffsets(c.b+1)
+		c.SetB(c.b+1)
 		return tabed
 	}
 	min, max := sel.MinMax()
@@ -459,7 +444,7 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	}
 	for _, l := range tabed {
 		if l == c.l {
-			c.SetOffsets(c.b+1)
+			c.SetB(c.b+1)
 		}
 	}
 	return tabed
@@ -472,7 +457,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 			return untabed
 		}
 		if c.b != 0 {
-			c.SetOffsets(c.b-1)
+			c.SetB(c.b-1)
 		}
 		untabed = append(untabed, c.l)
 		return untabed
@@ -491,7 +476,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 	}
 	for _, l := range untabed {
 		if l == c.l && !c.AtBol() {
-			c.SetOffsets(c.b-1)
+			c.SetB(c.b-1)
 		}
 	}
 	return untabed
@@ -519,12 +504,12 @@ func (c *Cursor) Backspace() string {
 
 func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
-	bmin := Point{min.l, BFromC(c.t.lines[min.l].data, min.o)}
-	bmax := Point{max.l, BFromC(c.t.lines[max.l].data, max.o)}
+	bmin := Point{min.l, BFromO(c.t.lines[min.l].data, min.o)}
+	bmax := Point{max.l, BFromO(c.t.lines[max.l].data, max.o)}
 	// TODO : should get deleted strings from RemoveRange
 	deleted := c.t.RemoveRange(bmin, bmax)
 	c.l = min.l
-	c.SetOffsets(bmin.o)
+	c.SetB(bmin.o)
 	return deleted
 }
 
@@ -542,7 +527,7 @@ func (c *Cursor) GotoNext(find string) {
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b+offset)
+			c.SetB(b+offset)
 			break
 		}
 	}
@@ -557,7 +542,7 @@ func (c *Cursor) GotoPrev(find string) {
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetB(b)
 			break
 		}
 	}
@@ -578,7 +563,7 @@ func (c *Cursor) GotoNextWord(find string) {
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b+offset)
+			c.SetB(b+offset)
 			if c.Word() == find {
 				return
 			}
@@ -597,7 +582,7 @@ func (c *Cursor) GotoPrevWord(find string) {
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetB(b)
 			if c.Word() == find {
 				return
 			}
@@ -612,7 +597,7 @@ func (c *Cursor) GotoFirst(find string) {
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetB(b)
 			break
 		}
 	}
@@ -624,7 +609,7 @@ func (c *Cursor) GotoLast(find string) {
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetB(b)
 			break
 		}
 	}
@@ -644,7 +629,7 @@ func (c *Cursor) GotoNextAny(chars string) {
 		b := strings.IndexAny(linedata, chars)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b+offset)
+			c.SetB(b+offset)
 			break
 		}
 	}
@@ -659,7 +644,7 @@ func (c *Cursor) GotoPrevAny(chars string) {
 		b := strings.LastIndexAny(linedata, chars)
 		if b != -1 {
 			c.l = l
-			c.SetOffsets(b)
+			c.SetB(b)
 			break
 		}
 	}
@@ -683,7 +668,7 @@ func (c *Cursor) GotoNextGlobalLineWithout(str string) {
 	}
 	if findLine != -1 {
 		c.l = findLine
-		c.SetOffsets(0)
+		c.SetB(0)
 		return
 	}
 }
@@ -712,7 +697,7 @@ func (c *Cursor) GotoPrevGlobalLineWithout(str string) {
 	}
 	if findLine != -1 {
 		c.l = findLine
-		c.SetOffsets(0)
+		c.SetB(0)
 		return
 	}
 }
@@ -730,7 +715,7 @@ func (c *Cursor) GotoNextDefinition(defn []string) {
 		}
 		if find {
 			c.l = l
-			c.SetOffsets(0)
+			c.SetB(0)
 			break
 		}
 	}
@@ -753,7 +738,7 @@ func (c *Cursor) GotoPrevDefinition(defn []string) {
 		}
 		if find {
 			c.l = l
-			c.SetOffsets(0)
+			c.SetB(0)
 			break
 		}
 	}
@@ -834,7 +819,7 @@ func (c *Cursor) GotoLine(l int) {
 		l = len(c.t.lines)-1
 	}
 	c.l = l
-	c.SetOffsets(0)
+	c.SetB(0)
 }
 
 func (c *Cursor) Word() string {
