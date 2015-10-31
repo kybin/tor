@@ -139,15 +139,11 @@ func main() {
 		} else if mode == "find" {
 			status = fmt.Sprintf("find : %v", findmode.findstr)
 		} else {
-			mm := ""
-			if mode == "move" {
-				mm = "(move mode)"
-			}
 			if !holdStatus {
 				if selection.on {
-					status = fmt.Sprintf("%v %v    selection on : (%v, %v) - (%v, %v)", f, mm, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
+					status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
 				} else {
-					status = fmt.Sprintf("%v %v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, mm, cursor.l+1, cursor.b, cursor.o, cursor.O())
+					status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l+1, cursor.b, cursor.o, cursor.O())
 				}
 			}
 		}
@@ -178,11 +174,6 @@ func main() {
 				} else if mode == "find" {
 					findmode.Handle(ev, cursor, &mode)
 					continue
-				} else if mode == "move" {
-					if ev.Key == term.KeyCtrlK {
-						mode = "normal"
-						continue
-					}
 				}
 
 				actions := parseEvent(ev, selection, &mode)

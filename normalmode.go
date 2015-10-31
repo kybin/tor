@@ -74,15 +74,13 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind:"modeChange", value:"gotoline"}}
-	case term.KeyCtrlJ:
-		return []*Action{&Action{kind:"modeChange", value:"move"}}
 	case term.KeyCtrlL:
 		return []*Action{&Action{kind:"selectLine"}}
 	default:
 		if ev.Ch == 0 {
 			return []*Action{&Action{kind:"none"}}
 		}
-		if ev.Mod & term.ModAlt != 0 || *mode == "move" {
+		if ev.Mod & term.ModAlt != 0 {
 			switch ev.Ch {
 			case 'j':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"left"}}
