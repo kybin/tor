@@ -7,10 +7,15 @@ import (
 	"strings"
 	"strconv"
 	"path"
+	"path/filepath"
 	"io/ioutil"
 )
 
-func saveLastPosition(workingfile string, l, b int) error {
+func saveLastPosition(relpath string, l, b int) error {
+	abspath, err := filepath.Abs(relpath)
+	if err != nil {
+		return err
+	}
 	u, err := user.Current()
 	if err != nil {
 		return err
@@ -28,13 +33,13 @@ func saveLastPosition(workingfile string, l, b int) error {
 	lines := strings.Split(string(input), "\n")
 	find := false
 	for i, ln := range lines {
-		if strings.Contains(ln, workingfile + ":") {
+		if strings.Contains(ln, abspath + ":") {
 			find = true
-			lines[i] = fmt.Sprintf("%v:%v:%v", workingfile, l, b)
+			lines[i] = fmt.Sprintf("%v:%v:%v", abspath, l, b)
 		}
 	}
 	if !find {
-		lines = append(lines, fmt.Sprintf("%v:%v:%v", workingfile, l, b))
+		lines = append(lines, fmt.Sprintf("%v:%v:%v", abspath, l, b))
 	}
 	output := strings.Join(lines, "\n")
 	err = ioutil.WriteFile(f, []byte(output), 0644)
@@ -44,7 +49,11 @@ func saveLastPosition(workingfile string, l, b int) error {
 	return nil
 }
 
-func loadLastPosition(workingfile string) (int, int) {
+func loadLastPosition(relpath string) (int, int) {
+	abspath, err := filepath.Abs(relpath)
+	if err != nil {
+		return 0, 0
+	}
 	u, err := user.Current()
 	if err != nil {
 		return 0, 0
@@ -58,7 +67,7 @@ func loadLastPosition(workingfile string) (int, int) {
 	findline := ""
 	lines := strings.Split(string(input), "\n")
 	for _, ln := range lines {
-		if strings.Contains(ln, workingfile + ":") {
+		if strings.Contains(ln, abspath + ":") {
 			find = true
 			findline = ln
 		}
