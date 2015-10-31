@@ -66,6 +66,10 @@ func (c *Cursor) SetB(b int) {
 	c.b = b
 }
 
+func (c *Cursor) SetO(o int) {
+	c.o = o
+	c.RecalcB()
+}
 
 // if b is from lastpos file, it may less correct.
 func (c *Cursor) SetCloseToB(tb int) {

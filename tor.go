@@ -9,11 +9,51 @@ import (
 	"strings"
 	"flag"
 	"strconv"
+	"errors"
 )
 
 // we use line, offset style. termbox use o, l style.
 func SetCursor(l, o int) {
        term.SetCursor(o, l)
+}
+
+// parseFileArg returns (filepath, linenum, offset, error).
+// if the linenum is given, but 0 or negative, it will be 1.
+// if the offset is given, but negative, it will be 0.
+// when only filepath is given, linenum and offset will be set to -1.
+func parseFileArg(farg string) (string, int, int, error) {
+	finfo := strings.Split(farg, ":")
+	f := finfo[0]
+	l, o := -1, -1
+	err := error(nil)
+
+	if len(finfo) >= 4 {
+		return "", -1, -1, errors.New("too many colons in file argument")
+	}
+
+	if len(finfo) == 1 {
+		return f, -1, -1, nil
+	}
+	if len(finfo) >= 2 {
+		l, err = strconv.Atoi(finfo[1])
+		if err != nil {
+			return "", -1, -1, err
+		}
+		if len(finfo) == 3 {
+			o, err = strconv.Atoi(finfo[2])
+			if err != nil {
+				return "", -1, -1, err
+			}
+		}
+	}
+
+	if l < 0 {
+		l = 0
+	}
+	if o < 0 {
+		o = 0
+	}
+	return f, l, o, nil
 }
 
 func main() {
@@ -27,35 +67,11 @@ func main() {
 		fmt.Println("please, set text file")
 		os.Exit(1)
 	}
-	fstr := args[len(args)-1]
+	farg := args[len(args)-1]
 
-	finfo := strings.Split(fstr, ":")
-
-	f := finfo[0]
-	initL, initO := -1, -1
-	switch len(finfo) {
-	case 1:
-	case 2:
-		l, err := strconv.Atoi(finfo[1])
-		if err != nil {
-			fmt.Println("parse file argument error: cannot convert line num to int")
-			os.Exit(1)
-		}
-		initL = l
-	case 3:
-		l, err := strconv.Atoi(finfo[1])
-		if err != nil {
-			fmt.Println("parse file argument error: cannot convert line num to int")
-			os.Exit(1)
-		}
-		o, err := strconv.Atoi(finfo[2])
-		if err != nil {
-			fmt.Println("parse file argument error: cannot convert line offset to int")
-			os.Exit(1)
-		}
-		initL, initO = l, o
-	default:
-		fmt.Println("parse file argument error: too many colons")
+	f, initL, initO, err := parseFileArg(farg)
+	if err != nil {
+		fmt.Println("file arg is invalid: ", err)
 		os.Exit(1)
 	}
 
@@ -94,12 +110,13 @@ func main() {
 	cursor := NewCursor(text)
 	if initL != -1 {
 		l := initL
+		// to internal line number
 		if l != 0 {
 			l--
 		}
 		cursor.GotoLine(l)
 		if initO != -1 {
-			cursor.o = initO
+			cursor.SetO(initO)
 		}
 	} else {
 		l, b := loadLastPosition(f)
