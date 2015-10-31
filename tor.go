@@ -17,10 +17,9 @@ func SetCursor(l, o int) {
 }
 
 func main() {
-	var new bool
-	flag.BoolVar(&new, "new", false, "let tor to edit a new file.")
-	var debug bool
-	flag.BoolVar(&debug, "debug", false, "tor will create .history file for debugging.")
+	var newFlag, debugFlag bool
+	flag.BoolVar(&newFlag, "new", false, "let tor to edit a new file.")
+	flag.BoolVar(&debugFlag, "debug", false, "tor will create .history file for debugging.")
 	flag.Parse()
 
 	args := flag.Args()
@@ -64,10 +63,10 @@ func main() {
 	if _, err := os.Stat(f); os.IsNotExist(err) {
 		exist = false
 	}
-	if !exist && !new {
+	if !exist && !newFlag {
 		fmt.Println("file not exist. please retry with -new flag.")
 		os.Exit(1)
-	} else if exist && new {
+	} else if exist && newFlag {
 		fmt.Println("file already exist.")
 		os.Exit(1)
 	}
@@ -257,7 +256,7 @@ func main() {
 					}
 					lastActStr = a.kind
 					lastAct := history.Last()
-					if debug && lastAct != nil {
+					if debugFlag && lastAct != nil {
 						historyFileString := ""
 						for i, a := range history.actions {
 							if i != 0 {
