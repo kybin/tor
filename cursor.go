@@ -12,22 +12,12 @@ var (
 	pageoffset = 16
 )
 
-//type place int
-//
-//var (
-//	NONE place = iota
-//	BOC
-//	EOC
-//	EOL
-//)
-
 type Cursor struct {
 	l int // line offset
 	o int // cursor offset - When MoveUp or MoveDown, it will calculated from visual offset.
 	v int // visual offset - When MoveLeft of MoveRight, it will matched to cursor offset.
 	b int // byte offset
 	t *Text
-	// stick place - will implement later
 }
 
 func NewCursor(t *Text) *Cursor {
