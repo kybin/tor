@@ -26,6 +26,10 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"up"}}
 	case term.KeyArrowDown:
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"down"}}
+	case term.KeyPgup:
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pageup"}}
+	case term.KeyPgdn:
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pagedown"}}
 	// insert
 	case term.KeyEnter:
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}}
