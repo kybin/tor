@@ -113,8 +113,8 @@ func (c *Cursor) Position() Point {
 	return Point{c.l, c.O()}
 }
 
-func (c *Cursor) Line() string {
-	return c.t.lines[c.l]
+func (c *Cursor) Line() *Line {
+	return &(c.t.lines[c.l])
 }
 
 func (c *Cursor) LineData() string {
