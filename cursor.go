@@ -121,10 +121,6 @@ func (c *Cursor) LineData() string {
 	return c.t.lines[c.l].data
 }
 
-func (c *Cursor) LineBoc() int {
-	return c.t.lines[c.l].Boc()
-}
-
 func (c *Cursor) RuneAfter() (rune, int) {
 	return utf8.DecodeRuneInString(c.LineData()[c.b:])
 }
@@ -339,13 +335,13 @@ func (c *Cursor) MoveBol() {
 }
 
 func (c *Cursor) MoveBoc() {
-	c.SetB(c.LineBoc())
+	c.SetB(c.Line().Boc())
 }
 
 func (c *Cursor) MoveBocBolRepeat() {
 	if c.AtBol() {
 		c.MoveBoc()
-	} else if c.b <= c.LineBoc() {
+	} else if c.b <= c.Line().Boc() {
 		c.MoveBol()
 	} else {
 		c.MoveBoc()
