@@ -4,7 +4,6 @@ import (
 	"unicode"
 	"unicode/utf8"
 	"strings"
-	"github.com/mattn/go-runewidth"
 )
 
 var (
@@ -34,7 +33,7 @@ func (c *Cursor) B() int {
 }
 
 func (c *Cursor) O() int {
-	maxo := c.LineVisualLength()
+	maxo := vlen(c.LineData())
 	if c.o >  maxo {
 		return maxo
 	}
@@ -45,7 +44,7 @@ func (c *Cursor) O() int {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		lasto := o
-		o += RuneVisualLength(r)
+		o += vlen(string(r))
 		if o == c.o {
 			return o
 		} else if o > c.o {
@@ -61,7 +60,7 @@ func (c *Cursor) SetB(b int) {
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		o += RuneVisualLength(r)
+		o += vlen(string(r))
 	}
 	c.o = o
 	c.b = b
@@ -80,7 +79,7 @@ func (c *Cursor) SetCloseToB(tb int) {
 		remain = remain[rlen:]
 		lasto, lastb := o, b
 		b += rlen
-		o += RuneVisualLength(r)
+		o += vlen(string(r))
 		if b == tb {
 			c.b = b
 			c.o = o
@@ -104,7 +103,7 @@ func BFromO(line string, o int) (b int) {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		b += rlen
-		o -= RuneVisualLength(r)
+		o -= vlen(string(r))
 	}
 	return
 }
@@ -127,24 +126,6 @@ func (c *Cursor) RuneAfter() (rune, int) {
 
 func (c *Cursor) RuneBefore() (rune, int) {
 	return utf8.DecodeLastRuneInString(c.LineData()[:c.b])
-}
-
-func RuneVisualLength(r rune) int {
-	if r=='\t' {
-		return taboffset
-	}
-	return runewidth.RuneWidth(r)
-}
-
-func (c *Cursor) LineVisualLength() int {
-	remain := c.LineData()
-	o := 0
-	for len(remain) > 0 {
-		r, rlen := utf8.DecodeRuneInString(remain)
-		remain = remain[rlen:]
-		o += RuneVisualLength(r)
-	}
-	return o
 }
 
 func (c *Cursor) AtBol() bool{
@@ -218,7 +199,7 @@ func (c *Cursor) MoveLeft() {
 	}
 	r, rlen := c.RuneBefore()
 	c.b -= rlen
-	c.o -= RuneVisualLength(r)
+	c.o -= vlen(string(r))
 }
 
 func (c *Cursor) MoveRight() {
@@ -231,7 +212,7 @@ func (c *Cursor) MoveRight() {
 	}
 	r, rlen := c.RuneAfter()
 	c.b += rlen
-	c.o += RuneVisualLength(r)
+	c.o += vlen(string(r))
 }
 
 func (c *Cursor) MoveUp() {
