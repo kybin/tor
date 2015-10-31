@@ -138,13 +138,11 @@ func main() {
 			status = fmt.Sprintf("goto : %v", gotolinemode.linestr)
 		} else if mode == "find" {
 			status = fmt.Sprintf("find : %v", findmode.findstr)
-		} else {
-			if !holdStatus {
-				if selection.on {
-					status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
-				} else {
-					status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l+1, cursor.b, cursor.o, cursor.O())
-				}
+		} else if !holdStatus {
+			if selection.on {
+				status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
+			} else {
+				status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l+1, cursor.b, cursor.o, cursor.O())
 			}
 		}
 		printStatus(status)
@@ -183,8 +181,9 @@ func main() {
 							if selection.on {
 								min, max := selection.MinMax()
 								findmode.findstr = text.DataInside(min, max)
-								findmode.juststart = true
+								continue
 							}
+							findmode.juststart = true
 						}
 						mode = a.value
 						continue
@@ -223,7 +222,7 @@ func main() {
 						cursor.Insert(copied)
 						a.value = copied
 					} else {
-						do(a, cursor, selection, history, &status, &holdStatus)
+						do(a, cursor, selection, history, &status, &holdStatus, findmode.findstr)
 					}
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":

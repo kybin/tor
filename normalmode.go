@@ -153,13 +153,13 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 			case '{', 'Z':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevArg"}}
 			case 'f':
-				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextFindWord"}}
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNext"}}
 			case 'F':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"nextFindWord"}}
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"findNextWord"}}
 			case 'b':
-				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevFindWord"}}
+				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findPrev"}}
 			case 'B':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevFindWord"}}
+				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"findPrevWord"}}
 			case 'c':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"matchingBracket"}}
 			case 'C':
@@ -176,7 +176,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	}
 }
 
-func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool) {
+func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool, findstr string) {
 	defer func() {
 		if sel.on {
 			sel.SetEnd(c)
@@ -242,6 +242,14 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 			}
 		case "matchingBracket":
 			c.GotoMatchingBracket()
+		case "findPrev":
+			c.GotoPrev(findstr)
+		case "findPrevWord":
+			c.GotoPrevWord(findstr)
+		case "findNext":
+			c.GotoNext(findstr)
+		case "findNextWord":
+			c.GotoNextWord(findstr)
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}

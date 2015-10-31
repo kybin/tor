@@ -472,6 +472,9 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 }
 
 func (c *Cursor) GotoNext(find string) {
+	if find == "" {
+		return
+	}
 	for l := c.l; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
 		offset := 0
@@ -492,6 +495,9 @@ func (c *Cursor) GotoNext(find string) {
 }
 
 func (c *Cursor) GotoPrev(find string) {
+	if find == "" {
+		return
+	}
 	for l := c.l; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
 		if l == c.l {

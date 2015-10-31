@@ -5,7 +5,11 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
+// TODO: print status when FindMode.Set() is executed.
+// ex) "find \"some find string\". alt+f to next, alt+b to prev"
+
 type FindMode struct {
+	// TODO: olds []string
 	findstr string
 	juststart bool
 }
@@ -13,61 +17,35 @@ type FindMode struct {
 func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 	switch ev.Key {
 	case term.KeyCtrlK:
+		// TODO: revert to old
 		*mode = "normal"
 	case term.KeyEnter:
-		if f.findstr == "" {
-			return
-		}
-		cursor.GotoNext(f.findstr)
+		*mode = "normal"
 	case term.KeySpace:
+		if f.juststart {
+			f.findstr = ""
+			f.juststart = false
+		}
 		f.findstr += " "
 	case term.KeyBackspace, term.KeyBackspace2:
 		if f.juststart {
 			f.findstr = ""
+			f.juststart = false
 			return
 		}
 		_, rlen := utf8.DecodeLastRuneInString(f.findstr)
 		f.findstr = f.findstr[:len(f.findstr)-rlen]
 	default:
-		if ev.Mod & term.ModAlt != 0 && ev.Ch != 0 {
-			switch ev.Ch {
-			case 'j':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoPrev(f.findstr)
-			case 'l':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoNext(f.findstr)
-			case 'i':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoFirst(f.findstr)
-			case 'k':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoLast(f.findstr)
-			case 'm':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoPrevWord(f.findstr)
-			case '.':
-				if f.findstr == "" {
-					return
-				}
-				cursor.GotoNextWord(f.findstr)
-			}
-		} else if ev.Ch != 0 {
+		if ev.Mod & term.ModAlt != 0 {
+			return
+		}
+		if ev.Ch != 0 {
 			if f.juststart {
-				f.juststart = false
 				f.findstr = ""
+				f.juststart = false
 			}
 			f.findstr += string(ev.Ch)
 		}
 	}
 }
+
