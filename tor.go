@@ -88,9 +88,8 @@ func main() {
 	term.Clear(term.ColorDefault, term.ColorDefault)
 	term.Flush()
 
-
-	layout := NewLayout()
-	mainarea := layout.MainViewerBound()
+	termw, termh := term.Size()
+	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
 	win := NewWindow(mainarea.Size())
 
 	cursor := NewCursor(text)
