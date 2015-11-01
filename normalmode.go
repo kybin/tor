@@ -75,7 +75,9 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
 	// find
 	case term.KeyCtrlD:
-		return []*Action{&Action{kind:"selectWord"}}
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNextSelect"}}
+	case term.KeyCtrlA:
+		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findPrevSelect"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
 	case term.KeyCtrlG:
@@ -243,13 +245,52 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 		case "matchingBracket":
 			c.GotoMatchingBracket()
 		case "findPrev":
-			c.GotoPrev(findstr)
+			ok := c.GotoPrev(findstr)
+			if !ok {
+				c.GotoLast(findstr)
+			}
+		case "findNext":
+			ok := c.GotoNext(findstr)
+			if !ok {
+				c.GotoFirst(findstr)
+			}
 		case "findPrevWord":
 			c.GotoPrevWord(findstr)
-		case "findNext":
-			c.GotoNext(findstr)
 		case "findNextWord":
 			c.GotoNextWord(findstr)
+		// TODO: "findPrevSelect" and "findNextSelect" are hack. make separate action.
+		case "findPrevSelect":
+			ok := c.GotoPrev(findstr)
+			if !ok {
+				ok = c.GotoLast(findstr)
+			}
+			if ok {
+				sel.on = true
+				for range findstr {
+					c.MoveRight()
+				}
+				sel.SetStart(c)
+				for range findstr {
+					c.MoveLeft()
+				}
+				sel.SetEnd(c)
+			}
+		case "findNextSelect":
+			ok := c.GotoNext(findstr)
+			if !ok {
+				ok = c.GotoFirst(findstr)
+			}
+			if ok {
+				sel.on = true
+				for range findstr {
+					c.MoveRight()
+				}
+				sel.SetStart(c)
+				for range findstr {
+					c.MoveLeft()
+				}
+				sel.SetEnd(c)
+			}
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}

@@ -475,9 +475,9 @@ func (c *Cursor) DeleteSelection(sel *Selection) string {
 	return deleted
 }
 
-func (c *Cursor) GotoNext(find string) {
+func (c *Cursor) GotoNext(find string) bool {
 	if find == "" {
-		return
+		return true
 	}
 	for l := c.l; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
@@ -493,14 +493,15 @@ func (c *Cursor) GotoNext(find string) {
 		if b != -1 {
 			c.l = l
 			c.SetB(b+offset)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoPrev(find string) {
+func (c *Cursor) GotoPrev(find string) bool {
 	if find == "" {
-		return
+		return true
 	}
 	for l := c.l; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
@@ -511,12 +512,13 @@ func (c *Cursor) GotoPrev(find string) {
 		if b != -1 {
 			c.l = l
 			c.SetB(b)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoNextWord(find string) {
+func (c *Cursor) GotoNextWord(find string) bool {
 	oldc := *c
 	for l := c.l; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
@@ -533,14 +535,15 @@ func (c *Cursor) GotoNextWord(find string) {
 			c.l = l
 			c.SetB(b+offset)
 			if c.Word() == find {
-				return
+				return true
 			}
 		}
 	}
 	c.Copy(oldc)
+	return false
 }
 
-func (c *Cursor) GotoPrevWord(find string) {
+func (c *Cursor) GotoPrevWord(find string) bool {
 	oldc := *c
 	for l := c.l; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
@@ -552,38 +555,41 @@ func (c *Cursor) GotoPrevWord(find string) {
 			c.l = l
 			c.SetB(b)
 			if c.Word() == find {
-				return
+				return true
 			}
 		}
 	}
 	c.Copy(oldc)
+	return false
 }
 
-func (c *Cursor) GotoFirst(find string) {
+func (c *Cursor) GotoFirst(find string) bool {
 	for l := 0; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
 			c.SetB(b)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoLast(find string) {
+func (c *Cursor) GotoLast(find string) bool {
 	for l := len(c.t.lines)-1; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
 			c.SetB(b)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoNextAny(chars string) {
+func (c *Cursor) GotoNextAny(chars string) bool {
 	for l := c.l; l < len(c.t.lines); l++ {
 		linedata := string(c.t.lines[l].data)
 		offset := 0
@@ -598,12 +604,13 @@ func (c *Cursor) GotoNextAny(chars string) {
 		if b != -1 {
 			c.l = l
 			c.SetB(b+offset)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoPrevAny(chars string) {
+func (c *Cursor) GotoPrevAny(chars string) bool {
 	for l := c.l; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
 		if l == c.l {
@@ -613,12 +620,13 @@ func (c *Cursor) GotoPrevAny(chars string) {
 		if b != -1 {
 			c.l = l
 			c.SetB(b)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoNextGlobalLineWithout(str string) {
+func (c *Cursor) GotoNextGlobalLineWithout(str string) bool {
 	findLine := -1
 	for l := c.l+1; l < len(c.t.lines); l++ {
 		find := true
@@ -637,11 +645,12 @@ func (c *Cursor) GotoNextGlobalLineWithout(str string) {
 	if findLine != -1 {
 		c.l = findLine
 		c.SetB(0)
-		return
+		return true
 	}
+	return false
 }
 
-func (c *Cursor) GotoPrevGlobalLineWithout(str string) {
+func (c *Cursor) GotoPrevGlobalLineWithout(str string) bool {
 	var startLine int
 	if c.b == 0 {
 		startLine = c.l - 1
@@ -666,11 +675,12 @@ func (c *Cursor) GotoPrevGlobalLineWithout(str string) {
 	if findLine != -1 {
 		c.l = findLine
 		c.SetB(0)
-		return
+		return true
 	}
+	return false
 }
 
-func (c *Cursor) GotoNextDefinition(defn []string) {
+func (c *Cursor) GotoNextDefinition(defn []string) bool {
 	nextLines := c.t.lines[c.l+1:]
 	for i, line := range nextLines {
 		l := c.l + 1 + i
@@ -684,12 +694,13 @@ func (c *Cursor) GotoNextDefinition(defn []string) {
 		if find {
 			c.l = l
 			c.SetB(0)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoPrevDefinition(defn []string) {
+func (c *Cursor) GotoPrevDefinition(defn []string) bool {
 	var startLine int
 	if c.b == 0 {
 		startLine = c.l - 1
@@ -707,12 +718,13 @@ func (c *Cursor) GotoPrevDefinition(defn []string) {
 		if find {
 			c.l = l
 			c.SetB(0)
-			break
+			return true
 		}
 	}
+	return false
 }
 
-func (c *Cursor) GotoMatchingBracket() {
+func (c *Cursor) GotoMatchingBracket() bool {
 	rb, _ := c.RuneBefore()
 	ra, _ := c.RuneAfter()
 	var r rune
@@ -726,7 +738,7 @@ func (c *Cursor) GotoMatchingBracket() {
 		dir = "left"
 	}
 	if dir == "" {
-		return
+		return true
 	}
 	// rune for matching.
 	var m rune
@@ -745,9 +757,9 @@ func (c *Cursor) GotoMatchingBracket() {
 		m = '('
 	}
 	if dir == "left" && rb == m {
-		return
+		return true
 	} else if dir == "right" && ra == m {
-		return
+		return true
 	}
 	set := string(r) + string(m)
 	depth := 0
@@ -762,7 +774,7 @@ func (c *Cursor) GotoMatchingBracket() {
 		if c.l == bc.l && c.o == bc.o {
 			// did not find next set.
 			c.Copy(origc)
-			return
+			return false
 		}
 		if c.InStrings() {
 			continue
@@ -775,11 +787,12 @@ func (c *Cursor) GotoMatchingBracket() {
 				if dir == "left" {
 					c.MoveRight()
 				}
-				return
+				return true
 			}
 			depth--
 		}
 	}
+	return false
 }
 
 func (c *Cursor) GotoLine(l int) {
