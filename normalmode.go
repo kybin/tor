@@ -96,13 +96,13 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"right"}}
 			case 'L':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"right"}}
-			case 'i', 'q':
+			case 'i':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"up"}}
-			case 'I', 'Q':
+			case 'I':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"up"}}
-			case 'k', 'a':
+			case 'k':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"down"}}
-			case 'K', 'A':
+			case 'K':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"down"}}
 			case 'm':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevBowEow"}}
@@ -132,13 +132,13 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pagedown"}}
 			case 'S':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"pagedown"}}
-			case 'e':
+			case 'q':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"bof"}}
-			case 'E':
+			case 'Q':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"bof"}}
-			case 'd':
+			case 'e':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eof"}}
-			case 'D':
+			case 'E':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"eof"}}
 			case 'n':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"nextGlobal"}}
@@ -156,14 +156,10 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"prevArg"}}
 			case '{', 'Z':
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevArg"}}
-			case 'f':
+			case 'd':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNext"}}
-			case 'F':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"findNextWord"}}
-			case 'b':
+			case 'a':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findPrev"}}
-			case 'B':
-				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"findPrevWord"}}
 			case 'c':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"matchingBracket"}}
 			case 'C':

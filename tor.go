@@ -157,7 +157,7 @@ func main() {
 		} else if !holdStatus {
 			status = fmt.Sprintf("%v:%v:%v", f, cursor.l+1, cursor.O())
 			if findmode.set {
-				status = fmt.Sprintf("find \"%v\": alt+f, alt+b", findmode.findstr)
+				status = fmt.Sprintf("find \"%v\": alt+d, alt+a", findmode.findstr)
 			}
 		}
 		printStatus(status)
