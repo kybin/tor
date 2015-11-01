@@ -76,7 +76,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	// find
 	case term.KeyCtrlD:
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNextSelect"}}
-	case term.KeyCtrlA:
+	case term.KeyCtrlB:
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findPrevSelect"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind:"modeChange", value:"find"}}
@@ -160,7 +160,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 				return []*Action{&Action{kind:"selection", value:"on"}, &Action{kind:"move", value:"prevArg"}}
 			case 'd':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNext"}}
-			case 'a':
+			case 'b':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findPrev"}}
 			case 'c':
 				return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"matchingBracket"}}
