@@ -155,14 +155,16 @@ func main() {
 		} else if mode == "find" {
 			status = fmt.Sprintf("find : %v", findmode.findstr)
 		} else if !holdStatus {
-			if selection.on {
-				status = fmt.Sprintf("%v    selection on : (%v, %v) - (%v, %v)", f, selection.start.l+1, selection.start.o, selection.end.l+1, selection.end.o)
-			} else {
-				status = fmt.Sprintf("%v    linenum:%v, byteoff:%v, visoff:%v, cursoroff:%v", f, cursor.l+1, cursor.b, cursor.o, cursor.O())
+			status = fmt.Sprintf("%v:%v:%v", f, cursor.l+1, cursor.O())
+			if findmode.set {
+				status = fmt.Sprintf("find \"%v\": alt+f, alt+b", findmode.findstr)
 			}
 		}
 		printStatus(status)
 		holdStatus = false
+
+		// reset variables
+		findmode.set = false
 
 		winP := cursor.Position().Sub(win.min)
 		SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
@@ -196,10 +198,12 @@ func main() {
 						if a.value == "find" {
 							if selection.on {
 								min, max := selection.MinMax()
+								findmode.set = true
 								findmode.findstr = text.DataInside(min, max)
+								selection.on = false
 								continue
 							}
-							findmode.juststart = true
+							findmode.start = true
 						}
 						mode = a.value
 						continue

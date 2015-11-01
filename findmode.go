@@ -5,13 +5,11 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
-// TODO: print status when FindMode.Set() is executed.
-// ex) "find \"some find string\". alt+f to next, alt+b to prev"
-
 type FindMode struct {
 	// TODO: olds []string
 	findstr string
-	juststart bool
+	start bool
+	set bool
 }
 
 func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
@@ -20,17 +18,18 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		// TODO: revert to old
 		*mode = "normal"
 	case term.KeyEnter:
+		f.set = true
 		*mode = "normal"
 	case term.KeySpace:
-		if f.juststart {
+		if f.start {
 			f.findstr = ""
-			f.juststart = false
+			f.start = false
 		}
 		f.findstr += " "
 	case term.KeyBackspace, term.KeyBackspace2:
-		if f.juststart {
+		if f.start {
 			f.findstr = ""
-			f.juststart = false
+			f.start = false
 			return
 		}
 		_, rlen := utf8.DecodeLastRuneInString(f.findstr)
@@ -40,9 +39,9 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 			return
 		}
 		if ev.Ch != 0 {
-			if f.juststart {
+			if f.start {
 				f.findstr = ""
-				f.juststart = false
+				f.start = false
 			}
 			f.findstr += string(ev.Ch)
 		}
