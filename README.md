@@ -36,7 +36,7 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 `Ctrl+O` Indent Line
 
-`Ctrl+U` Unintent Line
+`Ctrl+U` Unindent Line
 
 
 ##### Alt
