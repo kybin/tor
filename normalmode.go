@@ -32,15 +32,15 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"pagedown"}}
 	// insert
 	case term.KeyEnter:
-		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}}
+		return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}}
 	case term.KeyCtrlJ:
-		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
+		return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
 	case term.KeyCtrlN:
-		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
+		return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"eol"}, &Action{kind:"insert", value:"\n"}, &Action{kind:"insert", value:"autoIndent"}}
 	case term.KeySpace:
-		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:" "}}
+		return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:" "}}
 	case term.KeyTab:
-		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\t"}}
+		return []*Action{&Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}, &Action{kind:"insert", value:"\t"}}
 	case term.KeyCtrlU:
 		return []*Action{&Action{kind:"removeTab"}}
 	case term.KeyCtrlO:
@@ -72,7 +72,11 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		}
 		return []*Action{&Action{kind:"paste"}}
 	case term.KeyCtrlX:
-		return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
+		if sel.on {
+			return []*Action{&Action{kind:"copy"}, &Action{kind:"deleteSelection"}, &Action{kind:"selection", value:"off"}}
+		} else {
+			return []*Action{&Action{kind:"copy"}, &Action{kind:"delete"}}
+		}
 	// find
 	case term.KeyCtrlD:
 		return []*Action{&Action{kind:"selection", value:"off"}, &Action{kind:"move", value:"findNextSelect"}}
@@ -352,8 +356,6 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 		if sel.on {
 			a.value = c.DeleteSelection(sel)
 			sel.on = false
-		} else {
-			a.value = c.Delete()
 		}
 	case "selectLine":
 		c.MoveBol()
