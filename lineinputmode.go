@@ -5,14 +5,16 @@ import (
 	"unicode/utf8"
 )
 
-type FindMode struct {
+// TODO: handle aborted situation
+
+type LineInputMode struct {
 	// TODO: olds []string
-	findstr string
-	start   bool
-	set     bool
+	str   string
+	start bool
+	set   bool
 }
 
-func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
+func (f *LineInputMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 	switch ev.Key {
 	case term.KeyCtrlK:
 		// TODO: revert to old
@@ -22,28 +24,28 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		*mode = "normal"
 	case term.KeySpace:
 		if f.start {
-			f.findstr = ""
+			f.str = ""
 			f.start = false
 		}
-		f.findstr += " "
+		f.str += " "
 	case term.KeyBackspace, term.KeyBackspace2:
 		if f.start {
-			f.findstr = ""
+			f.str = ""
 			f.start = false
 			return
 		}
-		_, rlen := utf8.DecodeLastRuneInString(f.findstr)
-		f.findstr = f.findstr[:len(f.findstr)-rlen]
+		_, rlen := utf8.DecodeLastRuneInString(f.str)
+		f.str = f.str[:len(f.str)-rlen]
 	default:
 		if ev.Mod&term.ModAlt != 0 {
 			return
 		}
 		if ev.Ch != 0 {
 			if f.start {
-				f.findstr = ""
+				f.str = ""
 				f.start = false
 			}
-			f.findstr += string(ev.Ch)
+			f.str += string(ev.Ch)
 		}
 	}
 }

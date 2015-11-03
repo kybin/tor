@@ -28,6 +28,10 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 `Ctrl+B` Find Prev
 
+`Ctrl+R` Replace Mode
+
+`Ctrl+J` Replace
+
 `Ctrl+G` Goto Line
 
 `Ctrl+N` New Line

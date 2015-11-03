@@ -124,7 +124,8 @@ func main() {
 		cursor.SetCloseToB(b)
 	}
 
-	findmode := &FindMode{}
+	findmode := &LineInputMode{}
+	replacemode := &LineInputMode{}
 	gotolinemode := &GotoLineMode{}
 	selection := NewSelection()
 	history := newHistory()
@@ -153,11 +154,15 @@ func main() {
 		} else if mode == "gotoline" {
 			status = fmt.Sprintf("goto : %v", gotolinemode.linestr)
 		} else if mode == "find" {
-			status = fmt.Sprintf("find : %v", findmode.findstr)
+			status = fmt.Sprintf("find : %v", findmode.str)
+		} else if mode == "replace" {
+			status = fmt.Sprintf("replace : %v", replacemode.str)
 		} else if !holdStatus {
 			status = fmt.Sprintf("%v:%v:%v", f, cursor.l+1, cursor.O())
 			if findmode.set {
-				status = fmt.Sprintf("find \"%v\": ctrl+d, ctrl+b", findmode.findstr)
+				status = fmt.Sprintf("find \"%v\": ctrl+d, ctrl+b", findmode.str)
+			} else if replacemode.set {
+				status = fmt.Sprintf("replace \"%v\": ctrl+j", replacemode.str)
 			}
 		}
 		printStatus(status)
@@ -165,6 +170,7 @@ func main() {
 
 		// reset variables
 		findmode.set = false
+		replacemode.set = false
 
 		winP := cursor.Position().Sub(win.min)
 		SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
@@ -190,6 +196,9 @@ func main() {
 				} else if mode == "find" {
 					findmode.Handle(ev, cursor, &mode)
 					continue
+				} else if mode == "replace" {
+					replacemode.Handle(ev, cursor, &mode)
+					continue
 				}
 
 				actions := parseEvent(ev, selection, &mode)
@@ -199,11 +208,20 @@ func main() {
 							if selection.on {
 								min, max := selection.MinMax()
 								findmode.set = true
-								findmode.findstr = text.DataInside(min, max)
+								findmode.str = text.DataInside(min, max)
 								selection.on = false
 								continue
 							}
 							findmode.start = true
+						} else if a.value == "replace" {
+							if selection.on {
+								min, max := selection.MinMax()
+								replacemode.set = true
+								replacemode.str = text.DataInside(min, max)
+								selection.on = false
+								continue
+							}
+							replacemode.start = true
 						}
 						mode = a.value
 						continue
@@ -241,11 +259,16 @@ func main() {
 						}
 						cursor.Insert(copied)
 						a.value = copied
+					} else if a.kind == "replace" {
+						if replacemode.str != "" {
+							cursor.Insert(replacemode.str)
+							a.value = replacemode.str
+						}
 					} else {
-						do(a, cursor, selection, history, &status, &holdStatus, findmode.findstr)
+						do(a, cursor, selection, history, &status, &holdStatus, findmode.str)
 					}
 					switch a.kind {
-					case "insert", "delete", "backspace", "deleteSelection", "paste", "insertTab", "removeTab":
+					case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
 						// remember the action.
 						edited = true
 						nc := history.Cut(history.head)

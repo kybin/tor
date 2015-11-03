@@ -33,8 +33,6 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	// insert
 	case term.KeyEnter:
 		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: "\n"}}
-	case term.KeyCtrlJ:
-		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: "\n"}, &Action{kind: "insert", value: "autoIndent"}}
 	case term.KeyCtrlN:
 		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "eol"}, &Action{kind: "insert", value: "\n"}, &Action{kind: "insert", value: "autoIndent"}}
 	case term.KeySpace:
@@ -71,6 +69,11 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "paste"}}
 		}
 		return []*Action{&Action{kind: "paste"}}
+	case term.KeyCtrlJ:
+		if sel.on {
+			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "replace"}}
+		}
+		return []*Action{}
 	case term.KeyCtrlX:
 		if sel.on {
 			return []*Action{&Action{kind: "copy"}, &Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}}
@@ -84,6 +87,8 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "findPrevSelect"}}
 	case term.KeyCtrlF:
 		return []*Action{&Action{kind: "modeChange", value: "find"}}
+	case term.KeyCtrlR:
+		return []*Action{&Action{kind: "modeChange", value: "replace"}}
 	case term.KeyCtrlG:
 		return []*Action{&Action{kind: "modeChange", value: "gotoline"}}
 	case term.KeyCtrlL:
@@ -409,7 +414,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				}
 			}
 			c.Copy(action.beforeCursor)
-		case "paste":
+		case "paste", "replace":
 			c.Copy(action.beforeCursor)
 			for range action.value {
 				c.Delete()
@@ -461,7 +466,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				c.t.lines[l].InsertTab()
 			}
 			c.Copy(action.afterCursor)
-		case "paste":
+		case "paste", "replace":
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
 		case "backspace":
