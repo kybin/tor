@@ -1,8 +1,8 @@
 package main
 
 import (
-	"strings"
 	"errors"
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -66,7 +66,7 @@ type Text struct {
 }
 
 func (t *Text) JoinNextLine(l int) {
-	t.lines = append(append(t.lines[:l], Line{t.lines[l].data+t.lines[l+1].data}), t.lines[l+2:]...)
+	t.lines = append(append(t.lines[:l], Line{t.lines[l].data + t.lines[l+1].data}), t.lines[l+2:]...)
 }
 
 func (t *Text) SplitLine(l, b int) {
@@ -83,7 +83,7 @@ func (t *Text) InsertLine(ln Line, l int) {
 func (t *Text) RemoveLine(l int) string {
 	deleted := t.lines[l]
 	t.lines = append(append([]Line{}, t.lines[:l]...), t.lines[l+1:]...)
-	return deleted.data+"\n"
+	return deleted.data + "\n"
 }
 
 func (t *Text) RemoveRange(min, max Point) string {
@@ -91,7 +91,7 @@ func (t *Text) RemoveRange(min, max Point) string {
 	if min.l == max.l {
 		deleted = t.lines[min.l].data[min.o:max.o]
 	} else {
-		focusLines := t.lines[min.l:max.l+1]
+		focusLines := t.lines[min.l : max.l+1]
 		for i, line := range focusLines {
 			if i == 0 {
 				deleted += line.data[min.o:]
@@ -104,7 +104,7 @@ func (t *Text) RemoveRange(min, max Point) string {
 			}
 		}
 	}
-	t.lines = append(append(append([]Line{}, t.lines[:min.l]...), Line{t.lines[min.l].data[:min.o]+t.lines[max.l].data[max.o:]}), t.lines[max.l+1:]...)
+	t.lines = append(append(append([]Line{}, t.lines[:min.l]...), Line{t.lines[min.l].data[:min.o] + t.lines[max.l].data[max.o:]}), t.lines[max.l+1:]...)
 	return deleted
 }
 
@@ -129,7 +129,7 @@ func (t *Text) DataInside(min, max Cursor) string {
 		return t.lines[min.l].data[min.b:max.b]
 	}
 	data := ""
-	for l:=min.l; l<max.l+1; l++ {
+	for l := min.l; l < max.l+1; l++ {
 		if l == min.l {
 			data += t.lines[l].data[min.b:]
 		} else if l == max.l {

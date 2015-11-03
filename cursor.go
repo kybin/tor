@@ -1,13 +1,13 @@
 package main
 
 import (
+	"strings"
 	"unicode"
 	"unicode/utf8"
-	"strings"
 )
 
 var (
-	taboffset = 4
+	taboffset  = 4
 	pageoffset = 16
 )
 
@@ -34,7 +34,7 @@ func (c *Cursor) B() int {
 
 func (c *Cursor) O() int {
 	maxo := vlen(c.LineData())
-	if c.o >  maxo {
+	if c.o > maxo {
 		return maxo
 	}
 	// show cursor as well in mult-vis-character
@@ -132,15 +132,15 @@ func (c *Cursor) RuneBefore() (rune, int) {
 	return utf8.DecodeLastRuneInString(c.LineData()[:c.b])
 }
 
-func (c *Cursor) AtBol() bool{
+func (c *Cursor) AtBol() bool {
 	return c.b == 0
 }
 
-func (c *Cursor) AtEol() bool{
+func (c *Cursor) AtEol() bool {
 	return c.b == len(c.LineData())
 }
 
-func (c *Cursor) OnFirstLine() bool{
+func (c *Cursor) OnFirstLine() bool {
 	return c.l == 0
 }
 
@@ -151,7 +151,7 @@ func (c *Cursor) OnLastLine() bool {
 func (c *Cursor) AtBow() bool {
 	r, _ := c.RuneAfter()
 	rb, _ := c.RuneBefore()
-	if (unicode.IsLetter(r) || unicode.IsDigit(r))  && !(unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
+	if (unicode.IsLetter(r) || unicode.IsDigit(r)) && !(unicode.IsLetter(rb) || unicode.IsDigit(rb)) {
 		return true
 	}
 	return false
@@ -340,7 +340,7 @@ func (c *Cursor) MoveEol() {
 }
 
 func (c *Cursor) PageUp() {
-	for i:=0; i < pageoffset; i++ {
+	for i := 0; i < pageoffset; i++ {
 		if c.OnFirstLine() {
 			break
 		}
@@ -349,7 +349,7 @@ func (c *Cursor) PageUp() {
 }
 
 func (c *Cursor) PageDown() {
-	for i:=0; i < pageoffset; i++ {
+	for i := 0; i < pageoffset; i++ {
 		if c.OnLastLine() {
 			break
 		}
@@ -391,7 +391,7 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	if sel == nil {
 		c.t.lines[c.l].InsertTab()
 		tabed = append(tabed, c.l)
-		c.SetB(c.b+1)
+		c.SetB(c.b + 1)
 		return tabed
 	}
 	min, max := sel.MinMax()
@@ -401,13 +401,13 @@ func (c *Cursor) Tab(sel *Selection) []int {
 	if max.b == 0 {
 		max.l--
 	}
-	for l := min.l; l < max.l + 1; l++ {
+	for l := min.l; l < max.l+1; l++ {
 		c.t.lines[l].InsertTab()
 		tabed = append(tabed, l)
 	}
 	for _, l := range tabed {
 		if l == c.l {
-			c.SetB(c.b+1)
+			c.SetB(c.b + 1)
 		}
 	}
 	return tabed
@@ -420,7 +420,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 			return untabed
 		}
 		if c.b != 0 {
-			c.SetB(c.b-1)
+			c.SetB(c.b - 1)
 		}
 		untabed = append(untabed, c.l)
 		return untabed
@@ -439,7 +439,7 @@ func (c *Cursor) UnTab(sel *Selection) []int {
 	}
 	for _, l := range untabed {
 		if l == c.l && !c.AtBol() {
-			c.SetB(c.b-1)
+			c.SetB(c.b - 1)
 		}
 	}
 	return untabed
@@ -487,12 +487,12 @@ func (c *Cursor) GotoNext(find string) bool {
 				continue
 			}
 			linedata = linedata[c.b+1:]
-			offset = c.b+1
+			offset = c.b + 1
 		}
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetB(b+offset)
+			c.SetB(b + offset)
 			return true
 		}
 	}
@@ -528,12 +528,12 @@ func (c *Cursor) GotoNextWord(find string) bool {
 				continue
 			}
 			linedata = linedata[c.b+1:]
-			offset = c.b+1
+			offset = c.b + 1
 		}
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
-			c.SetB(b+offset)
+			c.SetB(b + offset)
 			if c.Word() == find {
 				return true
 			}
@@ -577,7 +577,7 @@ func (c *Cursor) GotoFirst(find string) bool {
 }
 
 func (c *Cursor) GotoLast(find string) bool {
-	for l := len(c.t.lines)-1; l >= 0; l-- {
+	for l := len(c.t.lines) - 1; l >= 0; l-- {
 		linedata := string(c.t.lines[l].data)
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
@@ -598,12 +598,12 @@ func (c *Cursor) GotoNextAny(chars string) bool {
 				continue
 			}
 			linedata = linedata[c.b+1:]
-			offset = c.b+1
+			offset = c.b + 1
 		}
 		b := strings.IndexAny(linedata, chars)
 		if b != -1 {
 			c.l = l
-			c.SetB(b+offset)
+			c.SetB(b + offset)
 			return true
 		}
 	}
@@ -628,7 +628,7 @@ func (c *Cursor) GotoPrevAny(chars string) bool {
 
 func (c *Cursor) GotoNextGlobalLineWithout(str string) bool {
 	findLine := -1
-	for l := c.l+1; l < len(c.t.lines); l++ {
+	for l := c.l + 1; l < len(c.t.lines); l++ {
 		find := true
 		for _, r := range str {
 			if c.t.lines[l].data == "" {
@@ -797,7 +797,7 @@ func (c *Cursor) GotoMatchingBracket() bool {
 
 func (c *Cursor) GotoLine(l int) {
 	if l >= len(c.t.lines) {
-		l = len(c.t.lines)-1
+		l = len(c.t.lines) - 1
 	}
 	c.l = l
 	c.SetB(0)

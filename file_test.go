@@ -5,7 +5,7 @@ import (
 )
 
 func TestExtendFileName(t *testing.T) {
-	cases := []struct{
+	cases := []struct {
 		f, e, want string
 	}{
 		{"/home/yongbin/test.txt", "_tor", "/home/yongbin/test_tor.txt"},

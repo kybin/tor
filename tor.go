@@ -1,20 +1,20 @@
 package main
 
 import (
+	"errors"
+	"flag"
 	"fmt"
-	"os"
-	"time"
 	term "github.com/nsf/termbox-go"
 	"io/ioutil"
-	"strings"
-	"flag"
+	"os"
 	"strconv"
-	"errors"
+	"strings"
+	"time"
 )
 
 // we use line, offset style. termbox use o, l style.
 func SetCursor(l, o int) {
-       term.SetCursor(o, l)
+	term.SetCursor(o, l)
 }
 
 // parseFileArg returns (filepath, linenum, offset, error).
@@ -269,7 +269,7 @@ func main() {
 						}
 						a.beforeCursor = beforeCursor
 						if a.kind == "deleteSelection" {
-							a.beforeCursor, _ = selection.MinMax();
+							a.beforeCursor, _ = selection.MinMax()
 						}
 						a.afterCursor = *cursor
 						history.Add(a)

@@ -5,10 +5,10 @@ import (
 )
 
 func TestRemoveRange(t *testing.T) {
-	cases := []struct{
-		in Text
+	cases := []struct {
+		in       Text
 		min, max Point
-		want Text
+		want     Text
 	}{
 		{
 			Text{[]Line{
@@ -59,7 +59,7 @@ func TestRemoveRange(t *testing.T) {
 		},
 		{
 			Text{[]Line{
-		        Line{"		for o := viewer.min.o ; o < viewer.max.o ; o++ {"},
+				Line{"		for o := viewer.min.o ; o < viewer.max.o ; o++ {"},
 				Line{"			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)"},
 			}},
 			Point{0, BFromO("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17)}, Point{1, BFromO("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19)},

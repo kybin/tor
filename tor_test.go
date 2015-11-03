@@ -60,4 +60,3 @@ func TestParseFileArg(t *testing.T) {
 		t.Error("shold return too many colon error")
 	}
 }
-

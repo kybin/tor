@@ -1,15 +1,15 @@
 package main
 
 import (
-	"unicode/utf8"
 	term "github.com/nsf/termbox-go"
+	"unicode/utf8"
 )
 
 type FindMode struct {
 	// TODO: olds []string
 	findstr string
-	start bool
-	set bool
+	start   bool
+	set     bool
 }
 
 func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
@@ -35,7 +35,7 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		_, rlen := utf8.DecodeLastRuneInString(f.findstr)
 		f.findstr = f.findstr[:len(f.findstr)-rlen]
 	default:
-		if ev.Mod & term.ModAlt != 0 {
+		if ev.Mod&term.ModAlt != 0 {
 			return
 		}
 		if ev.Ch != 0 {
@@ -47,4 +47,3 @@ func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		}
 	}
 }
-

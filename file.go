@@ -13,7 +13,7 @@ func open(f string) (*Text, error) {
 		return nil, err
 	}
 	if !ex {
-		return &Text{lines:[]Line{Line{data:""}}}, nil
+		return &Text{lines: []Line{Line{data: ""}}}, nil
 	}
 	file, err := os.Open(f)
 	if err != nil {
@@ -41,17 +41,21 @@ func save(f string, t *Text) error {
 	}
 	defer file.Close()
 	for _, line := range t.lines {
-		file.WriteString(line.data+"\n")
+		file.WriteString(line.data + "\n")
 	}
 	return nil
 }
 
 // exists returns whether the given file or directory exists or not
 func exists(path string) (bool, error) {
-    _, err := os.Stat(path)
-    if err == nil { return true, nil }
-    if os.IsNotExist(err) { return false, nil }
-    return false, err
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
 
 // extend file name at very before the file extension.

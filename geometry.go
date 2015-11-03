@@ -6,11 +6,11 @@ type Point struct {
 }
 
 func (p Point) Add(q Point) Point {
-	return Point{p.l+q.l, p.o+q.o}
+	return Point{p.l + q.l, p.o + q.o}
 }
 
 func (p Point) Sub(q Point) Point {
-	return Point{p.l-q.l, p.o-q.o}
+	return Point{p.l - q.l, p.o - q.o}
 }
 
 type Area struct {
@@ -29,9 +29,9 @@ func NewArea(a, b Point) *Area {
 	if mino > maxo {
 		mino, maxo = maxo, mino
 	}
-	return &Area{min:Point{minl,mino}, max:Point{maxl,maxo}}
+	return &Area{min: Point{minl, mino}, max: Point{maxl, maxo}}
 }
 
 func (a *Area) Size() Point {
-	return Point{a.max.l-a.min.l, a.max.o-a.min.o}
+	return Point{a.max.l - a.min.l, a.max.o - a.min.o}
 }

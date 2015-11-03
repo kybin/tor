@@ -1,9 +1,9 @@
 package main
 
 import (
+	term "github.com/nsf/termbox-go"
 	"strconv"
 	"unicode/utf8"
-	term "github.com/nsf/termbox-go"
 )
 
 type GotoLineMode struct {

@@ -5,9 +5,9 @@ import (
 )
 
 func TestBFromO(t *testing.T) {
-	cases := []struct{
-		l string
-		in int
+	cases := []struct {
+		l    string
+		in   int
 		want int
 	}{
 		{
@@ -33,9 +33,8 @@ func TestBFromO(t *testing.T) {
 	}
 	for _, c := range cases {
 		got := BFromO(c.l, c.in)
-		if  got != c.want {
+		if got != c.want {
 			t.Errorf("BFromO(%v, %v) == %v, want %v", c.l, c.in, got, c.want)
 		}
 	}
 }
-

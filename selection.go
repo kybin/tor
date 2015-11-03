@@ -1,9 +1,9 @@
 package main
 
 type Selection struct {
-	on bool
+	on    bool
 	start Cursor
-	end Cursor
+	end   Cursor
 }
 
 func NewSelection() *Selection {
@@ -37,7 +37,6 @@ func (s *Selection) Contains(p Point) bool {
 	}
 	return false
 }
-
 
 func withShift(r rune) bool {
 	shifts := "QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?!@#$%^&*()_+"

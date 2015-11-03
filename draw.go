@@ -1,11 +1,11 @@
 package main
 
 import (
+	"github.com/mattn/go-runewidth"
+	term "github.com/nsf/termbox-go"
 	"strconv"
 	"unicode"
 	"unicode/utf8"
-	term "github.com/nsf/termbox-go"
-	"github.com/mattn/go-runewidth"
 )
 
 func SetCell(l, o int, r rune, fg, bg term.Attribute) {
@@ -13,8 +13,8 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 func clearScreen(ar *Area) {
-	for l := ar.min.l ; l < ar.max.l ; l++ {
-		for o := ar.min.o ; o < ar.max.o ; o++ {
+	for l := ar.min.l; l < ar.max.l; l++ {
+		for o := ar.min.o; o < ar.max.o; o++ {
 			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
 		}
 	}
@@ -23,13 +23,13 @@ func clearScreen(ar *Area) {
 func resizeScreen(ar *Area, w *Window) {
 	min := ar.min
 	o, l := term.Size()
-	*ar = Area{min, Point{min.l+l, min.o+o}}
+	*ar = Area{min, Point{min.l + l, min.o + o}}
 	w.Resize(ar.Size())
 }
 
 // draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string) {
-	for l , ln := range t.lines {
+	for l, ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
 		}
@@ -82,7 +82,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			if o >= eoc {
 				bg = term.ColorYellow
 			}
-			if sel.on && sel.Contains(Point{l,o}) {
+			if sel.on && sel.Contains(Point{l, o}) {
 				bg = term.ColorGreen
 			}
 			if l == c.l {
@@ -127,7 +127,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			}
 
 			if r == '\t' {
-				for i:=0 ; i<taboffset ; i++ {
+				for i := 0; i < taboffset; i++ {
 					if o >= w.min.o {
 						SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
 					}
@@ -150,11 +150,10 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 func printStatus(status string) {
 	termw, termh := term.Size()
 	statusLine := termh - 1
-	for off:=0 ; off<termw ; off++ {
+	for off := 0; off < termw; off++ {
 		SetCell(statusLine, off, ' ', term.ColorBlack, term.ColorWhite)
 	}
 	for off, r := range status {
 		SetCell(statusLine, off, r, term.ColorBlack, term.ColorWhite)
 	}
 }
-

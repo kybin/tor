@@ -1,8 +1,8 @@
 package main
 
 import (
-	"unicode/utf8"
 	"github.com/mattn/go-runewidth"
+	"unicode/utf8"
 )
 
 func vlen(s string) int {
@@ -11,7 +11,7 @@ func vlen(s string) int {
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		if r=='\t' {
+		if r == '\t' {
 			o += taboffset
 		} else {
 			o += runewidth.RuneWidth(r)

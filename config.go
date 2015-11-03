@@ -1,14 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
 	"os/user"
-	"fmt"
-	"strings"
-	"strconv"
 	"path"
 	"path/filepath"
-	"io/ioutil"
+	"strconv"
+	"strings"
 )
 
 func saveLastPosition(relpath string, l, b int) error {
@@ -33,7 +33,7 @@ func saveLastPosition(relpath string, l, b int) error {
 	lines := strings.Split(string(input), "\n")
 	find := false
 	for i, ln := range lines {
-		if strings.Contains(ln, abspath + ":") {
+		if strings.Contains(ln, abspath+":") {
 			find = true
 			lines[i] = fmt.Sprintf("%v:%v:%v", abspath, l, b)
 		}
@@ -67,7 +67,7 @@ func loadLastPosition(relpath string) (int, int) {
 	findline := ""
 	lines := strings.Split(string(input), "\n")
 	for _, ln := range lines {
-		if strings.Contains(ln, abspath + ":") {
+		if strings.Contains(ln, abspath+":") {
 			find = true
 			findline = ln
 		}
