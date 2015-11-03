@@ -12,6 +12,8 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 ##### Ctrl
 
+`Ctrl+K` Cancel
+
 `Ctrl+W` Quit
 
 `Ctrl+S` Save

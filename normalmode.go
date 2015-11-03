@@ -17,6 +17,8 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "exit"}}
 	case term.KeyCtrlS:
 		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "save"}}
+	case term.KeyCtrlK:
+		return []*Action{&Action{kind: "selection", value: "off"}}
 	// move
 	case term.KeyArrowLeft:
 		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "left"}}
