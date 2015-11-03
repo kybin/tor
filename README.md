@@ -53,6 +53,14 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 `Alt+K` Down
 
+`Alt+W` Page Up
+
+`Alt+S` Page Down
+
+`Alt+Q` Home
+
+`Alt+A` End
+
 `Alt+U` Bigining Of Contents
 
 `Alt+O` End Of Contents
