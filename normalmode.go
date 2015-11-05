@@ -45,9 +45,9 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\t"}}
-	case term.KeyCtrlU, term.KeyEsc:
+	case term.KeyCtrlU:
 		return []*Action{{kind: "removeTab"}}
-		case term.KeyCtrlO, term.KeyCtrlRsqBracket:
+	case term.KeyCtrlO:
 		return []*Action{{kind: "insertTab"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
