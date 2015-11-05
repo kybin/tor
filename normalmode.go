@@ -14,181 +14,181 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 
 	switch ev.Key {
 	case term.KeyCtrlW:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "exit"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "exit"}}
 	case term.KeyCtrlS:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "save"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "save"}}
 	case term.KeyCtrlK:
-		return []*Action{&Action{kind: "selection", value: "off"}}
+		return []*Action{{kind: "selection", value: "off"}}
 	// move
 	case term.KeyArrowLeft:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "left"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "left"}}
 	case term.KeyArrowRight:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "right"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "right"}}
 	case term.KeyArrowUp:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "up"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "up"}}
 	case term.KeyArrowDown:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "down"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "down"}}
 	case term.KeyPgup:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "pageup"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pageup"}}
 	case term.KeyPgdn:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "pagedown"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pagedown"}}
 	case term.KeyHome:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "bof"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bof"}}
 	case term.KeyEnd:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "eof"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eof"}}
 	// insert
 	case term.KeyEnter:
-		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: "\n"}}
+		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}}
 	case term.KeyCtrlN:
-		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: "\n"}, &Action{kind: "insert", value: "autoIndent"}}
+		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
 	case term.KeySpace:
-		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: " "}}
+		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
-		return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "insert", value: "\t"}}
-	case term.KeyCtrlU:
-		return []*Action{&Action{kind: "removeTab"}}
-	case term.KeyCtrlO:
-		return []*Action{&Action{kind: "insertTab"}}
+		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\t"}}
+	case term.KeyCtrlU, term.KeyEsc:
+		return []*Action{{kind: "removeTab"}}
+		case term.KeyCtrlO, term.KeyCtrlRsqBracket:
+		return []*Action{{kind: "insertTab"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
 		if sel.on {
-			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
-			return []*Action{&Action{kind: "delete"}}
+			return []*Action{{kind: "delete"}}
 		}
 	case term.KeyBackspace, term.KeyBackspace2:
 		if sel.on {
-			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
-			return []*Action{&Action{kind: "backspace"}}
+			return []*Action{{kind: "backspace"}}
 		}
 	// undo, redo
 	case term.KeyCtrlZ:
-		return []*Action{&Action{kind: "undo"}}
+		return []*Action{{kind: "undo"}}
 	case term.KeyCtrlY:
-		return []*Action{&Action{kind: "redo"}}
+		return []*Action{{kind: "redo"}}
 	// copy, paste, cut
 	case term.KeyCtrlC:
-		return []*Action{&Action{kind: "copy"}, &Action{kind: "selection", value: "off"}}
+		return []*Action{{kind: "copy"}, {kind: "selection", value: "off"}}
 	case term.KeyCtrlV:
 		if sel.on {
-			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "paste"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "paste"}}
 		}
-		return []*Action{&Action{kind: "paste"}}
+		return []*Action{{kind: "paste"}}
 	case term.KeyCtrlJ:
 		if sel.on {
-			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}, &Action{kind: "replace"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "replace"}}
 		}
 		return []*Action{}
 	case term.KeyCtrlX:
 		if sel.on {
-			return []*Action{&Action{kind: "copy"}, &Action{kind: "deleteSelection"}, &Action{kind: "selection", value: "off"}}
+			return []*Action{{kind: "copy"}, {kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
-			return []*Action{&Action{kind: "copy"}, &Action{kind: "delete"}}
+			return []*Action{{kind: "copy"}, {kind: "delete"}}
 		}
 	// find
 	case term.KeyCtrlD, term.KeyF3:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "findNextSelect"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findNextSelect"}}
 	case term.KeyCtrlB, term.KeyF2:
-		return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "findPrevSelect"}}
+		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findPrevSelect"}}
 	case term.KeyCtrlF:
-		return []*Action{&Action{kind: "modeChange", value: "find"}}
+		return []*Action{{kind: "modeChange", value: "find"}}
 	case term.KeyCtrlR:
-		return []*Action{&Action{kind: "modeChange", value: "replace"}}
+		return []*Action{{kind: "modeChange", value: "replace"}}
 	case term.KeyCtrlG:
-		return []*Action{&Action{kind: "modeChange", value: "gotoline"}}
+		return []*Action{{kind: "modeChange", value: "gotoline"}}
 	case term.KeyCtrlL:
-		return []*Action{&Action{kind: "selectLine"}}
+		return []*Action{{kind: "selectLine"}}
 	default:
 		if ev.Ch == 0 {
-			return []*Action{&Action{kind: "none"}}
+			return []*Action{{kind: "none"}}
 		}
 		if ev.Mod&term.ModAlt != 0 {
 			switch ev.Ch {
 			case 'j':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "left"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "left"}}
 			case 'J':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "left"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "left"}}
 			case 'l':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "right"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "right"}}
 			case 'L':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "right"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "right"}}
 			case 'i':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "up"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "up"}}
 			case 'I':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "up"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "up"}}
 			case 'k':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "down"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "down"}}
 			case 'K':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "down"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "down"}}
 			case 'm':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "prevBowEow"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevBowEow"}}
 			case 'M':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "prevBowEow"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevBowEow"}}
 			case '.':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "nextBowEow"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextBowEow"}}
 			case '>':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "nextBowEow"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextBowEow"}}
 			case 'u':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "bocBolRepeat"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bocBolRepeat"}}
 			case 'U':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "bocBolRepeat"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "bocBolRepeat"}}
 			case 'y':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "bol"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bol"}}
 			case 'Y':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "bol"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "bol"}}
 			case 'o':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "eol"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}}
 			case 'O':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "eol"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "eol"}}
 			case 'w':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "pageup"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pageup"}}
 			case 'W':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "pageup"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "pageup"}}
 			case 's':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "pagedown"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pagedown"}}
 			case 'S':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "pagedown"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "pagedown"}}
 			case 'q':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "bof"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bof"}}
 			case 'Q':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "bof"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "bof"}}
 			case 'a':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "eof"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eof"}}
 			case 'A':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "eof"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "eof"}}
 			case 'n':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "nextGlobal"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
 			case 'N':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "nextGlobal"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
 			case 'h':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "prevGlobal"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
 			case 'H':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "prevGlobal"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
 			case ']', 'x':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "nextArg"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextArg"}}
 			case '}', 'X':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "nextArg"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextArg"}}
 			case '[', 'z':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "prevArg"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevArg"}}
 			case '{', 'Z':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "prevArg"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevArg"}}
 			case 'd':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "findNext"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findNext"}}
 			case 'b':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "findPrev"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findPrev"}}
 			case 'c':
-				return []*Action{&Action{kind: "selection", value: "off"}, &Action{kind: "move", value: "matchingBracket"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "matchingBracket"}}
 			case 'C':
-				return []*Action{&Action{kind: "selection", value: "on"}, &Action{kind: "move", value: "matchingBracket"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "matchingBracket"}}
 			default:
-				return []*Action{&Action{kind: "none"}}
+				return []*Action{{kind: "none"}}
 			}
 		}
 		if sel.on {
-			return []*Action{&Action{kind: "deleteSelection"}, &Action{kind: "insert", value: string(ev.Ch)}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "insert", value: string(ev.Ch)}}
 		} else {
-			return []*Action{&Action{kind: "insert", value: string(ev.Ch)}}
+			return []*Action{{kind: "insert", value: string(ev.Ch)}}
 		}
 	}
 }
