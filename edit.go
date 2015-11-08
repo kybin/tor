@@ -63,6 +63,8 @@ func (ln *Line) RemoveTab() error {
 // Text
 type Text struct {
 	lines []Line
+	tabToSpace bool
+	tabWidth int
 }
 
 func (t *Text) JoinNextLine(l int) {

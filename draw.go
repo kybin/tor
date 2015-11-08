@@ -47,7 +47,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			// ++
 			for _, r := range ln.data {
 				if r == '\t' {
-					eoc += taboffset
+					eoc += t.tabWidth
 				} else {
 					eoc += runewidth.RuneWidth(r)
 				}
@@ -64,7 +64,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 					break
 				}
 				if r == '\t' {
-					eoc -= taboffset
+					eoc -= t.tabWidth
 				} else {
 					eoc -= runewidth.RuneWidth(r)
 				}
@@ -127,7 +127,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			}
 
 			if r == '\t' {
-				for i := 0; i < taboffset; i++ {
+				for i := 0; i < t.tabWidth; i++ {
 					if o >= w.min.o {
 						SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
 					}

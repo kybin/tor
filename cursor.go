@@ -7,7 +7,6 @@ import (
 )
 
 var (
-	taboffset  = 4
 	pageoffset = 16
 )
 
@@ -33,7 +32,7 @@ func (c *Cursor) B() int {
 }
 
 func (c *Cursor) O() int {
-	maxo := vlen(c.LineData())
+	maxo := vlen(c.LineData(), c.t.tabWidth)
 	if c.o > maxo {
 		return maxo
 	}
@@ -44,7 +43,7 @@ func (c *Cursor) O() int {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		lasto := o
-		o += vlen(string(r))
+		o += vlen(string(r), c.t.tabWidth)
 		if o == c.o {
 			return o
 		} else if o > c.o {
@@ -60,7 +59,7 @@ func (c *Cursor) SetB(b int) {
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		o += vlen(string(r))
+		o += vlen(string(r), c.t.tabWidth)
 	}
 	c.o = o
 	c.b = b
@@ -83,7 +82,7 @@ func (c *Cursor) SetCloseToB(tb int) {
 		remain = remain[rlen:]
 		lasto, lastb := o, b
 		b += rlen
-		o += vlen(string(r))
+		o += vlen(string(r), c.t.tabWidth)
 		if b == tb {
 			c.b = b
 			c.o = o
@@ -98,16 +97,16 @@ func (c *Cursor) SetCloseToB(tb int) {
 
 // After MoveUp or MoveDown, we need reclaculate byte offset.
 func (c *Cursor) RecalcB() {
-	c.b = BFromO(c.LineData(), c.O())
+	c.b = BFromO(c.LineData(), c.O(), c.t.tabWidth)
 }
 
-func BFromO(line string, o int) (b int) {
+func BFromO(line string, o, tabWidth int) (b int) {
 	remain := line
 	for o > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		b += rlen
-		o -= vlen(string(r))
+		o -= vlen(string(r), tabWidth)
 	}
 	return
 }
@@ -204,7 +203,7 @@ func (c *Cursor) MoveLeft() {
 	}
 	r, rlen := c.RuneBefore()
 	c.b -= rlen
-	c.o -= vlen(string(r))
+	c.o -= vlen(string(r), c.t.tabWidth)
 }
 
 func (c *Cursor) MoveRight() {
@@ -218,7 +217,7 @@ func (c *Cursor) MoveRight() {
 	}
 	r, rlen := c.RuneAfter()
 	c.b += rlen
-	c.o += vlen(string(r))
+	c.o += vlen(string(r), c.t.tabWidth)
 }
 
 func (c *Cursor) MoveUp() {
@@ -366,7 +365,7 @@ func (c *Cursor) MoveBof() {
 func (c *Cursor) MoveEof() {
 	c.l = len(c.t.lines) - 1
 	c.b = len(c.LineData())
-	c.o = vlen(c.LineData())
+	c.o = vlen(c.LineData(), c.t.tabWidth)
 }
 
 func (c *Cursor) SplitLine() {
@@ -387,11 +386,17 @@ func (c *Cursor) Insert(str string) {
 }
 
 func (c *Cursor) Tab(sel *Selection) []int {
+	tab := "\t"
+	taboff := 1
+	if c.t.tabToSpace {
+		tab = strings.Repeat(" ", c.t.tabWidth)
+		taboff = c.t.tabWidth
+	}
 	tabed := make([]int, 0)
 	if sel == nil {
-		c.t.lines[c.l].InsertTab()
+		c.Line().Insert(tab, 0)
 		tabed = append(tabed, c.l)
-		c.SetB(c.b + 1)
+		c.SetB(c.b + taboff)
 		return tabed
 	}
 	min, max := sel.MinMax()
@@ -402,12 +407,12 @@ func (c *Cursor) Tab(sel *Selection) []int {
 		max.l--
 	}
 	for l := min.l; l < max.l+1; l++ {
-		c.t.lines[l].InsertTab()
+		c.t.lines[l].Insert(tab, 0)
 		tabed = append(tabed, l)
 	}
 	for _, l := range tabed {
 		if l == c.l {
-			c.SetB(c.b + 1)
+			c.SetB(c.b + taboff)
 		}
 	}
 	return tabed
@@ -467,8 +472,8 @@ func (c *Cursor) Backspace() string {
 
 func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
-	bmin := Point{min.l, BFromO(c.t.lines[min.l].data, min.o)}
-	bmax := Point{max.l, BFromO(c.t.lines[max.l].data, max.o)}
+	bmin := Point{min.l, BFromO(c.t.lines[min.l].data, min.o, c.t.tabWidth)}
+	bmax := Point{max.l, BFromO(c.t.lines[max.l].data, max.o, c.t.tabWidth)}
 	deleted := c.t.RemoveRange(bmin, bmax)
 	c.l = min.l
 	c.SetB(bmin.o)

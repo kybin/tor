@@ -87,10 +87,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	text, err := open(f)
-	if err != nil {
-		fmt.Println(err)
-		return
+	var text *Text
+	if exist {
+		text, err = open(f)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	} else {
+		lines := make([]Line, 0)
+		lines = append(lines, Line{""})
+		text = &Text{lines:lines, tabToSpace:false, tabWidth:4}
 	}
 
 	err = term.Init()
@@ -201,7 +208,7 @@ func main() {
 					continue
 				}
 
-				actions := parseEvent(ev, selection, &mode)
+				actions := parseEvent(ev, text, selection, &mode)
 				for _, a := range actions {
 					if a.kind == "modeChange" {
 						if a.value == "find" {
@@ -265,7 +272,7 @@ func main() {
 							a.value = replacemode.str
 						}
 					} else {
-						do(a, cursor, selection, history, &status, &holdStatus, findmode.str)
+						do(a, text, cursor, selection, history, &status, &holdStatus, findmode.str)
 					}
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":

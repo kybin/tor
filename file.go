@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"os"
 	"path/filepath"
+	"unicode/utf8"
 	// "log"
 )
 
@@ -22,16 +23,39 @@ func open(f string) (*Text, error) {
 	defer file.Close()
 
 	lines := make([]Line, 0)
+	tabToSpace := false
+	tabWidth := 4 // the default tab width
+
+	findIndentLine := false
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		ln := Line{scanner.Text()}
-		lines = append(lines, ln)
+		t := scanner.Text()
+		if !findIndentLine {
+			r, _ := utf8.DecodeRuneInString(t)
+			if r == ' ' || r == '\t' {
+				findIndentLine = true
+				if r == ' ' {
+					tabToSpace = true
+					// calculate tab width
+					tabWidth = 0
+					remain := t
+					for len(remain) != 0 {
+						r, rlen := utf8.DecodeRuneInString(remain)
+						remain = remain[rlen:]
+						if r != ' ' {
+							break
+						}
+						tabWidth++
+					}
+				}
+			}
+		}
+		lines = append(lines, Line{t})
 	}
-
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	return &Text{lines}, nil
+	return &Text{lines, tabToSpace, tabWidth}, nil
 }
 
 func save(f string, t *Text) error {

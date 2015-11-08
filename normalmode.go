@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
+func parseEvent(ev term.Event, t *Text, sel *Selection, mode *string) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -44,7 +44,11 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	case term.KeySpace:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
-		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\t"}}
+		tab := "\t"
+		if t.tabToSpace {
+			tab = strings.Repeat(" ", t.tabWidth)
+		}
+		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: tab}}
 	case term.KeyCtrlU:
 		return []*Action{{kind: "removeTab"}}
 	case term.KeyCtrlO:
@@ -193,7 +197,7 @@ func parseEvent(ev term.Event, sel *Selection, mode *string) []*Action {
 	}
 }
 
-func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool, findstr string) {
+func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool, findstr string) {
 	defer func() {
 		if sel.on {
 			sel.SetEnd(c)
@@ -311,7 +315,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 		}
 	case "insert":
 		if a.value == "autoIndent" {
-			prevline := c.t.lines[c.l-1].data
+			prevline := t.lines[c.l-1].data
 			trimed := strings.TrimLeft(prevline, " \t")
 			indent := prevline[:len(prevline)-len(trimed)]
 			c.Insert(indent)
@@ -327,7 +331,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 			tabed = c.Tab(sel)
 			for _, l := range tabed {
 				if l == sel.start.l {
-					sel.start.o += taboffset
+					sel.start.o += t.tabWidth
 				}
 			}
 		} else {
@@ -347,7 +351,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 			untabed = c.UnTab(sel)
 			for _, l := range untabed {
 				if l == sel.start.l {
-					sel.start.o -= taboffset
+					sel.start.o -= t.tabWidth
 				}
 			}
 		} else {
@@ -414,7 +418,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				if err != nil {
 					panic(err)
 				}
-				err = c.t.lines[l].RemoveTab()
+				err = t.lines[l].RemoveTab()
 				if err != nil {
 					panic(err)
 				}
@@ -441,7 +445,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				if err != nil {
 					panic(err)
 				}
-				c.t.lines[l].InsertTab()
+				t.lines[l].InsertTab()
 			}
 			c.Copy(action.beforeCursor)
 		default:
@@ -469,7 +473,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				if err != nil {
 					panic(err)
 				}
-				c.t.lines[l].InsertTab()
+				t.lines[l].InsertTab()
 			}
 			c.Copy(action.afterCursor)
 		case "paste", "replace":
@@ -495,7 +499,7 @@ func do(a *Action, c *Cursor, sel *Selection, history *History, status *string, 
 				if err != nil {
 					panic(err)
 				}
-				err = c.t.lines[l].RemoveTab()
+				err = t.lines[l].RemoveTab()
 				if err != nil {
 					panic(err)
 				}
