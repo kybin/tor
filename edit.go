@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -34,30 +32,6 @@ func (ln *Line) Remove(from, to int) string {
 	deleted := ln.data[from:to]
 	ln.data = ln.data[:from] + ln.data[to:]
 	return deleted
-}
-
-func (ln *Line) RemoveFrom(from int) string {
-	deleted := ln.data[from:]
-	ln.data = ln.data[:from]
-	return deleted
-}
-
-func (ln *Line) RemoveTo(to int) string {
-	deleted := ln.data[:to]
-	ln.data = ln.data[to:]
-	return deleted
-}
-
-func (ln *Line) InsertTab() {
-	ln.data = "\t" + ln.data
-}
-
-func (ln *Line) RemoveTab() error {
-	if !strings.HasPrefix(ln.data, "\t") {
-		return errors.New("first character is not a tab.")
-	}
-	ln.data = ln.data[1:]
-	return nil
 }
 
 // Text
@@ -120,14 +94,6 @@ func (t *Text) Insert(r string, l, b int) {
 
 func (t *Text) Remove(l, from, to int) string {
 	return t.lines[l].Remove(from, to)
-}
-
-func (t *Text) RemoveFrom(l, from int) string {
-	return t.lines[l].RemoveFrom(from)
-}
-
-func (t *Text) RemoveTo(l, to int) string {
-	return t.lines[l].RemoveTo(to)
 }
 
 func (t *Text) DataInside(min, max Cursor) string {
