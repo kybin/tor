@@ -326,45 +326,74 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 	case "delete":
 		a.value = c.Delete()
 	case "insertTab":
-		var tabed []int
+		tab := "\t"
+		if t.tabToSpace {
+			tab = strings.Repeat(" ", t.tabWidth)
+		}
+		lines := make([]int, 0)
 		if sel.on {
-			tabed = c.Tab(sel)
-			for _, l := range tabed {
-				if l == sel.start.l {
-					sel.start.o += t.tabWidth
-				}
+			min, max := sel.MinMax()
+			if max.o == 0 {
+				max.l--
+			}
+			for l := min.l; l <= max.l; l++ {
+				lines = append(lines, l)
 			}
 		} else {
-			tabed = c.Tab(nil)
+			lines = append(lines, c.l)
 		}
-		tabedStr := ""
-		for _, l := range tabed {
-			if tabedStr != "" {
-				tabedStr += ","
+		tabedLine := ""
+		for _, l := range lines {
+			t.Line(l).Insert(tab, 0)
+			if tabedLine != "" {
+				tabedLine += ","
 			}
-			tabedStr += strconv.Itoa(l)
+			tabedLine += strconv.Itoa(l) + ":" + tab
+			if l == c.l {
+				c.SetB(c.b + len(tab))
+			}
 		}
-		a.value = tabedStr
+		a.value = tabedLine
 	case "removeTab":
-		var untabed []int
+		// removeTab is slightly differ from insertTab.
+		// removeTab should remember what is removed, not tab string it self.
+		lines := make([]int, 0)
 		if sel.on {
-			untabed = c.UnTab(sel)
-			for _, l := range untabed {
-				if l == sel.start.l {
-					sel.start.o -= t.tabWidth
-				}
+			min, max := sel.MinMax()
+			if max.o == 0 {
+				max.l--
+			}
+			for l := min.l; l <= max.l; l++ {
+				lines = append(lines, l)
 			}
 		} else {
-			untabed = c.UnTab(nil)
+			lines = append(lines, c.l)
 		}
-		untabedStr := ""
-		for _, l := range untabed {
-			if untabedStr != "" {
-				untabedStr += ","
+		untabedLine := ""
+		for _, l := range lines {
+			removed := ""
+			if strings.HasPrefix(t.Line(l).data, "\t") {
+				removed += t.Line(l).Remove(0, 1)
+			} else {
+				for i := 0; i < t.tabWidth; i++ {
+					if len(t.Line(l).data) == 0 {
+						break
+					}
+					if !strings.HasPrefix(t.Line(l).data, " ") {
+						break
+					}
+					removed += t.Line(l).Remove(0, 1)
+				}
 			}
-			untabedStr += strconv.Itoa(l)
+			if untabedLine != "" {
+				untabedLine += ","
+			}
+			untabedLine += strconv.Itoa(l) + ":" + removed
+			if l == c.l && !c.AtBol() {
+				c.SetB(c.b-len(removed))
+			}
 		}
-		a.value = untabedStr
+		a.value = untabedLine
 	case "backspace":
 		a.value = c.Backspace()
 	case "deleteSelection":
@@ -409,18 +438,23 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 				c.Backspace()
 			}
 		case "insertTab":
-			lines := strings.Split(action.value, ",")
-			for _, lStr := range lines {
-				if lStr == "" {
+			lineInfos := strings.Split(action.value, ",")
+			for _, li := range lineInfos {
+				if li == "" {
 					continue
 				}
-				l, err := strconv.Atoi(lStr)
+				lis := strings.Split(li, ":")
+				lstr := lis[0]
+				tab := lis[1]
+				l, err := strconv.Atoi(lstr)
 				if err != nil {
 					panic(err)
 				}
-				err = t.lines[l].RemoveTab()
-				if err != nil {
-					panic(err)
+				for _, r := range tab {
+					rr := t.Line(l).Remove(0, 1)
+					if rr != string(r) {
+						panic("removed and current is not matched")
+					}
 				}
 			}
 			c.Copy(action.beforeCursor)
@@ -436,16 +470,19 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 			c.Copy(action.afterCursor)
 			c.Insert(action.value)
 		case "removeTab":
-			lines := strings.Split(action.value, ",")
-			for _, lStr := range lines {
-				if lStr == "" {
+			lineInfos := strings.Split(action.value, ",")
+			for _, li := range lineInfos {
+				if li == "" {
 					continue
 				}
-				l, err := strconv.Atoi(lStr)
+				lis := strings.Split(li, ":")
+				lstr := lis[0]
+				removed := lis[1]
+				l, err := strconv.Atoi(lstr)
 				if err != nil {
 					panic(err)
 				}
-				t.lines[l].InsertTab()
+				t.Line(l).Insert(removed, 0)
 			}
 			c.Copy(action.beforeCursor)
 		default:
@@ -464,16 +501,19 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 			c.Copy(action.beforeCursor)
 			c.Insert(action.value)
 		case "insertTab":
-			lines := strings.Split(action.value, ",")
-			for _, lStr := range lines {
-				if lStr == "" {
+			lineInfos := strings.Split(action.value, ",")
+			for _, li := range lineInfos {
+				if li == "" {
 					continue
 				}
-				l, err := strconv.Atoi(lStr)
+				lis := strings.Split(li, ":")
+				lstr := lis[0]
+				tab := lis[1]
+				l, err := strconv.Atoi(lstr)
 				if err != nil {
 					panic(err)
 				}
-				t.lines[l].InsertTab()
+				t.Line(l).Insert(tab, 0)
 			}
 			c.Copy(action.afterCursor)
 		case "paste", "replace":
@@ -490,18 +530,23 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 				c.Delete()
 			}
 		case "removeTab":
-			lines := strings.Split(action.value, ",")
-			for _, lStr := range lines {
-				if lStr == "" {
+			lineInfos := strings.Split(action.value, ",")
+			for _, li := range lineInfos {
+				if li == "" {
 					continue
 				}
-				l, err := strconv.Atoi(lStr)
+				lis := strings.Split(li, ":")
+				lstr := lis[0]
+				removed := lis[1]
+				l, err := strconv.Atoi(lstr)
 				if err != nil {
 					panic(err)
 				}
-				err = t.lines[l].RemoveTab()
-				if err != nil {
-					panic(err)
+				for _, r := range removed {
+					rr := t.Line(l).Remove(0, 1)
+					if rr != string(r) {
+						panic("removed and current is not matched")
+					}
 				}
 			}
 			c.Copy(action.afterCursor)

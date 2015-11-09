@@ -67,6 +67,10 @@ type Text struct {
 	tabWidth int
 }
 
+func (t *Text) Line(l int) *Line {
+	return &t.lines[l]
+}
+
 func (t *Text) JoinNextLine(l int) {
 	t.lines = append(append(t.lines[:l], Line{t.lines[l].data + t.lines[l+1].data}), t.lines[l+2:]...)
 }
