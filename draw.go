@@ -150,10 +150,14 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 func printStatus(status string) {
 	termw, termh := term.Size()
 	statusLine := termh - 1
-	for off := 0; off < termw; off++ {
-		SetCell(statusLine, off, ' ', term.ColorBlack, term.ColorWhite)
+	// clear
+	for i := 0; i < termw; i++ {
+		SetCell(statusLine, i, ' ', term.ColorBlack, term.ColorWhite)
 	}
-	for off, r := range status {
-		SetCell(statusLine, off, r, term.ColorBlack, term.ColorWhite)
+	// draw
+	o := 0
+	for _, r := range status {
+		SetCell(statusLine, o, r, term.ColorBlack, term.ColorWhite)
+		o += runewidth.RuneWidth(r)
 	}
 }
