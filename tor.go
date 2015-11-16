@@ -319,14 +319,11 @@ func main() {
 					}
 				}
 			case term.EventResize:
+				term.Clear(term.ColorDefault, term.ColorDefault)
 				resizeScreen(mainarea, win)
 			}
 		case <-time.After(time.Second):
 			holdStatus = true
-			// It seems maximize the terminal
-			// doesn't call term.EventResize.
-			// So manually do it.
-			resizeScreen(mainarea, win)
 		}
 	}
 }
