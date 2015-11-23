@@ -427,10 +427,9 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 		if history.head == 0 {
 			return
 		}
+		sel.on = false
 		history.head--
 		action := history.At(history.head)
-		// status = fmt.Sprintf("undo : %v", action)
-		// holdStatus = true
 		switch action.kind {
 		case "insert":
 			c.Copy(action.afterCursor)
@@ -492,9 +491,8 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 		if history.head == history.Len() {
 			return
 		}
+		sel.on = false
 		action := history.At(history.head)
-		// status = fmt.Sprintf("redo : %v", action)
-		// holdStatus = true
 		history.head++
 		switch action.kind {
 		case "insert":
