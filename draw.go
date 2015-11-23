@@ -91,8 +91,10 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 				}
 			}
 			if r == '/' && oldR == '/' && oldOldR != '\\' {
-				commented = true
-				SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
+				if !inStr {
+					commented = true
+					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
+				}
 			}
 			if inStrFinished {
 				inStr = false
