@@ -16,6 +16,10 @@ func (g *GotoLineMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		g.linestr = ""
 		*mode = "normal"
 	case term.KeyEnter:
+		if g.linestr == "" {
+			*mode = "normal"
+			return
+		}
 		n, err := strconv.Atoi(g.linestr)
 		if err != nil {
 			panic("cannot convert gotoline string to int")
