@@ -52,6 +52,13 @@ func open(f string) (*Text, error) {
 		}
 		lines = append(lines, Line{t})
 	}
+
+	// if file created with `touch` cmd, scanner could not scan anything,
+	// which cause no line in text that makes program panic.
+	if len(lines) == 0 {
+		lines = append(lines, Line{""})
+	}
+
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
