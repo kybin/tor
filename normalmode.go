@@ -337,7 +337,9 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 				max.l--
 			}
 			for l := min.l; l <= max.l; l++ {
-				lines = append(lines, l)
+				if t.Line(l).data != "" {
+					lines = append(lines, l)
+				}
 			}
 		} else {
 			lines = append(lines, c.l)
