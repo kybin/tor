@@ -73,7 +73,11 @@ func parseEvent(ev term.Event, t *Text, sel *Selection, mode *string) []*Action 
 		return []*Action{{kind: "redo"}}
 	// copy, paste, cut
 	case term.KeyCtrlC:
-		return []*Action{{kind: "copy"}, {kind: "selection", value: "off"}}
+		if sel.on {
+			return []*Action{{kind: "copy"}, {kind: "selection", value: "off"}}
+		} else {
+			return []*Action{}
+		}
 	case term.KeyCtrlV:
 		if sel.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "paste"}}
