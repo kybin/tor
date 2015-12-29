@@ -97,7 +97,7 @@ func main() {
 	} else {
 		lines := make([]Line, 0)
 		lines = append(lines, Line{""})
-		text = &Text{lines:lines, tabToSpace:false, tabWidth:4}
+		text = &Text{lines:lines, tabToSpace:false, tabWidth:4, edited:false}
 	}
 
 	err = term.Init()
@@ -139,7 +139,6 @@ func main() {
 
 	mode := "normal"
 
-	edited := false
 	status := ""
 	holdStatus := false
 	lastActStr := ""
@@ -237,7 +236,7 @@ func main() {
 					beforeCursor := *cursor
 
 					if a.kind == "exit" {
-						if !edited {
+						if !text.edited {
 							saveLastPosition(f, cursor.l, cursor.b)
 							return
 						}
@@ -248,7 +247,7 @@ func main() {
 						if err != nil {
 							panic(err)
 						}
-						edited = false
+						text.edited = false
 						status = fmt.Sprintf("successfully saved : %v", f)
 						holdStatus = true
 					} else if a.kind == "copy" {
@@ -277,7 +276,7 @@ func main() {
 					switch a.kind {
 					case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
 						// remember the action.
-						edited = true
+						text.edited = true
 						nc := history.Cut(history.head)
 						if nc != 0 {
 							lastActStr = ""
