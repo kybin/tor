@@ -62,7 +62,7 @@ func open(f string) (*Text, error) {
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
-	return &Text{lines, tabToSpace, tabWidth}, nil
+	return &Text{lines, tabToSpace, tabWidth, false}, nil
 }
 
 func save(f string, t *Text) error {
