@@ -4,11 +4,17 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+	term "github.com/nsf/termbox-go"
 )
 
 var (
 	pageoffset = 16
 )
+
+// SetCursor converts tor cursor to termbox cursor and set it.
+func SetCursor(l, o int) {
+	term.SetCursor(o, l)
+}
 
 type Cursor struct {
 	l int // line offset

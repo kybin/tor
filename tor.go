@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-// we use line, offset style. termbox use o, l style.
-func SetCursor(l, o int) {
-	term.SetCursor(o, l)
-}
-
 // parseFileArg returns (filepath, linenum, offset, error).
 // if the linenum is given, but 0 or negative, it will be 1.
 // if the offset is given, but negative, it will be 0.
