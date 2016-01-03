@@ -126,8 +126,8 @@ func main() {
 		cursor.SetCloseToB(b)
 	}
 
-	findmode := &LineInputMode{}
-	replacemode := &LineInputMode{}
+	findmode := &FindMode{}
+	replacemode := &ReplaceMode{}
 	gotolinemode := &GotoLineMode{}
 	selection := NewSelection()
 	history := newHistory()

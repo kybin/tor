@@ -7,14 +7,14 @@ import (
 
 // TODO: handle aborted situation
 
-type LineInputMode struct {
+type ReplaceMode struct {
 	// TODO: olds []string
 	str   string
 	start bool
 	set   bool
 }
 
-func (f *LineInputMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
+func (f *ReplaceMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 	switch ev.Key {
 	case term.KeyCtrlK:
 		// TODO: revert to old
