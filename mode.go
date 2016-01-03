@@ -10,6 +10,7 @@ const (
 	ModeUnknown ModeType = iota
 	ModeNormal
 	ModeFind
+	ModeReplace
 	ModeGotoline
 )
 
