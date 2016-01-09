@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
 	term "github.com/nsf/termbox-go"
+	"os"
 )
 
 type ExitMode struct {
-	f string // name of this file.
+	f      string // name of this file.
 	cursor *Cursor
-	mode *ModeSelector
+	mode   *ModeSelector
 }
 
 func (m *ExitMode) Start() {}
@@ -28,4 +28,3 @@ func (m *ExitMode) Handle(ev term.Event) {
 func (m *ExitMode) Status() string {
 	return "Buffer modified. Do you really want to quit? (y/n)"
 }
-

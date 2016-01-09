@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	term "github.com/nsf/termbox-go"
 	"unicode/utf8"
-	"fmt"
 )
 
 // TODO: handle aborted situation
@@ -14,9 +14,9 @@ type FindMode struct {
 	start bool
 	set   bool
 
-	text *Text
+	text      *Text
 	selection *Selection
-	mode *ModeSelector
+	mode      *ModeSelector
 }
 
 func (m *FindMode) Start() {

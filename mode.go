@@ -6,20 +6,20 @@ import (
 
 // Mode interface takes an event from terminal and handle it.
 type Mode interface {
-	Start() // Start setup mode variables.
-	End() // End clear mode variables.
+	Start()            // Start setup mode variables.
+	End()              // End clear mode variables.
 	Handle(term.Event) // Handle handles a terminal event.
-	Status() string // Status return current status of the mode.
+	Status() string    // Status return current status of the mode.
 }
 
 type ModeSelector struct {
 	current Mode // it stores one of follow modes.
 
-	normal *NormalMode
-	find *FindMode
-	replace *ReplaceMode
+	normal   *NormalMode
+	find     *FindMode
+	replace  *ReplaceMode
 	gotoline *GotoLineMode
-	exit *ExitMode
+	exit     *ExitMode
 }
 
 // ChangeTo chage current mode.
@@ -29,4 +29,3 @@ func (ms *ModeSelector) ChangeTo(m Mode) {
 	ms.current = m
 	ms.current.Start()
 }
-

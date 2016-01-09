@@ -1,17 +1,17 @@
 package main
 
 import (
+	"fmt"
 	term "github.com/nsf/termbox-go"
 	"strconv"
 	"unicode/utf8"
-	"fmt"
 )
 
 type GotoLineMode struct {
 	linestr string
 
 	cursor *Cursor
-	mode *ModeSelector
+	mode   *ModeSelector
 }
 
 func (m *GotoLineMode) Start() {}

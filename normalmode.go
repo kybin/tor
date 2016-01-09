@@ -1,22 +1,22 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	term "github.com/nsf/termbox-go"
+	"os"
 	"strconv"
 	"strings"
 )
 
 type NormalMode struct {
-	text *Text
-	cursor *Cursor
+	text      *Text
+	cursor    *Cursor
 	selection *Selection
-	history *History
-	f string
+	history   *History
+	f         string
 
-	copied string
-	saved bool
+	copied     string
+	saved      bool
 	lastActStr string
 
 	mode *ModeSelector
@@ -505,7 +505,7 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr
 			}
 			untabedLine += strconv.Itoa(l) + ":" + removed
 			if l == c.l && !c.AtBol() {
-				c.SetB(c.b-len(removed))
+				c.SetB(c.b - len(removed))
 			}
 		}
 		a.value = untabedLine

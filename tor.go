@@ -89,7 +89,7 @@ func main() {
 	} else {
 		lines := make([]Line, 0)
 		lines = append(lines, Line{""})
-		text = &Text{lines:lines, tabToSpace:false, tabWidth:4, edited:false}
+		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
 	}
 
 	err = term.Init()
@@ -126,30 +126,30 @@ func main() {
 
 	mode := &ModeSelector{}
 	mode.normal = &NormalMode{
-		text: text,
-		cursor: cursor,
+		text:      text,
+		cursor:    cursor,
 		selection: selection,
-		history: history,
-		f: f,
-		mode: mode,
+		history:   history,
+		f:         f,
+		mode:      mode,
 	}
 	mode.find = &FindMode{
-		text: text,
+		text:      text,
 		selection: selection,
-		mode: mode,
+		mode:      mode,
 	}
 	mode.replace = &ReplaceMode{
-		text: text,
+		text:      text,
 		selection: selection,
-		mode: mode,
+		mode:      mode,
 	}
 	mode.gotoline = &GotoLineMode{
 		mode: mode,
 	}
 	mode.exit = &ExitMode{
-		f: f,
+		f:      f,
 		cursor: cursor,
-		mode: mode,
+		mode:   mode,
 	}
 	mode.current = mode.normal // will start tor as normal mode.
 

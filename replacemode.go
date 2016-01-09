@@ -1,8 +1,8 @@
 package main
 
 import (
-	term "github.com/nsf/termbox-go"
 	"fmt"
+	term "github.com/nsf/termbox-go"
 	"unicode/utf8"
 )
 
@@ -14,7 +14,7 @@ type ReplaceMode struct {
 	start bool
 	set   bool
 
-	text *Text
+	text      *Text
 	selection *Selection // normal mode's selection.
 
 	mode *ModeSelector
@@ -73,4 +73,3 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 func (m *ReplaceMode) Status() string {
 	return fmt.Sprintf("replace : %v", m.str)
 }
-

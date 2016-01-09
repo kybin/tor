@@ -36,10 +36,10 @@ func (ln *Line) Remove(from, to int) string {
 
 // Text
 type Text struct {
-	lines []Line
+	lines      []Line
 	tabToSpace bool
-	tabWidth int
-	edited bool
+	tabWidth   int
+	edited     bool
 }
 
 func (t *Text) Line(l int) *Line {
