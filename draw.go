@@ -28,7 +28,7 @@ func resizeScreen(ar *Area, w *Window) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode string) {
+func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 	for l, ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
@@ -84,11 +84,6 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, mode st
 			}
 			if sel.on && sel.Contains(Point{l, o}) {
 				bg = term.ColorGreen
-			}
-			if l == c.l {
-				if mode == "find" || mode == "gotoline" {
-					bg = term.ColorCyan
-				}
 			}
 			if r == '/' && oldR == '/' && oldOldR != '\\' {
 				if !inStr {

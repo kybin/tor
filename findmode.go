@@ -3,6 +3,7 @@ package main
 import (
 	term "github.com/nsf/termbox-go"
 	"unicode/utf8"
+	"fmt"
 )
 
 // TODO: handle aborted situation
@@ -12,40 +13,61 @@ type FindMode struct {
 	str   string
 	start bool
 	set   bool
+
+	text *Text
+	selection *Selection
+	mode *ModeSelector
 }
 
-func (f *FindMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
+func (m *FindMode) Start() {
+	if m.selection.on {
+		m.set = true
+		min, max := m.selection.MinMax()
+		m.str = m.text.DataInside(min, max)
+		m.selection.on = false
+		return
+	}
+	m.start = true
+}
+
+func (m *FindMode) End() {}
+
+func (m *FindMode) Handle(ev term.Event) {
 	switch ev.Key {
 	case term.KeyCtrlK:
 		// TODO: revert to old
-		*mode = "normal"
+		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:
-		f.set = true
-		*mode = "normal"
+		m.set = true
+		m.mode.ChangeTo(m.mode.normal)
 	case term.KeySpace:
-		if f.start {
-			f.str = ""
-			f.start = false
+		if m.start {
+			m.str = ""
+			m.start = false
 		}
-		f.str += " "
+		m.str += " "
 	case term.KeyBackspace, term.KeyBackspace2:
-		if f.start {
-			f.str = ""
-			f.start = false
+		if m.start {
+			m.str = ""
+			m.start = false
 			return
 		}
-		_, rlen := utf8.DecodeLastRuneInString(f.str)
-		f.str = f.str[:len(f.str)-rlen]
+		_, rlen := utf8.DecodeLastRuneInString(m.str)
+		m.str = m.str[:len(m.str)-rlen]
 	default:
 		if ev.Mod&term.ModAlt != 0 {
 			return
 		}
 		if ev.Ch != 0 {
-			if f.start {
-				f.str = ""
-				f.start = false
+			if m.start {
+				m.str = ""
+				m.start = false
 			}
-			f.str += string(ev.Ch)
+			m.str += string(ev.Ch)
 		}
 	}
+}
+
+func (m *FindMode) Status() string {
+	return fmt.Sprintf("find : %v", m.str)
 }

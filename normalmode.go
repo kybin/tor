@@ -1,13 +1,122 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	term "github.com/nsf/termbox-go"
 	"strconv"
 	"strings"
 )
 
-func parseEvent(ev term.Event, t *Text, sel *Selection, mode *string) []*Action {
+type NormalMode struct {
+	text *Text
+	cursor *Cursor
+	selection *Selection
+	history *History
+	f string
+
+	copied string
+	saved bool
+	lastActStr string
+
+	mode *ModeSelector
+}
+
+func (m *NormalMode) Start() {}
+
+func (m *NormalMode) End() {}
+
+func (m *NormalMode) Handle(ev term.Event) {
+	m.saved = false
+
+	actions := parseEvent(ev, m.text, m.selection)
+	for _, a := range actions {
+		if a.kind == "modeChange" {
+			if a.value == "find" {
+				m.mode.ChangeTo(m.mode.find)
+				continue
+			} else if a.value == "replace" {
+				m.mode.ChangeTo(m.mode.replace)
+				continue
+			}
+		}
+
+		beforeCursor := *m.cursor
+
+		if a.kind == "exit" {
+			if !m.text.edited {
+				saveLastPosition(m.f, m.cursor.l, m.cursor.b)
+				term.Close()
+				os.Exit(0)
+			} else {
+				m.mode.ChangeTo(m.mode.exit)
+			}
+		} else if a.kind == "save" {
+			err := save(m.f, m.text)
+			if err != nil {
+				panic(err)
+			}
+			m.text.edited = false
+			m.saved = true
+		} else if a.kind == "copy" {
+			if m.selection.on {
+				minc, maxc := m.selection.MinMax()
+				m.copied = m.text.DataInside(minc, maxc)
+			} else {
+				r, _ := m.cursor.RuneAfter()
+				m.copied = string(r)
+			}
+			saveCopyString(m.copied)
+		} else if a.kind == "paste" {
+			if m.copied == "" {
+				m.copied = loadCopyString()
+			}
+			m.cursor.Insert(m.copied)
+			a.value = m.copied
+		} else if a.kind == "replace" {
+			if m.mode.replace.str != "" {
+				m.cursor.Insert(m.mode.replace.str)
+				a.value = m.mode.replace.str
+			}
+		} else {
+			do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
+		}
+		switch a.kind {
+		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
+			// remember the action.
+			m.text.edited = true
+			nc := m.history.Cut(m.history.head)
+			if nc != 0 {
+				m.lastActStr = ""
+			}
+			if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
+				if a.kind == m.lastActStr {
+					lastAct, err := m.history.Pop()
+					if err != nil {
+						panic(err)
+					}
+					m.history.head--
+					beforeCursor = lastAct.beforeCursor
+					if a.kind == "insert" || a.kind == "delete" {
+						a.value = lastAct.value + a.value
+					} else if a.kind == "backspace" {
+						a.value = a.value + lastAct.value
+					}
+				}
+			}
+			a.beforeCursor = beforeCursor
+			if a.kind == "deleteSelection" {
+				a.beforeCursor, _ = m.selection.MinMax()
+			}
+			a.afterCursor = *m.cursor
+			m.history.Add(a)
+			m.history.head++
+		}
+		m.lastActStr = a.kind
+	}
+}
+
+func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -201,7 +310,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection, mode *string) []*Action 
 	}
 }
 
-func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status *string, holdStatus *bool, findstr string) {
+func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr string) {
 	defer func() {
 		if sel.on {
 			sel.SetEnd(c)
@@ -560,4 +669,11 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, status 
 	default:
 		panic(fmt.Sprintln("what the..", a.kind, "action?"))
 	}
+}
+
+func (m *NormalMode) Status() string {
+	if m.saved {
+		return fmt.Sprintf("successfully saved: %v", m.f)
+	}
+	return fmt.Sprintf("%v:%v:%v", m.f, m.cursor.l+1, m.cursor.O())
 }

@@ -4,23 +4,31 @@ import (
 	term "github.com/nsf/termbox-go"
 	"strconv"
 	"unicode/utf8"
+	"fmt"
 )
 
 type GotoLineMode struct {
 	linestr string
+
+	cursor *Cursor
+	mode *ModeSelector
 }
 
-func (g *GotoLineMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
+func (m *GotoLineMode) Start() {}
+
+func (m *GotoLineMode) End() {}
+
+func (m *GotoLineMode) Handle(ev term.Event) {
 	switch ev.Key {
 	case term.KeyCtrlK:
-		g.linestr = ""
-		*mode = "normal"
+		m.linestr = ""
+		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:
-		if g.linestr == "" {
-			*mode = "normal"
+		if m.linestr == "" {
+			m.mode.ChangeTo(m.mode.normal)
 			return
 		}
-		n, err := strconv.Atoi(g.linestr)
+		n, err := strconv.Atoi(m.linestr)
 		if err != nil {
 			panic("cannot convert gotoline string to int")
 		}
@@ -30,21 +38,25 @@ func (g *GotoLineMode) Handle(ev term.Event, cursor *Cursor, mode *string) {
 		if n != 0 {
 			n--
 		}
-		cursor.GotoLine(n)
-		g.linestr = ""
-		*mode = "normal"
+		m.cursor.GotoLine(n)
+		m.linestr = ""
+		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyBackspace, term.KeyBackspace2:
-		if g.linestr == "" {
+		if m.linestr == "" {
 			return
 		}
-		_, rlen := utf8.DecodeLastRuneInString(g.linestr)
-		g.linestr = g.linestr[:len(g.linestr)-rlen]
+		_, rlen := utf8.DecodeLastRuneInString(m.linestr)
+		m.linestr = m.linestr[:len(m.linestr)-rlen]
 	default:
 		if ev.Ch != 0 {
 			_, err := strconv.Atoi(string(ev.Ch))
 			if err == nil {
-				g.linestr += string(ev.Ch)
+				m.linestr += string(ev.Ch)
 			}
 		}
 	}
+}
+
+func (m *GotoLineMode) Status() string {
+	return fmt.Sprintf("goto : %v", m.linestr)
 }

@@ -4,20 +4,29 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
-type ModeType int
-
-const (
-	ModeUnknown ModeType = iota
-	ModeNormal
-	ModeFind
-	ModeReplace
-	ModeGotoline
-)
-
-// Mode interface takes an event from terminal,
-// then creates actions, let main loop to do something.
-// TODO: also take tor information.
+// Mode interface takes an event from terminal and handle it.
 type Mode interface {
-	Handle(term.Event) ([]*Action, error)
+	Start() // Start setup mode variables.
+	End() // End clear mode variables.
+	Handle(term.Event) // Handle handles a terminal event.
+	Status() string // Status return current status of the mode.
+}
+
+type ModeSelector struct {
+	current Mode // it stores one of follow modes.
+
+	normal *NormalMode
+	find *FindMode
+	replace *ReplaceMode
+	gotoline *GotoLineMode
+	exit *ExitMode
+}
+
+// ChangeTo chage current mode.
+// It also calls old current's End() and new current's Start().
+func (ms *ModeSelector) ChangeTo(m Mode) {
+	ms.current.End()
+	ms.current = m
+	ms.current.Start()
 }
 
