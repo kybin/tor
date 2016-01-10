@@ -123,9 +123,12 @@ func main() {
 		clearScreen(mainarea)
 		drawScreen(mainarea, win, text, selection, cursor)
 		printStatus(mode.current.Status())
-		winP := cursor.Position().Sub(win.min)
-		SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
-
+		if mode.current == mode.normal {
+			winP := cursor.Position().Sub(win.min)
+			SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
+		} else {
+			SetCursor(termh, vlen(mode.current.Status(), text.tabWidth))
+		}
 		term.Flush()
 
 		// wait for keyboard input
