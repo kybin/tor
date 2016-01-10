@@ -38,6 +38,9 @@ func (m *NormalMode) Handle(ev term.Event) {
 			} else if a.value == "replace" {
 				m.mode.ChangeTo(m.mode.replace)
 				continue
+			} else if a.value == "gotoline" {
+				m.mode.ChangeTo(m.mode.gotoline)
+				continue
 			}
 		}
 

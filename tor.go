@@ -102,6 +102,7 @@ func main() {
 		mode:      mode,
 	}
 	mode.gotoline = &GotoLineMode{
+		cursor: cursor,
 		mode: mode,
 	}
 	mode.exit = &ExitMode{
