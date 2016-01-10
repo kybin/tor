@@ -1,9 +1,5 @@
 package main
 
-import (
-//term "github.com/nsf/termbox-go"
-)
-
 // Window is a area that follows a cursor.
 // It used for clipping text.
 // It's size should same as tor's main layout size.

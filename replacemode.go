@@ -31,8 +31,7 @@ func (m *ReplaceMode) Start() {
 	m.start = true
 }
 
-func (m *ReplaceMode) End() {
-}
+func (m *ReplaceMode) End() {}
 
 func (m *ReplaceMode) Handle(ev term.Event) {
 	switch ev.Key {
