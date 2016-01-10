@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"unicode/utf8"
-	// "log"
 )
 
 func open(f string) (*Text, error) {
@@ -63,6 +65,45 @@ func open(f string) (*Text, error) {
 		return nil, err
 	}
 	return &Text{lines, tabToSpace, tabWidth, false}, nil
+}
+
+// parseFileArg returns (filepath, linenum, offset, error).
+// if the linenum is given, but 0 or negative, it will be 1.
+// if the offset is given, but negative, it will be 0.
+// when only filepath is given, linenum and offset will be set to -1.
+func parseFileArg(farg string) (string, int, int, error) {
+	finfo := strings.Split(farg, ":")
+	f := finfo[0]
+	l, o := -1, -1
+	err := error(nil)
+
+	if len(finfo) >= 4 {
+		return "", -1, -1, errors.New("too many colons in file argument")
+	}
+
+	if len(finfo) == 1 {
+		return f, -1, -1, nil
+	}
+	if len(finfo) >= 2 {
+		l, err = strconv.Atoi(finfo[1])
+		if err != nil {
+			return "", -1, -1, err
+		}
+		if len(finfo) == 3 {
+			o, err = strconv.Atoi(finfo[2])
+			if err != nil {
+				return "", -1, -1, err
+			}
+		}
+	}
+
+	if l < 0 {
+		l = 0
+	}
+	if o < 0 {
+		o = 0
+	}
+	return f, l, o, nil
 }
 
 func save(f string, t *Text) error {
