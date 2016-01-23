@@ -285,6 +285,14 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
 			case ')':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
+			case 'e':
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevIndentMatch"}}
+			case 'E':
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevIndentMatch"}}
+			case 'd':
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextIndentMatch"}}
+			case 'D':
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextIndentMatch"}}
 			case ']', 'x':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextArg"}}
 			case '}', 'X':
@@ -293,10 +301,6 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevArg"}}
 			case '{', 'Z':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevArg"}}
-			case 'd':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findNext"}}
-			case 'b':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findPrev"}}
 			case 'c':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "matchingBracket"}}
 			case 'C':
@@ -361,6 +365,10 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr
 			c.GotoNextGlobalLineWithout(" \t#/{}()")
 		case "prevGlobal":
 			c.GotoPrevGlobalLineWithout(" \t#/{}()")
+		case "prevIndentMatch":
+			c.GotoPrevIndentMatch()
+		case "nextIndentMatch":
+			c.GotoNextIndentMatch()
 		case "nextArg":
 			c.GotoNextAny("{(,)}")
 			r, _ := c.RuneAfter()
