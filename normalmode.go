@@ -35,32 +35,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 
 		switch a.kind {
 		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
-			// remember the action.
-			m.text.edited = true
-			nc := m.history.Cut(m.history.head)
-			if nc != 0 {
-				m.lastActStr = ""
-			}
-			if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
-				if a.kind == m.lastActStr {
-					lastAct, err := m.history.Pop()
-					if err != nil {
-						panic(err)
-					}
-					m.history.head--
-					a.beforeCursor = lastAct.beforeCursor
-					if a.kind == "insert" || a.kind == "delete" {
-						a.value = lastAct.value + a.value
-					} else if a.kind == "backspace" {
-						a.value = a.value + lastAct.value
-					}
-				}
-			}
-			if a.kind == "deleteSelection" {
-				a.beforeCursor, _ = m.selection.MinMax()
-			}
-			m.history.Add(a)
-			m.history.head++
+			m.remember(a)
 		}
 		m.lastActStr = a.kind
 	}
@@ -665,6 +640,35 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 	default:
 		panic(fmt.Sprintln("what the..", a.kind, "action?"))
 	}
+}
+
+func (m *NormalMode) remember(a *Action) {
+	// remember the action.
+	m.text.edited = true
+	nc := m.history.Cut(m.history.head)
+	if nc != 0 {
+		m.lastActStr = ""
+	}
+	if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
+		if a.kind == m.lastActStr {
+			lastAct, err := m.history.Pop()
+			if err != nil {
+				panic(err)
+			}
+			m.history.head--
+			a.beforeCursor = lastAct.beforeCursor
+			if a.kind == "insert" || a.kind == "delete" {
+				a.value = lastAct.value + a.value
+			} else if a.kind == "backspace" {
+				a.value = a.value + lastAct.value
+			}
+		}
+	}
+	if a.kind == "deleteSelection" {
+		a.beforeCursor, _ = m.selection.MinMax()
+	}
+		m.history.Add(a)
+	m.history.head++
 }
 
 func (m *NormalMode) Status() string {
