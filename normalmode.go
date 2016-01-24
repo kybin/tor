@@ -456,11 +456,7 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr
 		}
 		lines := make([]int, 0)
 		if sel.on {
-			min, max := sel.MinMax()
-			if max.o == 0 {
-				max.l--
-			}
-			for l := min.l; l <= max.l; l++ {
+			for _, l := range sel.Lines() {
 				if t.Line(l).data != "" {
 					lines = append(lines, l)
 				}
@@ -485,13 +481,7 @@ func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr
 		// removeTab should remember what is removed, not tab string it self.
 		lines := make([]int, 0)
 		if sel.on {
-			min, max := sel.MinMax()
-			if max.o == 0 {
-				max.l--
-			}
-			for l := min.l; l <= max.l; l++ {
-				lines = append(lines, l)
-			}
+			lines = sel.Lines()
 		} else {
 			lines = append(lines, c.l)
 		}
