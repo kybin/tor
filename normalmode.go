@@ -31,19 +31,6 @@ func (m *NormalMode) Handle(ev term.Event) {
 
 	actions := parseEvent(ev, m.text, m.selection)
 	for _, a := range actions {
-		if a.kind == "modeChange" {
-			if a.value == "find" {
-				m.mode.ChangeTo(m.mode.find)
-				continue
-			} else if a.value == "replace" {
-				m.mode.ChangeTo(m.mode.replace)
-				continue
-			} else if a.value == "gotoline" {
-				m.mode.ChangeTo(m.mode.gotoline)
-				continue
-			}
-		}
-
 		a.beforeCursor = *m.cursor
 
 		m.do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
@@ -324,6 +311,14 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		if m.mode.replace.str != "" {
 			m.cursor.Insert(m.mode.replace.str)
 			a.value = m.mode.replace.str
+		}
+	case "modeChange":
+		if a.value == "find" {
+			m.mode.ChangeTo(m.mode.find)
+		} else if a.value == "replace" {
+			m.mode.ChangeTo(m.mode.replace)
+		} else if a.value == "gotoline" {
+			m.mode.ChangeTo(m.mode.gotoline)
 		}
 	case "none":
 		return
