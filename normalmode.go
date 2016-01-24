@@ -272,6 +272,8 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 				return []*Action{{kind: "none"}}
 			}
 		}
+
+		// key pressed without modifier
 		if sel.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "insert", value: string(ev.Ch)}}
 		} else {
