@@ -171,7 +171,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "selectLine"}}
 	default:
 		if ev.Ch == 0 {
-			return []*Action{{kind: "none"}}
+			return []*Action{}
 		}
 		if ev.Mod&term.ModAlt != 0 {
 			switch ev.Ch {
@@ -256,7 +256,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 			case 'C':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "matchingBracket"}}
 			default:
-				return []*Action{{kind: "none"}}
+				return []*Action{}
 			}
 		}
 
@@ -320,8 +320,6 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		} else if a.value == "gotoline" {
 			m.mode.ChangeTo(m.mode.gotoline)
 		}
-	case "none":
-		return
 	case "selection":
 		if a.value == "on" && !sel.on {
 			sel.on = true
