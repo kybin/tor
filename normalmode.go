@@ -44,46 +44,10 @@ func (m *NormalMode) Handle(ev term.Event) {
 			}
 		}
 
-		beforeCursor := *m.cursor
+		a.beforeCursor = *m.cursor
 
-		if a.kind == "exit" {
-			if !m.text.edited {
-				saveLastPosition(m.f, m.cursor.l, m.cursor.b)
-				term.Close()
-				os.Exit(0)
-			} else {
-				m.mode.ChangeTo(m.mode.exit)
-			}
-		} else if a.kind == "save" {
-			err := save(m.f, m.text)
-			if err != nil {
-				panic(err)
-			}
-			m.text.edited = false
-			m.saved = true
-		} else if a.kind == "copy" {
-			if m.selection.on {
-				minc, maxc := m.selection.MinMax()
-				m.copied = m.text.DataInside(minc, maxc)
-			} else {
-				r, _ := m.cursor.RuneAfter()
-				m.copied = string(r)
-			}
-			saveCopyString(m.copied)
-		} else if a.kind == "paste" {
-			if m.copied == "" {
-				m.copied = loadCopyString()
-			}
-			m.cursor.Insert(m.copied)
-			a.value = m.copied
-		} else if a.kind == "replace" {
-			if m.mode.replace.str != "" {
-				m.cursor.Insert(m.mode.replace.str)
-				a.value = m.mode.replace.str
-			}
-		} else {
-			do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
-		}
+		m.do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
+
 		switch a.kind {
 		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
 			// remember the action.
@@ -99,7 +63,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 						panic(err)
 					}
 					m.history.head--
-					beforeCursor = lastAct.beforeCursor
+					a.beforeCursor = lastAct.beforeCursor
 					if a.kind == "insert" || a.kind == "delete" {
 						a.value = lastAct.value + a.value
 					} else if a.kind == "backspace" {
@@ -107,7 +71,6 @@ func (m *NormalMode) Handle(ev term.Event) {
 					}
 				}
 			}
-			a.beforeCursor = beforeCursor
 			if a.kind == "deleteSelection" {
 				a.beforeCursor, _ = m.selection.MinMax()
 			}
@@ -317,13 +280,49 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 	}
 }
 
-func do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr string) {
+func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr string) {
 	defer func() {
 		if sel.on {
 			sel.SetEnd(c)
 		}
 	}()
+
 	switch a.kind {
+	case "exit":
+		if !m.text.edited {
+			saveLastPosition(m.f, m.cursor.l, m.cursor.b)
+			term.Close()
+			os.Exit(0)
+		} else {
+			m.mode.ChangeTo(m.mode.exit)
+		}
+	case "save":
+		err := save(m.f, m.text)
+		if err != nil {
+			panic(err)
+		}
+		m.text.edited = false
+		m.saved = true
+	case "copy":
+		if m.selection.on {
+			minc, maxc := m.selection.MinMax()
+			m.copied = m.text.DataInside(minc, maxc)
+		} else {
+			r, _ := m.cursor.RuneAfter()
+			m.copied = string(r)
+		}
+		saveCopyString(m.copied)
+	case "paste":
+		if m.copied == "" {
+			m.copied = loadCopyString()
+		}
+		m.cursor.Insert(m.copied)
+		a.value = m.copied
+	case "replace":
+		if m.mode.replace.str != "" {
+			m.cursor.Insert(m.mode.replace.str)
+			a.value = m.mode.replace.str
+		}
 	case "none":
 		return
 	case "selection":
