@@ -31,8 +31,6 @@ func (m *NormalMode) Handle(ev term.Event) {
 
 	actions := parseEvent(ev, m.text, m.selection)
 	for _, a := range actions {
-		a.beforeCursor = *m.cursor
-
 		m.do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
 
 		switch a.kind {
@@ -61,7 +59,6 @@ func (m *NormalMode) Handle(ev term.Event) {
 			if a.kind == "deleteSelection" {
 				a.beforeCursor, _ = m.selection.MinMax()
 			}
-			a.afterCursor = *m.cursor
 			m.history.Add(a)
 			m.history.head++
 		}
@@ -270,7 +267,11 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 }
 
 func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr string) {
+	a.beforeCursor = *m.cursor
+
 	defer func() {
+		a.afterCursor = *m.cursor
+
 		if sel.on {
 			sel.SetEnd(c)
 		}
