@@ -293,6 +293,7 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 					panic(err)
 				}
 				*m.text = *text
+				m.cursor.GotoLine(m.cursor.l)
 				m.cursor.SetCloseToB(m.cursor.b)
 			}
 		}
@@ -695,7 +696,7 @@ func (m *NormalMode) remember(a *Action) {
 	if a.kind == "deleteSelection" {
 		a.beforeCursor, _ = m.selection.MinMax()
 	}
-		m.history.Add(a)
+	m.history.Add(a)
 	m.history.head++
 }
 
