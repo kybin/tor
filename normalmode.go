@@ -4,6 +4,7 @@ import (
 	"fmt"
 	term "github.com/nsf/termbox-go"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 )
@@ -268,6 +269,33 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		}
 		m.text.edited = false
 		m.saved = true
+
+		// post save
+		if strings.HasSuffix(m.f, ".go") {
+			// run `go fmt`
+			// treat the go command exists. if not, handle error.
+			cmd := exec.Command("go", "fmt", m.f)
+			err := cmd.Start()
+			if err != nil {
+				// it's ok if there is no `go` command.
+				if err != exec.ErrNotFound {
+					panic(err)
+				}
+			} else {
+				// reload the file.
+				// TODO: show current status to user.
+				err = cmd.Wait()
+				if err != nil {
+					panic(err)
+				}
+				text, err := open(m.f)
+				if err != nil {
+					panic(err)
+				}
+				*m.text = *text
+				m.cursor.SetCloseToB(m.cursor.b)
+			}
+		}
 	case "copy":
 		if m.selection.on {
 			minc, maxc := m.selection.MinMax()
