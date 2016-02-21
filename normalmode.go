@@ -285,16 +285,17 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 				// reload the file.
 				// TODO: show current status to user.
 				err = cmd.Wait()
-				if err != nil {
-					panic(err)
+				if err == nil {
+					text, err := open(m.f)
+					if err != nil {
+						panic(err)
+					}
+					*m.text = *text
+					oldl := m.cursor.l
+					oldb := m.cursor.b
+					m.cursor.GotoLine(oldl)
+					m.cursor.SetCloseToB(oldb)
 				}
-				text, err := open(m.f)
-				if err != nil {
-					panic(err)
-				}
-				*m.text = *text
-				m.cursor.GotoLine(m.cursor.l)
-				m.cursor.SetCloseToB(m.cursor.b)
 			}
 		}
 	case "copy":
