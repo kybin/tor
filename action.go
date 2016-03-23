@@ -16,8 +16,8 @@ func toggleComment(comment string, t *Text, c *Cursor, sel *Selection) []*Action
 	}
 
 	commentedLns := make([]int, 0)
-	for _, l :=  range lns {
-		if strings.HasPrefix(t.lines[l].data, comment + " ") {
+	for _, l := range lns {
+		if strings.HasPrefix(t.lines[l].data, comment+" ") {
 			commentedLns = append(commentedLns, l)
 			break
 		}
@@ -25,7 +25,7 @@ func toggleComment(comment string, t *Text, c *Cursor, sel *Selection) []*Action
 
 	if len(commentedLns) > 0 {
 		for _, l := range commentedLns {
-			t.lines[l].data = strings.Replace(t.lines[l].data, comment + " ", "", 1)
+			t.lines[l].data = strings.Replace(t.lines[l].data, comment+" ", "", 1)
 		}
 	} else {
 		for _, l := range lns {

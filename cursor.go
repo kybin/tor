@@ -673,7 +673,7 @@ func (c *Cursor) GotoPrevDefinition(defn []string) bool {
 // GotoPrevIndentMatch moves cursor to any previous line matched indent with current line's.
 func (c *Cursor) GotoPrevIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
-	for l := c.l-1; l >= 0; l-- {
+	for l := c.l - 1; l >= 0; l-- {
 		line := c.t.lines[l].data
 		if strings.HasPrefix(line, indentStr) {
 			remain := line[len(indentStr):]
@@ -691,7 +691,7 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 // GotoNextIndentMatch moves cursor to any next line matched indent with current line's.
 func (c *Cursor) GotoNextIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
-	for l := c.l+1; l < len(c.t.lines); l++ {
+	for l := c.l + 1; l < len(c.t.lines); l++ {
 		line := c.t.lines[l].data
 		if strings.HasPrefix(line, indentStr) {
 			remain := line[len(indentStr):]
