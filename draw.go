@@ -20,11 +20,10 @@ func clearScreen(ar *Area) {
 	}
 }
 
-func resizeScreen(ar *Area, w *Window) {
+func resizeScreen(ar *Area, win *Window, w, h int) {
 	min := ar.min
-	o, l := term.Size()
-	*ar = Area{min, Point{min.l + l, min.o + o}}
-	w.Resize(ar.Size())
+	*ar = Area{min, Point{min.l + h, min.o + w}}
+	win.Resize(ar.Size())
 }
 
 // draw text inside of window at mainarea.

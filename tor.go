@@ -103,7 +103,7 @@ func main() {
 	}
 	mode.gotoline = &GotoLineMode{
 		cursor: cursor,
-		mode: mode,
+		mode:   mode,
 	}
 	mode.exit = &ExitMode{
 		f:      f,
@@ -139,7 +139,8 @@ func main() {
 				mode.current.Handle(ev)
 			case term.EventResize:
 				term.Clear(term.ColorDefault, term.ColorDefault)
-				resizeScreen(mainarea, win)
+				termw, termh = term.Size()
+				resizeScreen(mainarea, win, termw, termh)
 			}
 		}
 	}
