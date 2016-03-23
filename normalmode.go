@@ -506,7 +506,11 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			}
 			untabedLine += strconv.Itoa(l) + ":" + removed
 			if l == c.l && !c.AtBol() {
-				c.SetB(c.b - len(removed))
+				b := c.b - len(removed)
+				if b < 0 {
+					b = 0
+				}
+				c.SetB(b)
 			}
 		}
 		a.value = untabedLine
