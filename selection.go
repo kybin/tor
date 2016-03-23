@@ -24,14 +24,15 @@ func (s *Selection) Lines() []int {
 	if !s.on {
 		return nil
 	}
+	start, end := s.MinMax()
 
-	endL := s.end.l
+	endL := end.l
 	if s.end.o == 0 {
 		endL--
 	}
 
 	lns := make([]int, 0)
-	for l := s.start.l; l <= endL; l++ {
+	for l := start.l; l <= endL; l++ {
 		lns = append(lns, l)
 	}
 	return lns
