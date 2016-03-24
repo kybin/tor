@@ -147,13 +147,14 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 			return []*Action{}
 		}
 		if ev.Mod&term.ModAlt != 0 {
+			// TODO: move every selection action to last?
 			switch ev.Ch {
 			case 'j':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "left"}}
+				return []*Action{{kind: "move", value: "selLeft"}, {kind: "selection", value: "off"}}
 			case 'J':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "left"}}
 			case 'l':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "right"}}
+				return []*Action{{kind: "move", value: "selRight"}, {kind: "selection", value: "off"}}
 			case 'L':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "right"}}
 			case 'i':
@@ -339,6 +340,22 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			c.MoveLeft()
 		case "right":
 			c.MoveRight()
+		case "selLeft":
+			if sel.on {
+				minc := sel.Min()
+				c.GotoLine(minc.l)
+				c.SetB(minc.b)
+			} else {
+				c.MoveLeft()
+			}
+		case "selRight":
+			if sel.on {
+				maxc := sel.Max()
+				c.GotoLine(maxc.l)
+				c.SetB(maxc.b)
+			} else {
+				c.MoveRight()
+			}
 		case "up":
 			c.MoveUp()
 		case "down":

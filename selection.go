@@ -38,6 +38,20 @@ func (s *Selection) Lines() []int {
 	return lns
 }
 
+func (s *Selection) Min() Cursor {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
+		return s.end
+	}
+	return s.start
+}
+
+func (s *Selection) Max() Cursor {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
+		return s.start
+	}
+	return s.end
+}
+
 func (s *Selection) MinMax() (Cursor, Cursor) {
 	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
 		return s.end, s.start
