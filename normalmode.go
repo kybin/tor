@@ -140,6 +140,8 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "modeChange", value: "replace"}}
 	case term.KeyCtrlG:
 		return []*Action{{kind: "modeChange", value: "gotoline"}}
+	case term.KeyCtrlA:
+		return []*Action{{kind: "selectAll"}}
 	case term.KeyCtrlL:
 		return []*Action{{kind: "selectLine"}}
 	default:
@@ -538,6 +540,12 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			a.value = c.DeleteSelection(sel)
 			sel.on = false
 		}
+	case "selectAll":
+		c.MoveBof()
+		sel.on = true
+		sel.SetStart(c)
+		c.MoveEof()
+		sel.SetEnd(c)
 	case "selectLine":
 		c.MoveBol()
 		if !sel.on {
