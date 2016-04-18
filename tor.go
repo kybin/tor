@@ -125,9 +125,9 @@ func main() {
 		printStatus(mode.current.Status())
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)
-			SetCursor(mainarea.min.l+winP.l, mainarea.min.o+winP.o)
+			term.SetCursor(mainarea.min.o+winP.o, mainarea.min.l+winP.l)
 		} else {
-			SetCursor(termh, vlen(mode.current.Status(), text.tabWidth))
+			term.SetCursor(vlen(mode.current.Status(), text.tabWidth), termh)
 		}
 		term.Flush()
 
