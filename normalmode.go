@@ -75,9 +75,10 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 	case term.KeyEnter:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}}
 	case term.KeyCtrlN:
+		if ev.Mod&term.ModAlt != 0 {
+			return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
+		}
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
-	case term.KeyCtrlSlash:
-		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
 	case term.KeySpace:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
