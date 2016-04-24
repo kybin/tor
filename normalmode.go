@@ -76,7 +76,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}}
 	case term.KeyCtrlN:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
-	case term.KeyCtrlJ:
+	case term.KeyCtrlSlash:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
 	case term.KeySpace:
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
@@ -120,7 +120,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "paste"}}
 		}
 		return []*Action{{kind: "paste"}}
-	case term.KeyCtrlP:
+	case term.KeyCtrlJ:
 		if sel.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "replace"}}
 		}
