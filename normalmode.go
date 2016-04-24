@@ -95,12 +95,18 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		if sel.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
+			if ev.Mod&term.ModAlt != 0 {
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextBowEow"}, {kind: "deleteSelection"}, {kind: "selection", value: "off"}}
+			}
 			return []*Action{{kind: "delete"}}
 		}
 	case term.KeyBackspace, term.KeyBackspace2:
 		if sel.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
+			if ev.Mod&term.ModAlt != 0 {
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevBowEow"}, {kind: "deleteSelection"}, {kind: "selection", value: "off"}}
+			}
 			return []*Action{{kind: "backspace"}}
 		}
 	// undo, redo
