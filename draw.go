@@ -28,6 +28,7 @@ func resizeScreen(ar *Area, win *Window, w, h int) {
 
 // draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
+	multiLineComment := false
 	for l, ln := range t.lines {
 		if l < w.min.l || l >= w.max.l {
 			continue
@@ -89,6 +90,17 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 					commented = true
 					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
 				}
+			} else if r == '*' && oldR == '/' && oldOldR != '\\' {
+				if !inStr {
+					multiLineComment = true
+					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
+				}
+			} else if r == '/' && oldR == '*' && oldOldR != '\\' {
+				if !inStr {
+					multiLineComment = false
+					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '/', term.ColorMagenta, oldBg) // hacky way to color the last '/' cell.
+					continue
+				}
 			}
 			if inStrFinished {
 				inStr = false
@@ -107,7 +119,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			}
 
 			fg := term.ColorWhite
-			if commented {
+			if commented || multiLineComment {
 				fg = term.ColorMagenta
 			} else if inStr {
 				if inStrStarter == '\'' {
