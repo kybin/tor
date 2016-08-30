@@ -390,9 +390,9 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		case "eof":
 			c.MoveEof()
 		case "nextGlobal":
-			c.GotoNextGlobalLineWithout(" \t#/{}()")
+			c.GotoNextGlobalLine()
 		case "prevGlobal":
-			c.GotoPrevGlobalLineWithout(" \t#/{}()")
+			c.GotoPrevGlobalLine()
 		case "prevIndentMatch":
 			c.GotoPrevIndentMatch()
 		case "nextIndentMatch":

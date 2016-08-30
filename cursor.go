@@ -566,31 +566,23 @@ func (c *Cursor) GotoPrevAny(chars string) bool {
 	return false
 }
 
-func (c *Cursor) GotoNextGlobalLineWithout(str string) bool {
+func (c *Cursor) GotoNextGlobalLine() {
 	findLine := -1
 	for l := c.l + 1; l < len(c.t.lines); l++ {
-		find := true
-		for _, r := range str {
-			if c.t.lines[l].data == "" {
-				find = false
-			} else if strings.HasPrefix(c.t.lines[l].data, string(r)) {
-				find = false
-			}
-		}
-		if find {
+		d := c.t.lines[l].data
+		if d != "" && !unicode.IsSpace(rune(d[0])) {
 			findLine = l
 			break
 		}
 	}
-	if findLine != -1 {
-		c.l = findLine
-		c.SetB(0)
-		return true
+	if findLine == -1 {
+		findLine = len(c.t.lines) - 1
 	}
-	return false
+	c.l = findLine
+	c.SetB(0)
 }
 
-func (c *Cursor) GotoPrevGlobalLineWithout(str string) bool {
+func (c *Cursor) GotoPrevGlobalLine() {
 	var startLine int
 	if c.b == 0 {
 		startLine = c.l - 1
@@ -599,25 +591,17 @@ func (c *Cursor) GotoPrevGlobalLineWithout(str string) bool {
 	}
 	findLine := -1
 	for l := startLine; l >= 0; l-- {
-		find := true
-		for _, r := range str {
-			if c.t.lines[l].data == "" {
-				find = false
-			} else if strings.HasPrefix(c.t.lines[l].data, string(r)) {
-				find = false
-			}
-		}
-		if find {
+		d := c.t.lines[l].data
+		if d != "" && !unicode.IsSpace(rune(d[0])) {
 			findLine = l
 			break
 		}
 	}
-	if findLine != -1 {
-		c.l = findLine
-		c.SetB(0)
-		return true
+	if findLine == -1 {
+		findLine = 0
 	}
-	return false
+	c.l = findLine
+	c.SetB(0)
 }
 
 func (c *Cursor) GotoNextDefinition(defn []string) bool {
