@@ -60,3 +60,7 @@ func (m *GotoLineMode) Handle(ev term.Event) {
 func (m *GotoLineMode) Status() string {
 	return fmt.Sprintf("goto : %v", m.linestr)
 }
+
+func (m *GotoLineMode) Error() string {
+	return ""
+}

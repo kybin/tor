@@ -71,3 +71,7 @@ func (m *FindMode) Handle(ev term.Event) {
 func (m *FindMode) Status() string {
 	return fmt.Sprintf("find : %v", m.str)
 }
+
+func (m *FindMode) Error() string {
+	return ""
+}

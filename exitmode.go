@@ -28,3 +28,7 @@ func (m *ExitMode) Handle(ev term.Event) {
 func (m *ExitMode) Status() string {
 	return "Buffer modified. Do you really want to quit? (y/n)"
 }
+
+func (m *ExitMode) Error() string {
+	return ""
+}

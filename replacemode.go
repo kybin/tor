@@ -72,3 +72,7 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 func (m *ReplaceMode) Status() string {
 	return fmt.Sprintf("replace : %v", m.str)
 }
+
+func (m *ReplaceMode) Error() string {
+	return ""
+}

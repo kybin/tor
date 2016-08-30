@@ -169,3 +169,18 @@ func printStatus(status string) {
 		o += runewidth.RuneWidth(r)
 	}
 }
+
+func printErrorStatus(err string) {
+	termw, termh := term.Size()
+	statusLine := termh - 1
+	// clear
+	for i := 0; i < termw; i++ {
+		SetCell(statusLine, i, ' ', term.ColorBlack, term.ColorRed)
+	}
+	// draw
+	o := 0
+	for _, r := range err {
+		SetCell(statusLine, o, r, term.ColorBlack, term.ColorRed)
+		o += runewidth.RuneWidth(r)
+	}
+}

@@ -17,7 +17,8 @@ type NormalMode struct {
 	f         string
 
 	copied     string
-	saved      bool
+	status     string
+	err        string
 	lastActStr string
 
 	mode *ModeSelector
@@ -28,7 +29,8 @@ func (m *NormalMode) Start() {}
 func (m *NormalMode) End() {}
 
 func (m *NormalMode) Handle(ev term.Event) {
-	m.saved = false
+	m.status = ""
+	m.err = ""
 
 	actions := parseEvent(ev, m.text, m.selection)
 	for _, a := range actions {
@@ -277,10 +279,11 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 	case "save":
 		err := save(m.f, m.text)
 		if err != nil {
-			panic(err)
+			m.err = fmt.Sprintf("FAIL TO SAVE: %v", err)
+			return
 		}
 		m.text.edited = false
-		m.saved = true
+		m.status = fmt.Sprintf("successfully saved: %v", m.f)
 
 		// post save
 		if strings.HasSuffix(m.f, ".go") {
@@ -740,8 +743,12 @@ func (m *NormalMode) remember(a *Action) {
 }
 
 func (m *NormalMode) Status() string {
-	if m.saved {
-		return fmt.Sprintf("successfully saved: %v", m.f)
+	if m.status != "" {
+		return m.status
 	}
 	return fmt.Sprintf("%v:%v:%v", m.f, m.cursor.l+1, m.cursor.O())
+}
+
+func (m *NormalMode) Error() string {
+	return m.err
 }

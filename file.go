@@ -67,11 +67,16 @@ func open(f string) (*Text, error) {
 	return &Text{lines, tabToSpace, tabWidth, false}, nil
 }
 
-// parseFileArg returns (filepath, linenum, offset, error).
+// parseFileArg parses file argument. Which should look like "filepath:line:offset"
+// the correspond return values are (filepath, linenum, offset, error).
+// final ":" is (if exists) properly ignored for convinience.
 // if the linenum is given, but 0 or negative, it will be 1.
 // if the offset is given, but negative, it will be 0.
 // when only filepath is given, linenum and offset will be set to -1.
 func parseFileArg(farg string) (string, int, int, error) {
+	if strings.HasSuffix(farg, ":") {
+		farg = farg[:len(farg)-1]
+	}
 	finfo := strings.Split(farg, ":")
 	f := finfo[0]
 	l, o := -1, -1

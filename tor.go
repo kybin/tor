@@ -122,7 +122,11 @@ func main() {
 		win.Follow(cursor, 3)
 		clearScreen(mainarea)
 		drawScreen(mainarea, win, text, selection, cursor)
-		printStatus(mode.current.Status())
+		if mode.current.Error() != "" {
+			printErrorStatus(mode.current.Error())
+		} else {
+			printStatus(mode.current.Status())
+		}
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)
 			term.SetCursor(mainarea.min.o+winP.o, mainarea.min.l+winP.l)

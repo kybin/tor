@@ -10,6 +10,7 @@ type Mode interface {
 	End()              // End clear mode variables.
 	Handle(term.Event) // Handle handles a terminal event.
 	Status() string    // Status return current status of the mode.
+	Error() string
 }
 
 type ModeSelector struct {
