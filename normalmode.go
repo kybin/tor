@@ -213,13 +213,13 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 			case 'A':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "eof"}}
 			case '9':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
-			case '(':
-				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
-			case '0':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
-			case ')':
+			case '(':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
+			case '0':
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
+			case ')':
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
 			case 'e':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevIndentMatch"}}
 			case 'E':
