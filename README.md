@@ -10,6 +10,8 @@ Tor has different key binding set from other editors.
 
 Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is for selection.
 
+Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
+
 ##### Ctrl
 
 `Ctrl+K` Cancel
