@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	term "github.com/nsf/termbox-go"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	term "github.com/nsf/termbox-go"
 )
 
 type NormalMode struct {
@@ -289,27 +290,32 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		if strings.HasSuffix(m.f, ".go") {
 			// run `go fmt`
 			// treat the go command exists. if not, handle error.
-			cmd := exec.Command("go", "fmt", m.f)
-			err := cmd.Start()
-			if err != nil {
-				// it's ok if there is no `go` command.
-				if err != exec.ErrNotFound {
-					panic(err)
-				}
-			} else {
-				// reload the file.
-				// TODO: show current status to user.
-				err = cmd.Wait()
-				if err == nil {
-					text, err := open(m.f)
-					if err != nil {
+			cmds := []*exec.Cmd{
+				exec.Command("goimports", "-w", m.f),
+				exec.Command("go", "fmt", m.f),
+			}
+			for _, cmd := range cmds {
+				err := cmd.Start()
+				if err != nil {
+					// it's ok if there is no `go` command.
+					if err != exec.ErrNotFound {
 						panic(err)
 					}
-					*m.text = *text
-					oldl := m.cursor.l
-					oldb := m.cursor.b
-					m.cursor.GotoLine(oldl)
-					m.cursor.SetCloseToB(oldb)
+				} else {
+					// reload the file.
+					// TODO: show current status to user.
+					err = cmd.Wait()
+					if err == nil {
+						text, err := open(m.f)
+						if err != nil {
+							panic(err)
+						}
+						*m.text = *text
+						oldl := m.cursor.l
+						oldb := m.cursor.b
+						m.cursor.GotoLine(oldl)
+						m.cursor.SetCloseToB(oldb)
+					}
 				}
 			}
 		}
