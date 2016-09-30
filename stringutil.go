@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/mattn/go-runewidth"
 	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
 )
 
 func vlen(s string, tabWidth int) int {

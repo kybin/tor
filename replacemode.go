@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	term "github.com/nsf/termbox-go"
 	"unicode/utf8"
+
+	term "github.com/nsf/termbox-go"
 )
 
 // TODO: handle aborted situation

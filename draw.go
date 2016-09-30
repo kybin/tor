@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/mattn/go-runewidth"
-	term "github.com/nsf/termbox-go"
 	"strconv"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
+	term "github.com/nsf/termbox-go"
 )
 
 func SetCell(l, o int, r rune, fg, bg term.Attribute) {

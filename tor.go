@@ -3,8 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	term "github.com/nsf/termbox-go"
 	"os"
+
+	term "github.com/nsf/termbox-go"
 )
 
 func main() {
