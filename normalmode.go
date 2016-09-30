@@ -301,18 +301,20 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 				}
 				// reload the file.
 				err = cmd.Wait()
-				if err == nil {
-					text, err := open(m.f)
-					if err != nil {
-						m.err = fmt.Sprint(err)
-						return
-					}
-					*m.text = *text
-					oldl := m.cursor.l
-					oldb := m.cursor.b
-					m.cursor.GotoLine(oldl)
-					m.cursor.SetCloseToB(oldb)
+				if err != nil {
+					m.err = fmt.Sprint(err)
+					return
 				}
+				text, err := open(m.f)
+				if err != nil {
+					m.err = fmt.Sprint(err)
+					return
+				}
+				*m.text = *text
+				oldl := m.cursor.l
+				oldb := m.cursor.b
+				m.cursor.GotoLine(oldl)
+				m.cursor.SetCloseToB(oldb)
 			}
 		}
 	case "copy":
