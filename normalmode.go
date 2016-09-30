@@ -297,25 +297,21 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			for _, cmd := range cmds {
 				err := cmd.Start()
 				if err != nil {
-					// it's ok if there is no `go` command.
-					if err != exec.ErrNotFound {
-						panic(err)
+					continue
+				}
+				// reload the file.
+				err = cmd.Wait()
+				if err == nil {
+					text, err := open(m.f)
+					if err != nil {
+						m.err = fmt.Sprint(err)
+						return
 					}
-				} else {
-					// reload the file.
-					// TODO: show current status to user.
-					err = cmd.Wait()
-					if err == nil {
-						text, err := open(m.f)
-						if err != nil {
-							panic(err)
-						}
-						*m.text = *text
-						oldl := m.cursor.l
-						oldb := m.cursor.b
-						m.cursor.GotoLine(oldl)
-						m.cursor.SetCloseToB(oldb)
-					}
+					*m.text = *text
+					oldl := m.cursor.l
+					oldb := m.cursor.b
+					m.cursor.GotoLine(oldl)
+					m.cursor.SetCloseToB(oldb)
 				}
 			}
 		}
