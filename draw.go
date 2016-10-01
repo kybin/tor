@@ -24,14 +24,14 @@ func clearScreen(ar *Area) {
 func resizeScreen(ar *Area, win *Window, w, h int) {
 	min := ar.min
 	*ar = Area{min, Point{min.l + h, min.o + w}}
-	win.Resize(ar.Size())
+	win.size = ar.Size()
 }
 
 // draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 	multiLineComment := false
 	for l, ln := range t.lines {
-		if l < w.min.l || l >= w.max.l {
+		if l < w.min.l || l >= w.Max().l {
 			continue
 		}
 
@@ -75,7 +75,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 		// draw
 		o := 0
 		for _, r := range ln.data {
-			if o >= w.max.o {
+			if o >= w.Max().o {
 				break
 			}
 

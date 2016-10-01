@@ -4,8 +4,8 @@ package main
 // It used for clipping text.
 // It's size should same as tor's main layout size.
 type Window struct {
-	min Point
-	max Point
+	min  Point
+	size Point
 }
 
 func NewWindow(size Point) *Window {
@@ -13,28 +13,17 @@ func NewWindow(size Point) *Window {
 	return &w
 }
 
-func (w *Window) Resize(size Point) {
-	w.max = Point{w.min.l + size.l, w.min.o + size.o}
-}
-
-func (w *Window) Set(min, max Point) {
-	w.min = min
-	w.max = max
-}
-
-func (w *Window) Size() (int, int) {
-	size := w.max.Sub(w.min)
-	return size.o, size.l
+func (w *Window) Max() Point {
+	return w.min.Add(w.size)
 }
 
 func (w *Window) Move(t Point) {
 	w.min = w.min.Add(t)
-	w.max = w.max.Add(t)
 }
 
 func (w *Window) Contains(c *Cursor) bool {
 	cp := c.Position()
-	if (w.min.o <= cp.o && cp.o < w.max.o) && (w.min.l <= cp.l && cp.l < w.max.l) {
+	if (w.min.o <= cp.o && cp.o < w.Max().o) && (w.min.l <= cp.l && cp.l < w.Max().l) {
 		return true
 	}
 	return false
@@ -45,7 +34,7 @@ func (w *Window) Follow(c *Cursor, margin int) {
 	cp := c.Position()
 
 	minl := w.min.l + margin
-	maxl := w.max.l - margin
+	maxl := w.Max().l - margin
 	if cp.l < minl {
 		tl = cp.l - minl
 	} else if cp.l >= maxl {
@@ -57,7 +46,7 @@ func (w *Window) Follow(c *Cursor, margin int) {
 	}
 
 	mino := w.min.o + margin
-	maxo := w.max.o - margin
+	maxo := w.Max().o - margin
 	if cp.o < mino {
 		to = cp.o - mino
 	} else if cp.o >= maxo {
