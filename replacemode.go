@@ -12,17 +12,13 @@ type ReplaceMode struct {
 	start bool
 	olds  []string
 
-	text      *Text
-	selection *Selection // normal mode's selection.
-
 	mode *ModeSelector
 }
 
 func (m *ReplaceMode) Start() {
-	if m.selection.on {
-		min, max := m.selection.MinMax()
-		m.str = m.text.DataInside(min, max)
-		m.selection.on = false
+	nm := m.mode.normal
+	if nm.selection.on {
+		m.str = nm.text.DataInside(nm.selection.MinMax())
 		return
 	}
 	m.start = true
