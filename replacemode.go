@@ -10,7 +10,6 @@ import (
 type ReplaceMode struct {
 	str   string
 	start bool
-	set   bool
 	olds  []string
 
 	text      *Text
@@ -21,7 +20,6 @@ type ReplaceMode struct {
 
 func (m *ReplaceMode) Start() {
 	if m.selection.on {
-		m.set = true
 		min, max := m.selection.MinMax()
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
@@ -42,7 +40,6 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 		}
 		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:
-		m.set = true
 		m.mode.ChangeTo(m.mode.normal)
 		m.olds = append(m.olds, m.str)
 		saveConfig("replace", m.str)

@@ -10,7 +10,6 @@ import (
 type FindMode struct {
 	str   string
 	start bool
-	set   bool
 	olds  []string
 
 	text      *Text
@@ -20,7 +19,6 @@ type FindMode struct {
 
 func (m *FindMode) Start() {
 	if m.selection.on {
-		m.set = true
 		min, max := m.selection.MinMax()
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
@@ -41,7 +39,6 @@ func (m *FindMode) Handle(ev term.Event) {
 		}
 		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:
-		m.set = true
 		m.mode.ChangeTo(m.mode.normal)
 		m.olds = append(m.olds, m.str)
 		saveConfig("find", m.str)
