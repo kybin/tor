@@ -17,10 +17,9 @@ type NormalMode struct {
 	history   *History
 	f         string
 
-	copied     string
-	status     string
-	err        string
-	lastActStr string
+	copied string
+	status string
+	err    string
 
 	mode *ModeSelector
 }
@@ -33,15 +32,46 @@ func (m *NormalMode) Handle(ev term.Event) {
 	m.status = ""
 	m.err = ""
 
+	rememberActions := make([]*Action, 0)
+	cut := false
 	actions := parseEvent(ev, m.text, m.selection)
+	// TODO: Move to history.Add()
 	for _, a := range actions {
 		m.do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
-
+		// skip action types that are not specified below.
 		switch a.kind {
 		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
-			m.remember(a)
+			m.text.edited = true
+			nc := m.history.Cut(m.history.head)
+			if nc != 0 {
+				cut = true
+			}
+		default:
+			continue
 		}
-		m.lastActStr = a.kind
+		// joining repeative same kind of actions.
+		if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
+			var last *Action
+			if len(rememberActions) != 0 {
+				last = rememberActions[len(rememberActions)-1]
+			} else if !cut && m.history.Len() != 0 {
+				lastGroup := m.history.Last()
+				last = lastGroup[len(lastGroup)-1]
+			}
+			if last != nil && a.kind == last.kind {
+				if last.kind == "insert" || a.kind == "delete" {
+					last.value = last.value + a.value
+				} else if a.kind == "backspace" {
+					last.value = a.value + last.value
+				}
+				last.afterCursor = a.afterCursor
+				continue
+			}
+		}
+		rememberActions = append(rememberActions, a)
+	}
+	if len(rememberActions) != 0 {
+		m.history.Add(rememberActions)
 	}
 }
 
@@ -583,165 +613,142 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		c.MoveNextBowEow()
 		sel.SetEnd(c)
 	case "undo":
+		// TODO: Move to history.Undo()
 		if history.head == 0 {
 			return
 		}
 		sel.on = false
 		history.head--
-		action := history.At(history.head)
-		switch action.kind {
-		case "insert":
-			c.Copy(action.afterCursor)
-			for range action.value {
-				c.Backspace()
-			}
-		case "insertTab":
-			lineInfos := strings.Split(action.value, ",")
-			for _, li := range lineInfos {
-				if li == "" {
-					continue
+		actions := history.At(history.head)
+		for _, a := range actions {
+			switch a.kind {
+			case "insert":
+				c.Copy(a.afterCursor)
+				for range a.value {
+					c.Backspace()
 				}
-				lis := strings.Split(li, ":")
-				lstr := lis[0]
-				tab := lis[1]
-				l, err := strconv.Atoi(lstr)
-				if err != nil {
-					panic(err)
-				}
-				for _, r := range tab {
-					rr := t.Line(l).Remove(0, 1)
-					if rr != string(r) {
-						panic("removed and current is not matched")
+			case "insertTab":
+				lineInfos := strings.Split(a.value, ",")
+				for _, li := range lineInfos {
+					if li == "" {
+						continue
+					}
+					lis := strings.Split(li, ":")
+					lstr := lis[0]
+					tab := lis[1]
+					l, err := strconv.Atoi(lstr)
+					if err != nil {
+						panic(err)
+					}
+					for _, r := range tab {
+						rr := t.Line(l).Remove(0, 1)
+						if rr != string(r) {
+							panic("removed and current is not matched")
+						}
 					}
 				}
-			}
-			c.Copy(action.beforeCursor)
-		case "paste", "replace":
-			c.Copy(action.beforeCursor)
-			for range action.value {
-				c.Delete()
-			}
-		case "backspace":
-			c.Copy(action.afterCursor)
-			c.Insert(action.value)
-		case "delete", "deleteSelection":
-			c.Copy(action.afterCursor)
-			c.Insert(action.value)
-		case "removeTab":
-			lineInfos := strings.Split(action.value, ",")
-			for _, li := range lineInfos {
-				if li == "" {
-					continue
+				c.Copy(a.beforeCursor)
+			case "paste", "replace":
+				c.Copy(a.beforeCursor)
+				for range a.value {
+					c.Delete()
 				}
-				lis := strings.Split(li, ":")
-				lstr := lis[0]
-				removed := lis[1]
-				l, err := strconv.Atoi(lstr)
-				if err != nil {
-					panic(err)
+			case "backspace":
+				c.Copy(a.afterCursor)
+				c.Insert(a.value)
+			case "delete", "deleteSelection":
+				c.Copy(a.afterCursor)
+				c.Insert(a.value)
+			case "removeTab":
+				lineInfos := strings.Split(a.value, ",")
+				for _, li := range lineInfos {
+					if li == "" {
+						continue
+					}
+					lis := strings.Split(li, ":")
+					lstr := lis[0]
+					removed := lis[1]
+					l, err := strconv.Atoi(lstr)
+					if err != nil {
+						panic(err)
+					}
+					t.Line(l).Insert(removed, 0)
 				}
-				t.Line(l).Insert(removed, 0)
+				c.Copy(a.beforeCursor)
+			default:
+				panic(fmt.Sprintln("what the..", a.kind, "history?"))
 			}
-			c.Copy(action.beforeCursor)
-		default:
-			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
 	case "redo":
+		// TODO: Move to history.Redo()
 		if history.head == history.Len() {
 			return
 		}
 		sel.on = false
-		action := history.At(history.head)
+		actions := history.At(history.head)
 		history.head++
-		switch action.kind {
-		case "insert":
-			c.Copy(action.beforeCursor)
-			c.Insert(action.value)
-		case "insertTab":
-			lineInfos := strings.Split(action.value, ",")
-			for _, li := range lineInfos {
-				if li == "" {
-					continue
+		for _, a := range actions {
+			switch a.kind {
+			case "insert":
+				c.Copy(a.beforeCursor)
+				c.Insert(a.value)
+			case "insertTab":
+				lineInfos := strings.Split(a.value, ",")
+				for _, li := range lineInfos {
+					if li == "" {
+						continue
+					}
+					lis := strings.Split(li, ":")
+					lstr := lis[0]
+					tab := lis[1]
+					l, err := strconv.Atoi(lstr)
+					if err != nil {
+						panic(err)
+					}
+					t.Line(l).Insert(tab, 0)
 				}
-				lis := strings.Split(li, ":")
-				lstr := lis[0]
-				tab := lis[1]
-				l, err := strconv.Atoi(lstr)
-				if err != nil {
-					panic(err)
+				c.Copy(a.afterCursor)
+			case "paste", "replace":
+				c.Copy(a.beforeCursor)
+				c.Insert(a.value)
+			case "backspace":
+				c.Copy(a.beforeCursor)
+				for range a.value {
+					c.Backspace()
 				}
-				t.Line(l).Insert(tab, 0)
-			}
-			c.Copy(action.afterCursor)
-		case "paste", "replace":
-			c.Copy(action.beforeCursor)
-			c.Insert(action.value)
-		case "backspace":
-			c.Copy(action.beforeCursor)
-			for range action.value {
-				c.Backspace()
-			}
-		case "delete", "deleteSelection":
-			c.Copy(action.beforeCursor)
-			for range action.value {
-				c.Delete()
-			}
-		case "removeTab":
-			lineInfos := strings.Split(action.value, ",")
-			for _, li := range lineInfos {
-				if li == "" {
-					continue
+			case "delete", "deleteSelection":
+				c.Copy(a.beforeCursor)
+				for range a.value {
+					c.Delete()
 				}
-				lis := strings.Split(li, ":")
-				lstr := lis[0]
-				removed := lis[1]
-				l, err := strconv.Atoi(lstr)
-				if err != nil {
-					panic(err)
-				}
-				for _, r := range removed {
-					rr := t.Line(l).Remove(0, 1)
-					if rr != string(r) {
-						panic("removed and current is not matched")
+			case "removeTab":
+				lineInfos := strings.Split(a.value, ",")
+				for _, li := range lineInfos {
+					if li == "" {
+						continue
+					}
+					lis := strings.Split(li, ":")
+					lstr := lis[0]
+					removed := lis[1]
+					l, err := strconv.Atoi(lstr)
+					if err != nil {
+						panic(err)
+					}
+					for _, r := range removed {
+						rr := t.Line(l).Remove(0, 1)
+						if rr != string(r) {
+							panic("removed and current is not matched")
+						}
 					}
 				}
+				c.Copy(a.afterCursor)
+			default:
+				panic(fmt.Sprintln("what the..", a.kind, "history?"))
 			}
-			c.Copy(action.afterCursor)
-		default:
-			panic(fmt.Sprintln("what the..", action.kind, "history?"))
 		}
 	default:
 		panic(fmt.Sprintln("what the..", a.kind, "action?"))
 	}
-}
-
-func (m *NormalMode) remember(a *Action) {
-	// remember the action.
-	m.text.edited = true
-	nc := m.history.Cut(m.history.head)
-	if nc != 0 {
-		m.lastActStr = ""
-	}
-	if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
-		if a.kind == m.lastActStr {
-			lastAct, err := m.history.Pop()
-			if err != nil {
-				panic(err)
-			}
-			m.history.head--
-			a.beforeCursor = lastAct.beforeCursor
-			if a.kind == "insert" || a.kind == "delete" {
-				a.value = lastAct.value + a.value
-			} else if a.kind == "backspace" {
-				a.value = a.value + lastAct.value
-			}
-		}
-	}
-	if a.kind == "deleteSelection" {
-		a.beforeCursor, _ = m.selection.MinMax()
-	}
-	m.history.Add(a)
-	m.history.head++
 }
 
 func (m *NormalMode) Status() string {
