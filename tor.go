@@ -96,11 +96,13 @@ func main() {
 		text:      text,
 		selection: selection,
 		mode:      mode,
+		str:       loadConfig("find"),
 	}
 	mode.replace = &ReplaceMode{
 		text:      text,
 		selection: selection,
 		mode:      mode,
+		str:       loadConfig("replace"),
 	}
 	mode.gotoline = &GotoLineMode{
 		cursor: cursor,

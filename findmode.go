@@ -27,8 +27,6 @@ func (m *FindMode) Start() {
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
 		return
-	} else {
-		m.str = loadConfig("find")
 	}
 	m.start = true
 }

@@ -28,8 +28,6 @@ func (m *ReplaceMode) Start() {
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
 		return
-	} else {
-		m.str = loadConfig("replace")
 	}
 	m.start = true
 }
