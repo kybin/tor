@@ -27,6 +27,8 @@ func (m *FindMode) Start() {
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
 		return
+	} else {
+		m.str = loadConfig("find")
 	}
 	m.start = true
 }
@@ -41,6 +43,7 @@ func (m *FindMode) Handle(ev term.Event) {
 	case term.KeyEnter:
 		m.set = true
 		m.mode.ChangeTo(m.mode.normal)
+		saveConfig("find", m.str)
 	case term.KeySpace:
 		if m.start {
 			m.str = ""

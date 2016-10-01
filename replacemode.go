@@ -28,6 +28,8 @@ func (m *ReplaceMode) Start() {
 		m.str = m.text.DataInside(min, max)
 		m.selection.on = false
 		return
+	} else {
+		m.str = loadConfig("replace")
 	}
 	m.start = true
 }
@@ -42,6 +44,7 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 	case term.KeyEnter:
 		m.set = true
 		m.mode.ChangeTo(m.mode.normal)
+		saveConfig("replace", m.str)
 	case term.KeySpace:
 		if m.start {
 			m.str = ""
