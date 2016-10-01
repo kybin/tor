@@ -10,6 +10,8 @@ import (
 	"unicode/utf8"
 )
 
+// open read a file and return it as *Text.
+// If the file not exist, it will return *Text with one empty line.
 func open(f string) (*Text, error) {
 	ex, err := exists(f)
 	if err != nil {
@@ -25,8 +27,11 @@ func open(f string) (*Text, error) {
 	defer file.Close()
 
 	lines := make([]Line, 0)
+
+	// tor use tab(shown as 4 space) for indentation as default.
+	// But when parse an exsit file, follow the file's rule.
 	tabToSpace := false
-	tabWidth := 4 // the default tab width
+	tabWidth := 4
 
 	findIndentLine := false
 	scanner := bufio.NewScanner(file)
@@ -54,6 +59,9 @@ func open(f string) (*Text, error) {
 		}
 		lines = append(lines, Line{t})
 	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
 
 	// if file created with `touch` cmd, scanner could not scan anything,
 	// which cause no line in text that makes program panic.
@@ -61,9 +69,6 @@ func open(f string) (*Text, error) {
 		lines = append(lines, Line{""})
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
 	return &Text{lines, tabToSpace, tabWidth, false}, nil
 }
 
