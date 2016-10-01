@@ -288,8 +288,6 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 
 		// post save
 		if strings.HasSuffix(m.f, ".go") {
-			// run `go fmt`
-			// treat the go command exists. if not, handle error.
 			cmds := []*exec.Cmd{
 				exec.Command("goimports", "-w", m.f),
 				exec.Command("go", "fmt", m.f),
