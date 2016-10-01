@@ -325,10 +325,10 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			r, _ := m.cursor.RuneAfter()
 			m.copied = string(r)
 		}
-		saveCopyString(m.copied)
+		saveConfig("copy", m.copied)
 	case "paste":
 		if m.copied == "" {
-			m.copied = loadCopyString()
+			m.copied = loadConfig("copy")
 		}
 		m.cursor.Insert(m.copied)
 		a.value = m.copied

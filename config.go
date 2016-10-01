@@ -90,32 +90,35 @@ func loadLastPosition(relpath string) (int, int) {
 	return l, b
 }
 
-func saveCopyString(copystr string) error {
+// saveConfig save string to ~/.config/tor/{fname} file.
+func saveConfig(fname, s string) error {
 	u, err := user.Current()
 	if err != nil {
 		return err
 	}
-	f := path.Join(u.HomeDir, ".config", "tor", "copy")
+	f := path.Join(u.HomeDir, ".config", "tor", fname)
 	if _, err = os.Stat(f); os.IsNotExist(err) {
 		d := path.Join(u.HomeDir, ".config", "tor")
 		os.MkdirAll(d, 0777)
 	}
-	err = ioutil.WriteFile(f, []byte(copystr), 0644)
+	err = ioutil.WriteFile(f, []byte(s), 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func loadCopyString() string {
+// saveConfig load string from ~/.config/tor/{fname} file.
+// On any error, it will return empty string.
+func loadConfig(fname string) string {
 	u, err := user.Current()
 	if err != nil {
 		return ""
 	}
-	f := path.Join(u.HomeDir, ".config", "tor", "copy")
-	copystr, err := ioutil.ReadFile(f)
+	f := path.Join(u.HomeDir, ".config", "tor", fname)
+	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		return ""
 	}
-	return string(copystr)
+	return string(b)
 }
