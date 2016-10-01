@@ -1,8 +1,8 @@
 package main
 
 type Point struct {
-	l int // l
-	o int // o
+	l int // line
+	o int // offset
 }
 
 func (p Point) Add(q Point) Point {
