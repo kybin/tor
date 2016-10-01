@@ -7,13 +7,11 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
-// TODO: handle aborted situation
-
 type ReplaceMode struct {
-	// TODO: olds []string
 	str   string
 	start bool
 	set   bool
+	olds  []string
 
 	text      *Text
 	selection *Selection // normal mode's selection.
@@ -37,11 +35,16 @@ func (m *ReplaceMode) End() {}
 func (m *ReplaceMode) Handle(ev term.Event) {
 	switch ev.Key {
 	case term.KeyCtrlK:
-		// TODO: revert to old
+		if len(m.olds) == 0 {
+			m.str = ""
+		} else {
+			m.str = m.olds[len(m.olds)-1]
+		}
 		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:
 		m.set = true
 		m.mode.ChangeTo(m.mode.normal)
+		m.olds = append(m.olds, m.str)
 		saveConfig("replace", m.str)
 	case term.KeySpace:
 		if m.start {
