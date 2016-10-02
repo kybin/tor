@@ -620,7 +620,8 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		sel.on = false
 		history.head--
 		actions := history.At(history.head)
-		for _, a := range actions {
+		for i := len(actions) - 1; i >= 0; i-- {
+			a = actions[i]
 			switch a.kind {
 			case "insert":
 				c.Copy(a.afterCursor)
