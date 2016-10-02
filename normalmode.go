@@ -34,7 +34,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 
 	rememberActions := make([]*Action, 0)
 	cut := false
-	actions := parseEvent(ev, m.text, m.selection)
+	actions := m.parseEvent(ev)
 	// TODO: Move to history.Add()
 	for _, a := range actions {
 		m.do(a)
@@ -75,7 +75,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 	}
 }
 
-func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
+func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
 	}
@@ -116,8 +116,8 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
 		tab := "\t"
-		if t.tabToSpace {
-			tab = strings.Repeat(" ", t.tabWidth)
+		if m.text.tabToSpace {
+			tab = strings.Repeat(" ", m.text.tabWidth)
 		}
 		return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: tab}}
 	case term.KeyCtrlU:
@@ -126,7 +126,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "insertTab"}}
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
 			if ev.Mod&term.ModAlt != 0 {
@@ -135,7 +135,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 			return []*Action{{kind: "delete"}}
 		}
 	case term.KeyBackspace, term.KeyBackspace2:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
 			if ev.Mod&term.ModAlt != 0 {
@@ -150,23 +150,23 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		return []*Action{{kind: "redo"}}
 	// copy, paste, cut
 	case term.KeyCtrlC:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "copy"}, {kind: "selection", value: "off"}}
 		} else {
 			return []*Action{}
 		}
 	case term.KeyCtrlV:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "paste"}}
 		}
 		return []*Action{{kind: "paste"}}
 	case term.KeyCtrlJ:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "replace"}}
 		}
 		return []*Action{}
 	case term.KeyCtrlX:
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "copy"}, {kind: "deleteSelection"}, {kind: "selection", value: "off"}}
 		} else {
 			return []*Action{{kind: "copy"}, {kind: "delete"}}
@@ -279,7 +279,7 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 		}
 
 		// key pressed without modifier
-		if sel.on {
+		if m.selection.on {
 			return []*Action{{kind: "deleteSelection"}, {kind: "insert", value: string(ev.Ch)}}
 		} else {
 			return []*Action{{kind: "insert", value: string(ev.Ch)}}
