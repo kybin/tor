@@ -17,7 +17,7 @@ type Action struct {
 func (a Action) String() string {
 	bc := strconv.Itoa(a.beforeCursor.l) + ":" + strconv.Itoa(a.beforeCursor.b)
 	ac := strconv.Itoa(a.afterCursor.l) + ":" + strconv.Itoa(a.afterCursor.b)
-	return fmt.Sprintf("%v, %v, %v, %v", a.kind, a.value, bc, ac)
+	return fmt.Sprintf("(%v, %v, %v, %v)", a.kind, a.value, bc, ac)
 }
 
 // History remembers what actions are done by user.
