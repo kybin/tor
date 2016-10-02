@@ -37,7 +37,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 	actions := parseEvent(ev, m.text, m.selection)
 	// TODO: Move to history.Add()
 	for _, a := range actions {
-		m.do(a, m.text, m.cursor, m.selection, m.history, m.mode.find.str)
+		m.do(a)
 		// skip action types that are not specified below.
 		switch a.kind {
 		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
@@ -287,14 +287,14 @@ func parseEvent(ev term.Event, t *Text, sel *Selection) []*Action {
 	}
 }
 
-func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *History, findstr string) {
+func (m *NormalMode) do(a *Action) {
 	a.beforeCursor = *m.cursor
 
 	defer func() {
 		a.afterCursor = *m.cursor
 
-		if sel.on {
-			sel.SetEnd(c)
+		if m.selection.on {
+			m.selection.SetEnd(m.cursor)
 		}
 	}()
 
@@ -374,168 +374,168 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 			m.mode.ChangeTo(m.mode.gotoline)
 		}
 	case "selection":
-		if a.value == "on" && !sel.on {
-			sel.on = true
-			sel.SetStart(c)
+		if a.value == "on" && !m.selection.on {
+			m.selection.on = true
+			m.selection.SetStart(m.cursor)
 		} else if a.value == "off" {
-			sel.on = false
+			m.selection.on = false
 		}
 	case "move":
 		switch a.value {
 		case "left":
-			c.MoveLeft()
+			m.cursor.MoveLeft()
 		case "right":
-			c.MoveRight()
+			m.cursor.MoveRight()
 		case "selLeft":
-			if sel.on {
-				minc := sel.Min()
-				c.GotoLine(minc.l)
-				c.SetB(minc.b)
+			if m.selection.on {
+				minc := m.selection.Min()
+				m.cursor.GotoLine(minc.l)
+				m.cursor.SetB(minc.b)
 			} else {
-				c.MoveLeft()
+				m.cursor.MoveLeft()
 			}
 		case "selRight":
-			if sel.on {
-				maxc := sel.Max()
-				c.GotoLine(maxc.l)
-				c.SetB(maxc.b)
+			if m.selection.on {
+				maxc := m.selection.Max()
+				m.cursor.GotoLine(maxc.l)
+				m.cursor.SetB(maxc.b)
 			} else {
-				c.MoveRight()
+				m.cursor.MoveRight()
 			}
 		case "up":
-			c.MoveUp()
+			m.cursor.MoveUp()
 		case "down":
-			c.MoveDown()
+			m.cursor.MoveDown()
 		case "prevBowEow":
-			c.MovePrevBowEow()
+			m.cursor.MovePrevBowEow()
 		case "nextBowEow":
-			c.MoveNextBowEow()
+			m.cursor.MoveNextBowEow()
 		case "bol":
-			c.MoveBol()
+			m.cursor.MoveBol()
 		case "eol":
-			c.MoveEol()
+			m.cursor.MoveEol()
 		case "bocBolRepeat":
-			c.MoveBocBolRepeat()
+			m.cursor.MoveBocBolRepeat()
 		case "pageup":
-			c.PageUp()
+			m.cursor.PageUp()
 		case "pagedown":
-			c.PageDown()
+			m.cursor.PageDown()
 		case "bof":
-			c.MoveBof()
+			m.cursor.MoveBof()
 		case "eof":
-			c.MoveEof()
+			m.cursor.MoveEof()
 		case "nextGlobal":
-			c.GotoNextGlobalLine()
+			m.cursor.GotoNextGlobalLine()
 		case "prevGlobal":
-			c.GotoPrevGlobalLine()
+			m.cursor.GotoPrevGlobalLine()
 		case "prevIndentMatch":
-			c.GotoPrevIndentMatch()
+			m.cursor.GotoPrevIndentMatch()
 		case "nextIndentMatch":
-			c.GotoNextIndentMatch()
+			m.cursor.GotoNextIndentMatch()
 		case "nextArg":
-			c.GotoNextAny("{(,)}")
-			r, _ := c.RuneAfter()
+			m.cursor.GotoNextAny("{(,)}")
+			r, _ := m.cursor.RuneAfter()
 			if r == '(' || r == '{' {
-				c.MoveRight()
+				m.cursor.MoveRight()
 			}
 		case "prevArg":
-			r, _ := c.RuneBefore()
+			r, _ := m.cursor.RuneBefore()
 			if r == '(' || r == '{' {
-				c.MoveLeft()
+				m.cursor.MoveLeft()
 			}
-			c.GotoPrevAny("{(,)}")
-			r, _ = c.RuneAfter()
+			m.cursor.GotoPrevAny("{(,)}")
+			r, _ = m.cursor.RuneAfter()
 			if r == '(' || r == '{' {
-				c.MoveRight()
+				m.cursor.MoveRight()
 			}
 		case "matchingBracket":
-			c.GotoMatchingBracket()
+			m.cursor.GotoMatchingBracket()
 		case "findPrev":
-			ok := c.GotoPrev(findstr)
+			ok := m.cursor.GotoPrev(m.mode.find.str)
 			if !ok {
-				c.GotoLast(findstr)
+				m.cursor.GotoLast(m.mode.find.str)
 			}
 		case "findNext":
-			ok := c.GotoNext(findstr)
+			ok := m.cursor.GotoNext(m.mode.find.str)
 			if !ok {
-				c.GotoFirst(findstr)
+				m.cursor.GotoFirst(m.mode.find.str)
 			}
 		case "findPrevWord":
-			c.GotoPrevWord(findstr)
+			m.cursor.GotoPrevWord(m.mode.find.str)
 		case "findNextWord":
-			c.GotoNextWord(findstr)
+			m.cursor.GotoNextWord(m.mode.find.str)
 		// TODO: "findPrevSelect" and "findNextSelect" are hack. make separate action.
 		case "findPrevSelect":
-			ok := c.GotoPrev(findstr)
+			ok := m.cursor.GotoPrev(m.mode.find.str)
 			if !ok {
-				ok = c.GotoLast(findstr)
+				ok = m.cursor.GotoLast(m.mode.find.str)
 			}
 			if ok {
-				sel.on = true
-				for range findstr {
-					c.MoveRight()
+				m.selection.on = true
+				for range m.mode.find.str {
+					m.cursor.MoveRight()
 				}
-				sel.SetStart(c)
-				for range findstr {
-					c.MoveLeft()
+				m.selection.SetStart(m.cursor)
+				for range m.mode.find.str {
+					m.cursor.MoveLeft()
 				}
-				sel.SetEnd(c)
+				m.selection.SetEnd(m.cursor)
 			}
 		case "findNextSelect":
-			ok := c.GotoNext(findstr)
+			ok := m.cursor.GotoNext(m.mode.find.str)
 			if !ok {
-				ok = c.GotoFirst(findstr)
+				ok = m.cursor.GotoFirst(m.mode.find.str)
 			}
 			if ok {
-				sel.on = true
-				for range findstr {
-					c.MoveRight()
+				m.selection.on = true
+				for range m.mode.find.str {
+					m.cursor.MoveRight()
 				}
-				sel.SetStart(c)
-				for range findstr {
-					c.MoveLeft()
+				m.selection.SetStart(m.cursor)
+				for range m.mode.find.str {
+					m.cursor.MoveLeft()
 				}
-				sel.SetEnd(c)
+				m.selection.SetEnd(m.cursor)
 			}
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}
 	case "insert":
 		if a.value == "autoIndent" {
-			prevline := t.lines[c.l-1].data
+			prevline := m.text.lines[m.cursor.l-1].data
 			trimed := strings.TrimLeft(prevline, " \t")
 			indent := prevline[:len(prevline)-len(trimed)]
-			c.Insert(indent)
+			m.cursor.Insert(indent)
 			a.value = indent
 			return
 		}
-		c.Insert(a.value)
+		m.cursor.Insert(a.value)
 	case "delete":
-		a.value = c.Delete()
+		a.value = m.cursor.Delete()
 	case "insertTab":
 		tab := "\t"
-		if t.tabToSpace {
-			tab = strings.Repeat(" ", t.tabWidth)
+		if m.text.tabToSpace {
+			tab = strings.Repeat(" ", m.text.tabWidth)
 		}
 		lines := make([]int, 0)
-		if sel.on {
-			for _, l := range sel.Lines() {
-				if t.Line(l).data != "" {
+		if m.selection.on {
+			for _, l := range m.selection.Lines() {
+				if m.text.Line(l).data != "" {
 					lines = append(lines, l)
 				}
 			}
 		} else {
-			lines = append(lines, c.l)
+			lines = append(lines, m.cursor.l)
 		}
 		tabedLine := ""
 		for _, l := range lines {
-			t.Line(l).Insert(tab, 0)
+			m.text.Line(l).Insert(tab, 0)
 			if tabedLine != "" {
 				tabedLine += ","
 			}
 			tabedLine += strconv.Itoa(l) + ":" + tab
-			if l == c.l {
-				c.SetB(c.b + len(tab))
+			if l == m.cursor.l {
+				m.cursor.SetB(m.cursor.b + len(tab))
 			}
 		}
 		a.value = tabedLine
@@ -543,90 +543,90 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 		// removeTab is slightly differ from insertTab.
 		// removeTab should remember what is removed, not tab string it self.
 		lines := make([]int, 0)
-		if sel.on {
-			lines = sel.Lines()
+		if m.selection.on {
+			lines = m.selection.Lines()
 		} else {
-			lines = append(lines, c.l)
+			lines = append(lines, m.cursor.l)
 		}
 		untabedLine := ""
 		for _, l := range lines {
 			removed := ""
-			if strings.HasPrefix(t.Line(l).data, "\t") {
-				removed += t.Line(l).Remove(0, 1)
+			if strings.HasPrefix(m.text.Line(l).data, "\t") {
+				removed += m.text.Line(l).Remove(0, 1)
 			} else {
-				for i := 0; i < t.tabWidth; i++ {
-					if len(t.Line(l).data) == 0 {
+				for i := 0; i < m.text.tabWidth; i++ {
+					if len(m.text.Line(l).data) == 0 {
 						break
 					}
-					if !strings.HasPrefix(t.Line(l).data, " ") {
+					if !strings.HasPrefix(m.text.Line(l).data, " ") {
 						break
 					}
-					removed += t.Line(l).Remove(0, 1)
+					removed += m.text.Line(l).Remove(0, 1)
 				}
 			}
 			if untabedLine != "" {
 				untabedLine += ","
 			}
 			untabedLine += strconv.Itoa(l) + ":" + removed
-			if l == c.l && !c.AtBol() {
-				b := c.b - len(removed)
+			if l == m.cursor.l && !m.cursor.AtBol() {
+				b := m.cursor.b - len(removed)
 				if b < 0 {
 					b = 0
 				}
-				c.SetB(b)
+				m.cursor.SetB(b)
 			}
 		}
 		a.value = untabedLine
 	case "backspace":
-		a.value = c.Backspace()
+		a.value = m.cursor.Backspace()
 	case "deleteSelection":
-		if sel.on {
-			a.value = c.DeleteSelection(sel)
-			sel.on = false
+		if m.selection.on {
+			a.value = m.cursor.DeleteSelection(m.selection)
+			m.selection.on = false
 		}
 	case "selectAll":
-		c.MoveBof()
-		sel.on = true
-		sel.SetStart(c)
-		c.MoveEof()
-		sel.SetEnd(c)
+		m.cursor.MoveBof()
+		m.selection.on = true
+		m.selection.SetStart(m.cursor)
+		m.cursor.MoveEof()
+		m.selection.SetEnd(m.cursor)
 	case "selectLine":
-		c.MoveBol()
-		if !sel.on {
-			sel.on = true
-			sel.SetStart(c)
+		m.cursor.MoveBol()
+		if !m.selection.on {
+			m.selection.on = true
+			m.selection.SetStart(m.cursor)
 		}
-		if c.OnLastLine() {
-			c.MoveEol()
+		if m.cursor.OnLastLine() {
+			m.cursor.MoveEol()
 		} else {
-			c.MoveDown()
+			m.cursor.MoveDown()
 		}
-		sel.SetEnd(c)
+		m.selection.SetEnd(m.cursor)
 	case "selectWord":
-		if !c.AtBow() {
-			c.MovePrevBowEow()
+		if !m.cursor.AtBow() {
+			m.cursor.MovePrevBowEow()
 		}
-		if !sel.on {
-			sel.on = true
-			sel.SetStart(c)
+		if !m.selection.on {
+			m.selection.on = true
+			m.selection.SetStart(m.cursor)
 		}
-		c.MoveNextBowEow()
-		sel.SetEnd(c)
+		m.cursor.MoveNextBowEow()
+		m.selection.SetEnd(m.cursor)
 	case "undo":
 		// TODO: Move to history.Undo()
-		if history.head == 0 {
+		if m.history.head == 0 {
 			return
 		}
-		sel.on = false
-		history.head--
-		actions := history.At(history.head)
+		m.selection.on = false
+		m.history.head--
+		actions := m.history.At(m.history.head)
 		for i := len(actions) - 1; i >= 0; i-- {
 			a = actions[i]
 			switch a.kind {
 			case "insert":
-				c.Copy(a.afterCursor)
+				m.cursor.Copy(a.afterCursor)
 				for range a.value {
-					c.Backspace()
+					m.cursor.Backspace()
 				}
 			case "insertTab":
 				lineInfos := strings.Split(a.value, ",")
@@ -642,24 +642,24 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 						panic(err)
 					}
 					for _, r := range tab {
-						rr := t.Line(l).Remove(0, 1)
+						rr := m.text.Line(l).Remove(0, 1)
 						if rr != string(r) {
 							panic("removed and current is not matched")
 						}
 					}
 				}
-				c.Copy(a.beforeCursor)
+				m.cursor.Copy(a.beforeCursor)
 			case "paste", "replace":
-				c.Copy(a.beforeCursor)
+				m.cursor.Copy(a.beforeCursor)
 				for range a.value {
-					c.Delete()
+					m.cursor.Delete()
 				}
 			case "backspace":
-				c.Copy(a.afterCursor)
-				c.Insert(a.value)
+				m.cursor.Copy(a.afterCursor)
+				m.cursor.Insert(a.value)
 			case "delete", "deleteSelection":
-				c.Copy(a.afterCursor)
-				c.Insert(a.value)
+				m.cursor.Copy(a.afterCursor)
+				m.cursor.Insert(a.value)
 			case "removeTab":
 				lineInfos := strings.Split(a.value, ",")
 				for _, li := range lineInfos {
@@ -673,26 +673,26 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 					if err != nil {
 						panic(err)
 					}
-					t.Line(l).Insert(removed, 0)
+					m.text.Line(l).Insert(removed, 0)
 				}
-				c.Copy(a.beforeCursor)
+				m.cursor.Copy(a.beforeCursor)
 			default:
 				panic(fmt.Sprintln("what the..", a.kind, "history?"))
 			}
 		}
 	case "redo":
 		// TODO: Move to history.Redo()
-		if history.head == history.Len() {
+		if m.history.head == m.history.Len() {
 			return
 		}
-		sel.on = false
-		actions := history.At(history.head)
-		history.head++
+		m.selection.on = false
+		actions := m.history.At(m.history.head)
+		m.history.head++
 		for _, a := range actions {
 			switch a.kind {
 			case "insert":
-				c.Copy(a.beforeCursor)
-				c.Insert(a.value)
+				m.cursor.Copy(a.beforeCursor)
+				m.cursor.Insert(a.value)
 			case "insertTab":
 				lineInfos := strings.Split(a.value, ",")
 				for _, li := range lineInfos {
@@ -706,21 +706,21 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 					if err != nil {
 						panic(err)
 					}
-					t.Line(l).Insert(tab, 0)
+					m.text.Line(l).Insert(tab, 0)
 				}
-				c.Copy(a.afterCursor)
+				m.cursor.Copy(a.afterCursor)
 			case "paste", "replace":
-				c.Copy(a.beforeCursor)
-				c.Insert(a.value)
+				m.cursor.Copy(a.beforeCursor)
+				m.cursor.Insert(a.value)
 			case "backspace":
-				c.Copy(a.beforeCursor)
+				m.cursor.Copy(a.beforeCursor)
 				for range a.value {
-					c.Backspace()
+					m.cursor.Backspace()
 				}
 			case "delete", "deleteSelection":
-				c.Copy(a.beforeCursor)
+				m.cursor.Copy(a.beforeCursor)
 				for range a.value {
-					c.Delete()
+					m.cursor.Delete()
 				}
 			case "removeTab":
 				lineInfos := strings.Split(a.value, ",")
@@ -736,13 +736,13 @@ func (m *NormalMode) do(a *Action, t *Text, c *Cursor, sel *Selection, history *
 						panic(err)
 					}
 					for _, r := range removed {
-						rr := t.Line(l).Remove(0, 1)
+						rr := m.text.Line(l).Remove(0, 1)
 						if rr != string(r) {
 							panic("removed and current is not matched")
 						}
 					}
 				}
-				c.Copy(a.afterCursor)
+				m.cursor.Copy(a.afterCursor)
 			default:
 				panic(fmt.Sprintln("what the..", a.kind, "history?"))
 			}
