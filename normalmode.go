@@ -38,6 +38,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 	// TODO: Move to history.Add()
 	for _, a := range actions {
 		m.do(a)
+		a.text = m.text
 		// skip action types that are not specified below.
 		switch a.kind {
 		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
@@ -338,7 +339,7 @@ func (m *NormalMode) do(a *Action) {
 					m.err = fmt.Sprint(err)
 					return
 				}
-				*m.text = *text
+				m.text = text
 				oldl := m.cursor.l
 				oldb := m.cursor.b
 				m.cursor.GotoLine(oldl)
@@ -622,6 +623,7 @@ func (m *NormalMode) do(a *Action) {
 		undoActions := m.history.At(m.history.head)
 		for i := len(undoActions) - 1; i >= 0; i-- {
 			u := undoActions[i]
+			m.text = u.text
 			switch u.kind {
 			case "insert":
 				m.cursor.Copy(u.afterCursor)
@@ -689,6 +691,7 @@ func (m *NormalMode) do(a *Action) {
 		redoActions := m.history.At(m.history.head)
 		m.history.head++
 		for _, r := range redoActions {
+			m.text = r.text
 			switch r.kind {
 			case "insert":
 				m.cursor.Copy(r.beforeCursor)

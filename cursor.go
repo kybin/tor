@@ -14,11 +14,8 @@ type Cursor struct {
 	l int // line offset
 	b int // byte offset
 	o int // visual offset - not always matches with Cursor.O()
-	t *Text
-}
 
-func NewCursor(t *Text) *Cursor {
-	return &Cursor{0, 0, 0, t}
+	m *NormalMode
 }
 
 func (c *Cursor) Copy(c2 Cursor) {
@@ -32,7 +29,7 @@ func (c *Cursor) B() int {
 }
 
 func (c *Cursor) O() int {
-	maxo := vlen(c.LineData(), c.t.tabWidth)
+	maxo := vlen(c.LineData(), c.m.text.tabWidth)
 	if c.o > maxo {
 		return maxo
 	}
@@ -43,7 +40,7 @@ func (c *Cursor) O() int {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
 		lasto := o
-		o += vlen(string(r), c.t.tabWidth)
+		o += vlen(string(r), c.m.text.tabWidth)
 		if o == c.o {
 			return o
 		} else if o > c.o {
@@ -59,7 +56,7 @@ func (c *Cursor) SetB(b int) {
 	for len(remain) > 0 {
 		r, rlen := utf8.DecodeRuneInString(remain)
 		remain = remain[rlen:]
-		o += vlen(string(r), c.t.tabWidth)
+		o += vlen(string(r), c.m.text.tabWidth)
 	}
 	c.o = o
 	c.b = b
@@ -82,7 +79,7 @@ func (c *Cursor) SetCloseToB(tb int) {
 		remain = remain[rlen:]
 		lasto, lastb := o, b
 		b += rlen
-		o += vlen(string(r), c.t.tabWidth)
+		o += vlen(string(r), c.m.text.tabWidth)
 		if b == tb {
 			c.b = b
 			c.o = o
@@ -97,7 +94,7 @@ func (c *Cursor) SetCloseToB(tb int) {
 
 // After MoveUp or MoveDown, we need reclaculate byte offset.
 func (c *Cursor) RecalcB() {
-	c.b = BFromO(c.LineData(), c.O(), c.t.tabWidth)
+	c.b = BFromO(c.LineData(), c.O(), c.m.text.tabWidth)
 }
 
 func BFromO(line string, o, tabWidth int) (b int) {
@@ -116,11 +113,11 @@ func (c *Cursor) Position() Point {
 }
 
 func (c *Cursor) Line() *Line {
-	return &(c.t.lines[c.l])
+	return &(c.m.text.lines[c.l])
 }
 
 func (c *Cursor) LineData() string {
-	return c.t.lines[c.l].data
+	return c.m.text.lines[c.l].data
 }
 
 func (c *Cursor) RuneAfter() (rune, int) {
@@ -144,7 +141,7 @@ func (c *Cursor) OnFirstLine() bool {
 }
 
 func (c *Cursor) OnLastLine() bool {
-	return c.l == len(c.t.lines)-1
+	return c.l == len(c.m.text.lines)-1
 }
 
 func (c *Cursor) AtBow() bool {
@@ -203,7 +200,7 @@ func (c *Cursor) MoveLeft() {
 	}
 	r, rlen := c.RuneBefore()
 	c.b -= rlen
-	c.o -= vlen(string(r), c.t.tabWidth)
+	c.o -= vlen(string(r), c.m.text.tabWidth)
 }
 
 func (c *Cursor) MoveRight() {
@@ -217,7 +214,7 @@ func (c *Cursor) MoveRight() {
 	}
 	r, rlen := c.RuneAfter()
 	c.b += rlen
-	c.o += vlen(string(r), c.t.tabWidth)
+	c.o += vlen(string(r), c.m.text.tabWidth)
 }
 
 func (c *Cursor) MoveUp() {
@@ -363,13 +360,13 @@ func (c *Cursor) MoveBof() {
 }
 
 func (c *Cursor) MoveEof() {
-	c.l = len(c.t.lines) - 1
+	c.l = len(c.m.text.lines) - 1
 	c.b = len(c.LineData())
-	c.o = vlen(c.LineData(), c.t.tabWidth)
+	c.o = vlen(c.LineData(), c.m.text.tabWidth)
 }
 
 func (c *Cursor) SplitLine() {
-	c.t.SplitLine(c.l, c.b)
+	c.m.text.SplitLine(c.l, c.b)
 	c.MoveDown()
 	c.SetB(0)
 }
@@ -380,7 +377,7 @@ func (c *Cursor) Insert(str string) {
 			c.SplitLine()
 			continue
 		}
-		c.t.Insert(string(r), c.l, c.b)
+		c.m.text.Insert(string(r), c.l, c.b)
 		c.MoveRight()
 	}
 }
@@ -390,11 +387,11 @@ func (c *Cursor) Delete() string {
 		return ""
 	}
 	if c.AtEol() {
-		c.t.JoinNextLine(c.l)
+		c.m.text.JoinNextLine(c.l)
 		return "\n"
 	}
 	_, rlen := c.RuneAfter()
-	return c.t.Remove(c.l, c.b, c.b+rlen)
+	return c.m.text.Remove(c.l, c.b, c.b+rlen)
 }
 
 func (c *Cursor) Backspace() string {
@@ -407,9 +404,9 @@ func (c *Cursor) Backspace() string {
 
 func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
-	bmin := Point{min.l, BFromO(c.t.lines[min.l].data, min.o, c.t.tabWidth)}
-	bmax := Point{max.l, BFromO(c.t.lines[max.l].data, max.o, c.t.tabWidth)}
-	deleted := c.t.RemoveRange(bmin, bmax)
+	bmin := Point{min.l, BFromO(c.m.text.lines[min.l].data, min.o, c.m.text.tabWidth)}
+	bmax := Point{max.l, BFromO(c.m.text.lines[max.l].data, max.o, c.m.text.tabWidth)}
+	deleted := c.m.text.RemoveRange(bmin, bmax)
 	c.l = min.l
 	c.SetB(bmin.o)
 	return deleted
@@ -419,8 +416,8 @@ func (c *Cursor) GotoNext(find string) bool {
 	if find == "" {
 		return true
 	}
-	for l := c.l; l < len(c.t.lines); l++ {
-		linedata := string(c.t.lines[l].data)
+	for l := c.l; l < len(c.m.text.lines); l++ {
+		linedata := string(c.m.text.lines[l].data)
 		offset := 0
 		if l == c.l {
 			if c.b == len(linedata) {
@@ -444,7 +441,7 @@ func (c *Cursor) GotoPrev(find string) bool {
 		return true
 	}
 	for l := c.l; l >= 0; l-- {
-		linedata := string(c.t.lines[l].data)
+		linedata := string(c.m.text.lines[l].data)
 		if l == c.l {
 			linedata = linedata[:c.b]
 		}
@@ -460,8 +457,8 @@ func (c *Cursor) GotoPrev(find string) bool {
 
 func (c *Cursor) GotoNextWord(find string) bool {
 	oldc := *c
-	for l := c.l; l < len(c.t.lines); l++ {
-		linedata := string(c.t.lines[l].data)
+	for l := c.l; l < len(c.m.text.lines); l++ {
+		linedata := string(c.m.text.lines[l].data)
 		offset := 0
 		if l == c.l {
 			if c.b == len(linedata) {
@@ -486,7 +483,7 @@ func (c *Cursor) GotoNextWord(find string) bool {
 func (c *Cursor) GotoPrevWord(find string) bool {
 	oldc := *c
 	for l := c.l; l >= 0; l-- {
-		linedata := string(c.t.lines[l].data)
+		linedata := string(c.m.text.lines[l].data)
 		if l == c.l {
 			linedata = linedata[:c.b]
 		}
@@ -504,8 +501,8 @@ func (c *Cursor) GotoPrevWord(find string) bool {
 }
 
 func (c *Cursor) GotoFirst(find string) bool {
-	for l := 0; l < len(c.t.lines); l++ {
-		linedata := string(c.t.lines[l].data)
+	for l := 0; l < len(c.m.text.lines); l++ {
+		linedata := string(c.m.text.lines[l].data)
 		b := strings.Index(linedata, find)
 		if b != -1 {
 			c.l = l
@@ -517,8 +514,8 @@ func (c *Cursor) GotoFirst(find string) bool {
 }
 
 func (c *Cursor) GotoLast(find string) bool {
-	for l := len(c.t.lines) - 1; l >= 0; l-- {
-		linedata := string(c.t.lines[l].data)
+	for l := len(c.m.text.lines) - 1; l >= 0; l-- {
+		linedata := string(c.m.text.lines[l].data)
 		b := strings.LastIndex(linedata, find)
 		if b != -1 {
 			c.l = l
@@ -530,8 +527,8 @@ func (c *Cursor) GotoLast(find string) bool {
 }
 
 func (c *Cursor) GotoNextAny(chars string) bool {
-	for l := c.l; l < len(c.t.lines); l++ {
-		linedata := string(c.t.lines[l].data)
+	for l := c.l; l < len(c.m.text.lines); l++ {
+		linedata := string(c.m.text.lines[l].data)
 		offset := 0
 		if l == c.l {
 			if c.b == len(linedata) {
@@ -552,7 +549,7 @@ func (c *Cursor) GotoNextAny(chars string) bool {
 
 func (c *Cursor) GotoPrevAny(chars string) bool {
 	for l := c.l; l >= 0; l-- {
-		linedata := string(c.t.lines[l].data)
+		linedata := string(c.m.text.lines[l].data)
 		if l == c.l {
 			linedata = linedata[:c.b]
 		}
@@ -568,15 +565,15 @@ func (c *Cursor) GotoPrevAny(chars string) bool {
 
 func (c *Cursor) GotoNextGlobalLine() {
 	findLine := -1
-	for l := c.l + 1; l < len(c.t.lines); l++ {
-		d := c.t.lines[l].data
+	for l := c.l + 1; l < len(c.m.text.lines); l++ {
+		d := c.m.text.lines[l].data
 		if d != "" && !unicode.IsSpace(rune(d[0])) {
 			findLine = l
 			break
 		}
 	}
 	if findLine == -1 {
-		findLine = len(c.t.lines) - 1
+		findLine = len(c.m.text.lines) - 1
 	}
 	c.l = findLine
 	c.SetB(0)
@@ -591,7 +588,7 @@ func (c *Cursor) GotoPrevGlobalLine() {
 	}
 	findLine := -1
 	for l := startLine; l >= 0; l-- {
-		d := c.t.lines[l].data
+		d := c.m.text.lines[l].data
 		if d != "" && !unicode.IsSpace(rune(d[0])) {
 			findLine = l
 			break
@@ -605,7 +602,7 @@ func (c *Cursor) GotoPrevGlobalLine() {
 }
 
 func (c *Cursor) GotoNextDefinition(defn []string) bool {
-	nextLines := c.t.lines[c.l+1:]
+	nextLines := c.m.text.lines[c.l+1:]
 	for i, line := range nextLines {
 		l := c.l + 1 + i
 		find := false
@@ -634,7 +631,7 @@ func (c *Cursor) GotoPrevDefinition(defn []string) bool {
 	find := false
 	for l := startLine; l >= 0; l-- {
 		for _, d := range defn {
-			if strings.HasPrefix(string(c.t.lines[l].data), d) {
+			if strings.HasPrefix(string(c.m.text.lines[l].data), d) {
 				find = true
 				break
 			}
@@ -652,7 +649,7 @@ func (c *Cursor) GotoPrevDefinition(defn []string) bool {
 func (c *Cursor) GotoPrevIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
 	for l := c.l - 1; l >= 0; l-- {
-		line := c.t.lines[l].data
+		line := c.m.text.lines[l].data
 		if strings.HasPrefix(line, indentStr) {
 			remain := line[len(indentStr):]
 			r, _ := utf8.DecodeRuneInString(remain)
@@ -669,8 +666,8 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 // GotoNextIndentMatch moves cursor to any next line matched indent with current line's.
 func (c *Cursor) GotoNextIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
-	for l := c.l + 1; l < len(c.t.lines); l++ {
-		line := c.t.lines[l].data
+	for l := c.l + 1; l < len(c.m.text.lines); l++ {
+		line := c.m.text.lines[l].data
 		if strings.HasPrefix(line, indentStr) {
 			remain := line[len(indentStr):]
 			r, _ := utf8.DecodeRuneInString(remain)
@@ -756,8 +753,8 @@ func (c *Cursor) GotoMatchingBracket() bool {
 }
 
 func (c *Cursor) GotoLine(l int) {
-	if l >= len(c.t.lines) {
-		l = len(c.t.lines) - 1
+	if l >= len(c.m.text.lines) {
+		l = len(c.m.text.lines) - 1
 	}
 	c.l = l
 	c.SetB(0)

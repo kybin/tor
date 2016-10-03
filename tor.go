@@ -64,22 +64,7 @@ func main() {
 	termw, termh := term.Size()
 	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
 	win := NewWindow(mainarea.Size())
-	cursor := NewCursor(text)
-	if initL != -1 {
-		l := initL
-		// to internal line number
-		if l != 0 {
-			l--
-		}
-		cursor.GotoLine(l)
-		if initO != -1 {
-			cursor.SetO(initO)
-		}
-	} else {
-		l, b := loadLastPosition(f)
-		cursor.GotoLine(l)
-		cursor.SetCloseToB(b)
-	}
+	cursor := &Cursor{}
 	selection := NewSelection()
 	history := newHistory()
 
@@ -111,6 +96,24 @@ func main() {
 	}
 	mode.current = mode.normal // will start tor as normal mode.
 
+	// Set cursor.
+	cursor.m = mode.normal
+	if initL != -1 {
+		l := initL
+		// to internal line number
+		if l != 0 {
+			l--
+		}
+		cursor.GotoLine(l)
+		if initO != -1 {
+			cursor.SetO(initO)
+		}
+	} else {
+		l, b := loadLastPosition(f)
+		cursor.GotoLine(l)
+		cursor.SetCloseToB(b)
+	}
+
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -120,7 +123,7 @@ func main() {
 	for {
 		win.Follow(cursor, 3)
 		clearScreen(mainarea)
-		drawScreen(mainarea, win, text, selection, cursor)
+		drawScreen(mainarea, win, mode.normal.text, selection, cursor)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
 		} else {
@@ -130,7 +133,7 @@ func main() {
 			winP := cursor.Position().Sub(win.min)
 			term.SetCursor(mainarea.min.o+winP.o, mainarea.min.l+winP.l)
 		} else {
-			term.SetCursor(vlen(mode.current.Status(), text.tabWidth), termh)
+			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
 		}
 		term.Flush()
 

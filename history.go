@@ -12,6 +12,7 @@ type Action struct {
 	value        string
 	beforeCursor Cursor
 	afterCursor  Cursor
+	text         *Text
 }
 
 func (a Action) String() string {
