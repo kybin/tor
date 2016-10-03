@@ -41,7 +41,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 		a.text = m.text
 		// skip action types that are not specified below.
 		switch a.kind {
-		case "insert", "delete", "backspace", "deleteSelection", "paste", "replace", "insertTab", "removeTab":
+		case "insert", "delete", "backspace", "deleteSelection", "insertTab", "removeTab":
 			m.text.edited = true
 			nc := m.history.Cut(m.history.head)
 			if nc != 0 {
@@ -158,12 +158,12 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 		}
 	case term.KeyCtrlV:
 		if m.selection.on {
-			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "paste"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: m.copied}}
 		}
-		return []*Action{{kind: "paste"}}
+		return []*Action{{kind: "insert", value: m.copied}}
 	case term.KeyCtrlJ:
 		if m.selection.on {
-			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "replace"}}
+			return []*Action{{kind: "deleteSelection"}, {kind: "selection", value: "off"}, {kind: "insert", value: m.mode.replace.str}}
 		}
 		return []*Action{}
 	case term.KeyCtrlX:
@@ -355,17 +355,6 @@ func (m *NormalMode) do(a *Action) {
 			m.copied = string(r)
 		}
 		saveConfig("copy", m.copied)
-	case "paste":
-		if m.copied == "" {
-			m.copied = loadConfig("copy")
-		}
-		m.cursor.Insert(m.copied)
-		a.value = m.copied
-	case "replace":
-		if m.mode.replace.str != "" {
-			m.cursor.Insert(m.mode.replace.str)
-			a.value = m.mode.replace.str
-		}
 	case "modeChange":
 		if a.value == "find" {
 			m.mode.ChangeTo(m.mode.find)
@@ -651,11 +640,6 @@ func (m *NormalMode) do(a *Action) {
 					}
 				}
 				m.cursor.Copy(u.beforeCursor)
-			case "paste", "replace":
-				m.cursor.Copy(u.beforeCursor)
-				for range u.value {
-					m.cursor.Delete()
-				}
 			case "backspace":
 				m.cursor.Copy(u.afterCursor)
 				m.cursor.Insert(u.value)
@@ -712,9 +696,6 @@ func (m *NormalMode) do(a *Action) {
 					m.text.Line(l).Insert(tab, 0)
 				}
 				m.cursor.Copy(r.afterCursor)
-			case "paste", "replace":
-				m.cursor.Copy(r.beforeCursor)
-				m.cursor.Insert(r.value)
 			case "backspace":
 				m.cursor.Copy(r.beforeCursor)
 				for range r.value {
