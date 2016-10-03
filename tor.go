@@ -65,7 +65,7 @@ func main() {
 	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
 	win := NewWindow(mainarea.Size())
 	cursor := &Cursor{}
-	selection := NewSelection()
+	selection := &Selection{}
 	history := newHistory()
 
 	mode := &ModeSelector{}
@@ -96,6 +96,7 @@ func main() {
 	}
 	mode.current = mode.normal // will start tor as normal mode.
 
+	selection.m = mode.normal
 	// Set cursor.
 	cursor.m = mode.normal
 	if initL != -1 {

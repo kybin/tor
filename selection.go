@@ -4,10 +4,8 @@ type Selection struct {
 	on    bool
 	start Cursor
 	end   Cursor
-}
 
-func NewSelection() *Selection {
-	return &Selection{}
+	m *NormalMode
 }
 
 func (s *Selection) SetStart(c *Cursor) {
@@ -39,24 +37,31 @@ func (s *Selection) Lines() []int {
 }
 
 func (s *Selection) Min() Cursor {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
 		return s.end
 	}
 	return s.start
 }
 
 func (s *Selection) Max() Cursor {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
 		return s.start
 	}
 	return s.end
 }
 
 func (s *Selection) MinMax() (Cursor, Cursor) {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
 		return s.end, s.start
 	}
 	return s.start, s.end
+}
+
+func (s *Selection) Data() string {
+	if !s.on {
+		return ""
+	}
+	return s.m.text.DataInside(s.MinMax())
 }
 
 func (s *Selection) Contains(p Point) bool {
