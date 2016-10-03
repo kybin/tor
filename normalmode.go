@@ -621,7 +621,7 @@ func (m *NormalMode) do(a *Action) {
 		m.history.head--
 		actions := m.history.At(m.history.head)
 		for i := len(actions) - 1; i >= 0; i-- {
-			a = actions[i]
+			a := actions[i]
 			switch a.kind {
 			case "insert":
 				m.cursor.Copy(a.afterCursor)
