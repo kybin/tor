@@ -619,17 +619,17 @@ func (m *NormalMode) do(a *Action) {
 		}
 		m.selection.on = false
 		m.history.head--
-		actions := m.history.At(m.history.head)
-		for i := len(actions) - 1; i >= 0; i-- {
-			a := actions[i]
-			switch a.kind {
+		undoActions := m.history.At(m.history.head)
+		for i := len(undoActions) - 1; i >= 0; i-- {
+			u := undoActions[i]
+			switch u.kind {
 			case "insert":
-				m.cursor.Copy(a.afterCursor)
-				for range a.value {
+				m.cursor.Copy(u.afterCursor)
+				for range u.value {
 					m.cursor.Backspace()
 				}
 			case "insertTab":
-				lineInfos := strings.Split(a.value, ",")
+				lineInfos := strings.Split(u.value, ",")
 				for _, li := range lineInfos {
 					if li == "" {
 						continue
@@ -648,20 +648,20 @@ func (m *NormalMode) do(a *Action) {
 						}
 					}
 				}
-				m.cursor.Copy(a.beforeCursor)
+				m.cursor.Copy(u.beforeCursor)
 			case "paste", "replace":
-				m.cursor.Copy(a.beforeCursor)
-				for range a.value {
+				m.cursor.Copy(u.beforeCursor)
+				for range u.value {
 					m.cursor.Delete()
 				}
 			case "backspace":
-				m.cursor.Copy(a.afterCursor)
-				m.cursor.Insert(a.value)
+				m.cursor.Copy(u.afterCursor)
+				m.cursor.Insert(u.value)
 			case "delete", "deleteSelection":
-				m.cursor.Copy(a.afterCursor)
-				m.cursor.Insert(a.value)
+				m.cursor.Copy(u.afterCursor)
+				m.cursor.Insert(u.value)
 			case "removeTab":
-				lineInfos := strings.Split(a.value, ",")
+				lineInfos := strings.Split(u.value, ",")
 				for _, li := range lineInfos {
 					if li == "" {
 						continue
@@ -675,9 +675,9 @@ func (m *NormalMode) do(a *Action) {
 					}
 					m.text.Line(l).Insert(removed, 0)
 				}
-				m.cursor.Copy(a.beforeCursor)
+				m.cursor.Copy(u.beforeCursor)
 			default:
-				panic(fmt.Sprintln("what the..", a.kind, "history?"))
+				panic(fmt.Sprintln("what the..", u.kind, "history?"))
 			}
 		}
 	case "redo":
@@ -686,15 +686,15 @@ func (m *NormalMode) do(a *Action) {
 			return
 		}
 		m.selection.on = false
-		actions := m.history.At(m.history.head)
+		redoActions := m.history.At(m.history.head)
 		m.history.head++
-		for _, a := range actions {
-			switch a.kind {
+		for _, r := range redoActions {
+			switch r.kind {
 			case "insert":
-				m.cursor.Copy(a.beforeCursor)
-				m.cursor.Insert(a.value)
+				m.cursor.Copy(r.beforeCursor)
+				m.cursor.Insert(r.value)
 			case "insertTab":
-				lineInfos := strings.Split(a.value, ",")
+				lineInfos := strings.Split(r.value, ",")
 				for _, li := range lineInfos {
 					if li == "" {
 						continue
@@ -708,22 +708,22 @@ func (m *NormalMode) do(a *Action) {
 					}
 					m.text.Line(l).Insert(tab, 0)
 				}
-				m.cursor.Copy(a.afterCursor)
+				m.cursor.Copy(r.afterCursor)
 			case "paste", "replace":
-				m.cursor.Copy(a.beforeCursor)
-				m.cursor.Insert(a.value)
+				m.cursor.Copy(r.beforeCursor)
+				m.cursor.Insert(r.value)
 			case "backspace":
-				m.cursor.Copy(a.beforeCursor)
-				for range a.value {
+				m.cursor.Copy(r.beforeCursor)
+				for range r.value {
 					m.cursor.Backspace()
 				}
 			case "delete", "deleteSelection":
-				m.cursor.Copy(a.beforeCursor)
-				for range a.value {
+				m.cursor.Copy(r.beforeCursor)
+				for range r.value {
 					m.cursor.Delete()
 				}
 			case "removeTab":
-				lineInfos := strings.Split(a.value, ",")
+				lineInfos := strings.Split(r.value, ",")
 				for _, li := range lineInfos {
 					if li == "" {
 						continue
@@ -742,9 +742,9 @@ func (m *NormalMode) do(a *Action) {
 						}
 					}
 				}
-				m.cursor.Copy(a.afterCursor)
+				m.cursor.Copy(r.afterCursor)
 			default:
-				panic(fmt.Sprintln("what the..", a.kind, "history?"))
+				panic(fmt.Sprintln("what the..", r.kind, "history?"))
 			}
 		}
 	default:
