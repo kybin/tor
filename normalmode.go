@@ -39,6 +39,10 @@ func (m *NormalMode) Handle(ev term.Event) {
 	for _, a := range actions {
 		m.do(a)
 		a.text = m.text
+		// delete selection usally don't delete anything.
+		if a.kind == "delete" && a.value == "" {
+			continue
+		}
 		// skip action types that are not specified below.
 		switch a.kind {
 		case "insert", "delete", "backspace", "insertTab", "removeTab":
@@ -192,7 +196,6 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 			return []*Action{}
 		}
 		if ev.Mod&term.ModAlt != 0 {
-			// TODO: move every selection action to last?
 			switch ev.Ch {
 			case 'j':
 				return []*Action{{kind: "move", value: "selLeft"}, {kind: "selection", value: "off"}}
