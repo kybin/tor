@@ -45,7 +45,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 		}
 		// skip action types that are not specified below.
 		switch a.kind {
-		case "insert", "delete", "backspace", "insertTab", "removeTab":
+		case "insert", "delete", "backspace", "insertTab", "removeTab", "move":
 			m.text.edited = true
 			nc := m.history.Cut(m.history.head)
 			if nc != 0 {
@@ -55,7 +55,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 			continue
 		}
 		// joining repeative same kind of actions.
-		if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" {
+		if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" || a.kind == "move" {
 			var last *Action
 			if len(rememberActions) != 0 {
 				last = rememberActions[len(rememberActions)-1]
@@ -670,6 +670,8 @@ func (m *NormalMode) do(a *Action) {
 					m.text.Line(l).Insert(removed, 0)
 				}
 				m.cursor.Copy(u.beforeCursor)
+			case "move":
+				m.cursor.Copy(u.beforeCursor)
 			default:
 				panic(fmt.Sprintln("what the..", u.kind, "history?"))
 			}
@@ -734,6 +736,8 @@ func (m *NormalMode) do(a *Action) {
 						}
 					}
 				}
+				m.cursor.Copy(r.afterCursor)
+			case "move":
 				m.cursor.Copy(r.afterCursor)
 			default:
 				panic(fmt.Sprintln("what the..", r.kind, "history?"))
