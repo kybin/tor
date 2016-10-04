@@ -505,6 +505,7 @@ func (m *NormalMode) do(a *Action) {
 		if m.selection.on {
 			*m.cursor, _ = m.selection.MinMax()
 		}
+		m.selection.on = false
 		for range a.value {
 			d += m.cursor.Delete()
 		}
