@@ -114,9 +114,9 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: "\n"}}
 	case term.KeyCtrlN:
 		if ev.Mod&term.ModAlt != 0 {
-			return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
+			return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: m.cursor.Line().Indent()}}
 		}
-		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
+		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: "\n"}, {kind: "insert", value: m.cursor.Line().Indent()}}
 	case term.KeySpace:
 		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: " "}}
 	case term.KeyTab:
@@ -494,14 +494,6 @@ func (m *NormalMode) do(a *Action) {
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
 		}
 	case "insert":
-		if a.value == "autoIndent" {
-			prevline := m.text.lines[m.cursor.l-1].data
-			trimed := strings.TrimLeft(prevline, " \t")
-			indent := prevline[:len(prevline)-len(trimed)]
-			m.cursor.Insert(indent)
-			a.value = indent
-			return
-		}
 		m.cursor.Insert(a.value)
 	case "delete":
 		d := ""
