@@ -46,7 +46,9 @@ func (m *NormalMode) Handle(ev term.Event) {
 		// skip action types that are not specified below.
 		switch a.kind {
 		case "insert", "delete", "backspace", "insertTab", "removeTab", "move":
-			m.text.edited = true
+			if a.kind != "move" {
+				m.text.edited = true
+			}
 			nc := m.history.Cut(m.history.head)
 			if nc != 0 {
 				cut = true
