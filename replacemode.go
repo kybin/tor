@@ -19,7 +19,6 @@ func (m *ReplaceMode) Start() {
 	nm := m.mode.normal
 	if nm.selection.on {
 		m.str = nm.text.DataInside(nm.selection.MinMax())
-		return
 	}
 	m.start = true
 }
@@ -60,10 +59,10 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 		if ev.Ch != 0 {
 			if m.start {
 				m.str = ""
-				m.start = false
 			}
 			m.str += string(ev.Ch)
 		}
+		m.start = false
 	}
 }
 
