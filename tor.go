@@ -76,6 +76,7 @@ func main() {
 		history:   history,
 		f:         f,
 		mode:      mode,
+		copied:    loadConfig("copy"),
 	}
 	mode.find = &FindMode{
 		mode: mode,
