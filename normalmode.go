@@ -113,20 +113,20 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}}
 	// insert
 	case term.KeyEnter:
-		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: "\n"}}
+		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: "\n"}}
 	case term.KeyCtrlN:
 		if ev.Mod&term.ModAlt != 0 {
 			return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: m.cursor.Line().Indent()}}
 		}
-		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: "\n"}, {kind: "insert", value: m.cursor.Line().Indent()}}
+		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: "\n"}, {kind: "insert", value: m.cursor.Line().Indent()}}
 	case term.KeySpace:
-		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: " "}}
+		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: " "}}
 	case term.KeyTab:
 		tab := "\t"
 		if m.text.tabToSpace {
 			tab = strings.Repeat(" ", m.text.tabWidth)
 		}
-		return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: tab}}
+		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: tab}}
 	case term.KeyCtrlU:
 		return []*Action{{kind: "removeTab"}}
 	case term.KeyCtrlO:
@@ -134,19 +134,19 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 	// delete : value will added after actual deletion.
 	case term.KeyDelete:
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: m.selection.Data()}}
+			return []*Action{{kind: "delete", value: "selection"}}
 		} else {
 			if ev.Mod&term.ModAlt != 0 {
-				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextBowEow"}, {kind: "delete", value: m.selection.Data()}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextBowEow"}, {kind: "delete", value: "selection"}}
 			}
 			return []*Action{{kind: "delete"}}
 		}
 	case term.KeyBackspace, term.KeyBackspace2:
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: m.selection.Data()}}
+			return []*Action{{kind: "delete", value: "selection"}}
 		} else {
 			if ev.Mod&term.ModAlt != 0 {
-				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevBowEow"}, {kind: "delete", value: m.selection.Data()}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevBowEow"}, {kind: "delete", value: "selection"}}
 			}
 			return []*Action{{kind: "backspace"}}
 		}
@@ -164,17 +164,17 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 		}
 	case term.KeyCtrlV:
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: m.copied}}
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.copied}}
 		}
 		return []*Action{{kind: "insert", value: m.copied}}
 	case term.KeyCtrlJ:
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: m.mode.replace.str}}
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.mode.replace.str}}
 		}
 		return []*Action{}
 	case term.KeyCtrlX:
 		if m.selection.on {
-			return []*Action{{kind: "copy"}, {kind: "delete", value: m.selection.Data()}}
+			return []*Action{{kind: "copy"}, {kind: "delete", value: "selection"}}
 		} else {
 			return []*Action{{kind: "copy"}, {kind: "delete"}}
 		}
@@ -286,7 +286,7 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 
 		// key pressed without modifier
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: m.selection.Data()}, {kind: "insert", value: string(ev.Ch)}}
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: string(ev.Ch)}}
 		} else {
 			return []*Action{{kind: "insert", value: string(ev.Ch)}}
 		}
@@ -298,7 +298,6 @@ func (m *NormalMode) do(a *Action) {
 
 	defer func() {
 		a.afterCursor = *m.cursor
-
 		if m.selection.on {
 			m.selection.SetEnd(m.cursor)
 		}
@@ -498,16 +497,18 @@ func (m *NormalMode) do(a *Action) {
 	case "insert":
 		m.cursor.Insert(a.value)
 	case "delete":
-		d := ""
-		if m.selection.on {
-			*m.cursor, _ = m.selection.MinMax()
-		}
-		m.selection.on = false
-		for range a.value {
-			d += m.cursor.Delete()
-		}
-		if a.value != d {
-			panic(fmt.Sprint("delete value and actual deleted rune are different. delete:", d, " want: ", a.value))
+		if a.value == "selection" {
+			if m.selection.on {
+				*m.cursor, _ = m.selection.MinMax()
+				a.beforeCursor = *m.cursor // rewrite before cursor.
+			}
+			a.value = m.selection.Data()
+			for range a.value {
+				m.cursor.Delete()
+			}
+			m.selection.on = false
+		} else {
+			a.value = m.cursor.Delete()
 		}
 	case "insertTab":
 		tab := "\t"
