@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -23,11 +22,6 @@ func (ln *Line) Boc() int {
 		b += rlen
 	}
 	return b
-}
-
-func (ln *Line) Indent() string {
-	trimed := strings.TrimLeft(ln.data, " \t")
-	return ln.data[:len(ln.data)-len(trimed)]
 }
 
 func (ln *Line) Insert(r string, b int) {
