@@ -153,6 +153,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			oldR = r
 			oldBg = bg
 		}
+		SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '\n', term.ColorDefault, term.ColorDefault)
 	}
 }
 
