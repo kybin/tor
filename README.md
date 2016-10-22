@@ -37,9 +37,9 @@ Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 - End Of Contents : `Alt+O` 
 
 #### Select
-- Select : Shift + Move Action
--- ex) Select Word :`Shift + Alt + .`
 - Select Line : `Ctrl+L`
+- Select Mode : Shift + Move Action
+  - ex) Select Word :`Shift + Alt + .`
 
 #### Copy, Paste
 - Copy : `Ctrl+C`
