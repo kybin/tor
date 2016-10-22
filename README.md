@@ -12,11 +12,13 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 
-### How to use Basic
+### How to use
+
+#### Basic
 - New file : `$ tor -new filename.ext`
-- Save : `Ctrl + S`
+- Save : `Ctrl+S`
 - Undo : `Ctrl+Z`
-- Quit : `Ctrl + W`
+- Quit : `Ctrl+W`
 
 #### Move
 - Left : `Alt+J`
@@ -38,8 +40,8 @@ Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 
 #### Select
 - Select Line : `Ctrl+L`
-- Select Mode : Shift + Move Action
-  - ex) Select Word :`Shift + Alt + .`
+- Select Mode : Shift+MoveAction
+  - ex) Select Word :`Shift+Alt+.`
 
 #### Copy, Paste
 - Copy : `Ctrl+C`
