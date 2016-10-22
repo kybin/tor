@@ -12,68 +12,49 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 
 Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 
-##### Ctrl
+### How to use
 
-`Ctrl+K` Cancel
+#### Basic
+- New file : `$ tor -new filename.ext`
+- Save : `Ctrl+S`
+- Undo : `Ctrl+Z`
+- Quit : `Ctrl+W`
 
-`Ctrl+W` Quit
+#### Move
+- Left : `Alt+J`
+- Right : `Alt+L`
+- Up : `Alt+I`
+- Down : `Alt+K`
+- Prev Word Edge : `Alt+M`
+- Next Word Edge : `Alt+.`
+- Goto Line : `Ctrl+G`
+- New Line : `Ctrl+N`
+- Indent Line : `Ctrl+O`
+- Unindent Line : `Ctrl+U`
+- Page Up : `Alt+W`
+- Page Down : `Alt+S`
+- Home : `Alt+Q`
+- End : `Alt+A`
+- Bigining Of Contents : `Alt+U` 
+- End Of Contents : `Alt+O` 
 
-`Ctrl+S` Save
+#### Select
+- Select Line : `Ctrl+L`
+- Select Mode : Shift+MoveAction
+  - ex) Select Word :`Shift+Alt+.`
 
-`Ctrl+C` Copy
+#### Copy, Paste
+- Copy : `Ctrl+C`
+- Paste : `Ctrl+V`
 
-`Ctrl+Z` Undo
+#### Find, Replace
+- Find Mode : `Ctrl+F` 
+- Find Next : `Ctrl+D`
+- Find Prev : `Ctrl+B`
+- Replace Mode : `Ctrl+R`
+- Replace : `Ctrl+J`
+- Cancel Input Mode : `Ctrl+K`
 
-`Ctrl+V` Paste
-
-`Ctrl+F` Find Mode
-
-`Ctrl+D` Find Next
-
-`Ctrl+B` Find Prev
-
-`Ctrl+R` Replace Mode
-
-`Ctrl+J` Replace
-
-`Ctrl+G` Goto Line
-
-`Ctrl+N` New Line
-
-`Ctrl+L` Select Line
-
-`Ctrl+O` Indent Line
-
-`Ctrl+U` Unindent Line
-
-
-##### Alt
-
-`Alt+J` Left
-
-`Alt+L` Right
-
-`Alt+I` Up
-
-`Alt+K` Down
-
-`Alt+W` Page Up
-
-`Alt+S` Page Down
-
-`Alt+Q` Home
-
-`Alt+A` End
-
-`Alt+U` Bigining Of Contents
-
-`Alt+O` End Of Contents
-
-`Alt+M` Prev Word Edge
-
-`Alt+.` Next Word Edge
-
-...And several other key maps, but they may changed frequently.
-
-
+#### Other
+- ...And several other key maps, but they may changed frequently.
 
