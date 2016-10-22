@@ -36,10 +36,14 @@ Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 - Bigining Of Contents : `Alt+U` 
 - End Of Contents : `Alt+O` 
 
-#### Select, Copy, Paste
+#### Select
+- Select : Shift + Move Action
+-- ex) Select Word :`Shift + Alt + .`
+- Select Line : `Ctrl+L`
+
+#### Copy, Paste
 - Copy : `Ctrl+C`
 - Paste : `Ctrl+V`
-- Select Line : `Ctrl+L`
 
 #### Find, Replace
 - Find Mode : `Ctrl+F` 
