@@ -58,3 +58,5 @@ Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 #### Other
 - ...And several other key maps, but they may changed frequently.
 
+#### Recommend
+- goimports : `go get golang.org/x/tools/cmd/goimports`
