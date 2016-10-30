@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -138,19 +137,4 @@ func exists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
-}
-
-// extend file name at very before the file extension.
-// extendFileName("/home/yongbin/test.txt", "_tor") -> "/home/yongbin/test_tor.txt"
-func extendFileName(f, e string) string {
-	fdir := filepath.Dir(f)
-	fname := filepath.Base(f)
-	fext := filepath.Ext(f)
-	var froot string
-	if fext == "" {
-		froot = fname
-	} else {
-		froot = fname[:len(fname)-len(fext)]
-	}
-	return filepath.Join(fdir, froot+e+fext)
 }
