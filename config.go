@@ -1,5 +1,7 @@
 package main
 
+// ~/.config/tor 디렉토리 안의 설정파일을 저장하거나 부를때 사용하는 함수들
+
 import (
 	"fmt"
 	"io/ioutil"
@@ -11,6 +13,9 @@ import (
 	"strings"
 )
 
+// saveLastPosition는 해당 파일을 닫을 때의 커서위치를 저장한다.
+// 이 정보는 ~/.config/tor/lastpos 파일에 쌓이며 그 형식은
+// {filepath}:{line}:{offset} 이다.
 func saveLastPosition(relpath string, l, b int) error {
 	abspath, err := filepath.Abs(relpath)
 	if err != nil {
@@ -49,6 +54,10 @@ func saveLastPosition(relpath string, l, b int) error {
 	return nil
 }
 
+// loadLastPosition는 마지막으로 해당 파일을 닫을 때의 커서위치를 가지고 온다.
+// 이 정보는 ~/.config/tor/lastpos 파일에 쌓이며 그 형식은
+// {filepath}:{line}:{offset} 이다.
+// 만일 이 파일을 전에 닫은 적이 없다면 (0, 0)을 반환한다.
 func loadLastPosition(relpath string) (int, int) {
 	abspath, err := filepath.Abs(relpath)
 	if err != nil {
