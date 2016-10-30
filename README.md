@@ -37,6 +37,8 @@ Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
 - End : `Alt+A`
 - Bigining Of Contents : `Alt+U` 
 - End Of Contents : `Alt+O` 
+- Prev Head Line : `Alt+9`
+- Next Head Line : `Alt+0`
 
 #### Select
 - Select Line : `Ctrl+L`
