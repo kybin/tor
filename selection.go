@@ -76,13 +76,3 @@ func (s *Selection) Contains(p Point) bool {
 	}
 	return false
 }
-
-func withShift(r rune) bool {
-	shifts := "QWERTYUIOP{}|ASDFGHJKL:ZXCVBNM<>?!@#$%^&*()_+"
-	for _, s := range shifts {
-		if s == r {
-			return true
-		}
-	}
-	return false
-}
