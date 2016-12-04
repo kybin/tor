@@ -328,16 +328,21 @@ func (m *NormalMode) do(a *Action) {
 				exec.Command("go", "fmt", m.f),
 			}
 			for _, cmd := range cmds {
-				err := cmd.Start()
-				if err != nil {
+				if cmd.Path == "" {
+					// Could not find the command.
 					continue
 				}
-				// reload the file.
-				err = cmd.Wait()
+				out, err := cmd.CombinedOutput()
 				if err != nil {
-					m.err = fmt.Sprint(err)
+					outs := strings.Split(string(out), "\n")
+					if len(outs) == 0 {
+						m.err = fmt.Sprint(err)
+					} else {
+						m.err = outs[0]
+					}
 					return
 				}
+				// reload the file.
 				text, err := open(m.f)
 				if err != nil {
 					m.err = fmt.Sprint(err)
