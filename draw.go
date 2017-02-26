@@ -16,7 +16,7 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 func clearScreen(ar *Area) {
 	for l := ar.min.l; l < ar.max.l; l++ {
 		for o := ar.min.o; o < ar.max.o; o++ {
-			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)
+			SetCell(l, o, ' ', term.ColorWhite, term.ColorBlack)
 		}
 	}
 }
@@ -79,7 +79,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 				break
 			}
 
-			bg := term.ColorDefault
+			bg := term.ColorBlack
 			if o >= eoc {
 				bg = term.ColorYellow
 			}
@@ -153,7 +153,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			oldR = r
 			oldBg = bg
 		}
-		SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '\n', term.ColorDefault, term.ColorDefault)
+		SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '\n', term.ColorWhite, term.ColorBlack)
 	}
 }
 
