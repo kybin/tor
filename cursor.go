@@ -654,12 +654,41 @@ func leadingSpaces(line string) string {
 // GotoPrevIndentMatch moves cursor to any previous line matched indent with current line's.
 func (c *Cursor) GotoPrevIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
+	n := 0
+	jumped := false
+	lastMatched := c.l
 	for l := c.l - 1; l >= 0; l-- {
 		line := c.m.text.lines[l].data
 		if leadingSpaces(line) != indentStr {
+			// We are at indentation edge.
+			// If this is a starting point, jump it. Or stop.
+			if n != 0 {
+				c.GotoLine(l + 1)
+				c.SetB(len(indentStr))
+				return true
+			}
+			jumped = true
 			continue
 		}
-		c.GotoLine(l)
+		if jumped {
+			// the first line after jumped.
+			c.GotoLine(l)
+			c.SetB(len(indentStr))
+			return true
+		}
+		// move at most 8 lines.
+		n++
+		if n == 8 {
+			c.GotoLine(l)
+			c.SetB(len(indentStr))
+			return true
+		}
+		// save the last matched line,
+		// in case we are reached at the end of loop.
+		lastMatched = l
+	}
+	if !(c.l == lastMatched && c.b == len(indentStr)) {
+		c.GotoLine(lastMatched)
 		c.SetB(len(indentStr))
 		return true
 	}
@@ -669,12 +698,41 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 // GotoNextIndentMatch moves cursor to any next line matched indent with current line's.
 func (c *Cursor) GotoNextIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
+	n := 0
+	jumped := false
+	lastMatched := c.l
 	for l := c.l + 1; l < len(c.m.text.lines); l++ {
 		line := c.m.text.lines[l].data
 		if leadingSpaces(line) != indentStr {
+			// We are at indentation edge.
+			// If this is a starting point, jump it. Or stop.
+			if n != 0 {
+				c.GotoLine(l - 1)
+				c.SetB(len(indentStr))
+				return true
+			}
+			jumped = true
 			continue
 		}
-		c.GotoLine(l)
+		if jumped {
+			// the first line after jumped.
+			c.GotoLine(l)
+			c.SetB(len(indentStr))
+			return true
+		}
+		// move at most 8 lines.
+		n++
+		if n == 8 {
+			c.GotoLine(l)
+			c.SetB(len(indentStr))
+			return true
+		}
+		// save the last matched line,
+		// in case we are reached at the end of loop.
+		lastMatched = l
+	}
+	if !(c.l == lastMatched && c.b == len(indentStr)) {
+		c.GotoLine(lastMatched)
 		c.SetB(len(indentStr))
 		return true
 	}
