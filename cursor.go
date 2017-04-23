@@ -645,20 +645,23 @@ func (c *Cursor) GotoPrevDefinition(defn []string) bool {
 	return false
 }
 
+// leadingSpaces returns leading spaces (indentation) from a line string.
+func leadingSpaces(line string) string {
+	trimed := strings.TrimLeftFunc(line, unicode.IsSpace)
+	return line[:len(line)-len(trimed)]
+}
+
 // GotoPrevIndentMatch moves cursor to any previous line matched indent with current line's.
 func (c *Cursor) GotoPrevIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
 	for l := c.l - 1; l >= 0; l-- {
 		line := c.m.text.lines[l].data
-		if strings.HasPrefix(line, indentStr) {
-			remain := line[len(indentStr):]
-			r, _ := utf8.DecodeRuneInString(remain)
-			if !unicode.IsSpace(r) {
-				c.GotoLine(l)
-				c.SetB(len(indentStr))
-				return true
-			}
+		if leadingSpaces(line) != indentStr {
+			continue
 		}
+		c.GotoLine(l)
+		c.SetB(len(indentStr))
+		return true
 	}
 	return false
 }
@@ -668,15 +671,12 @@ func (c *Cursor) GotoNextIndentMatch() bool {
 	indentStr := c.LineData()[:c.Line().Boc()]
 	for l := c.l + 1; l < len(c.m.text.lines); l++ {
 		line := c.m.text.lines[l].data
-		if strings.HasPrefix(line, indentStr) {
-			remain := line[len(indentStr):]
-			r, _ := utf8.DecodeRuneInString(remain)
-			if !unicode.IsSpace(r) {
-				c.GotoLine(l)
-				c.SetB(len(indentStr))
-				return true
-			}
+		if leadingSpaces(line) != indentStr {
+			continue
 		}
+		c.GotoLine(l)
+		c.SetB(len(indentStr))
+		return true
 	}
 	return false
 }
