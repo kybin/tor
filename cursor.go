@@ -659,6 +659,9 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 	lastMatched := c.l
 	for l := c.l - 1; l >= 0; l-- {
 		line := c.m.text.lines[l].data
+		if line == "" {
+			continue
+		}
 		if leadingSpaces(line) != indentStr {
 			// We are at indentation edge.
 			// If this is a starting point, jump it. Or stop.
@@ -703,6 +706,9 @@ func (c *Cursor) GotoNextIndentMatch() bool {
 	lastMatched := c.l
 	for l := c.l + 1; l < len(c.m.text.lines); l++ {
 		line := c.m.text.lines[l].data
+		if line == "" {
+			continue
+		}
 		if leadingSpaces(line) != indentStr {
 			// We are at indentation edge.
 			// If this is a starting point, jump it. Or stop.
