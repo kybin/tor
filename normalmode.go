@@ -252,21 +252,21 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 			case 'D':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "eof"}}
 			case '1':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
 			case '!':
-				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
 			case '2':
-				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
-			case '@':
-				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
-			case '9':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
-			case '(':
+			case '@':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
-			case '0':
+			case '9':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevGlobal"}}
-			case ')':
+			case '(':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevGlobal"}}
+			case '0':
+				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
+			case ')':
+				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
 			case 'w':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevIndentMatch"}}
 			case 'W':
