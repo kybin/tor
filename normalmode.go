@@ -10,6 +10,7 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
+// NormalMode is a mode for text editing.
 type NormalMode struct {
 	text      *Text
 	cursor    *Cursor
@@ -24,10 +25,14 @@ type NormalMode struct {
 	mode *ModeSelector
 }
 
+// Start prepare things to start a normal mode.
 func (m *NormalMode) Start() {}
 
+// End prepare things to end a normal mode.
 func (m *NormalMode) End() {}
 
+// Handle handles a terminal event.
+// It will run appropriate actions, and save it in history.
 func (m *NormalMode) Handle(ev term.Event) {
 	m.status = ""
 	m.err = ""
@@ -82,6 +87,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 	}
 }
 
+// parseEvent parses a terminal event and return actions.
 func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 	if ev.Type != term.EventKey {
 		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
@@ -301,6 +307,8 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 	}
 }
 
+// do takes an action and do it.
+// After done the action, it will save result on the action.
 func (m *NormalMode) do(a *Action) {
 	a.beforeCursor = *m.cursor
 
@@ -764,6 +772,8 @@ func (m *NormalMode) do(a *Action) {
 	}
 }
 
+// Status returns a status as string.
+// The status will cleared when normal mode takes another event.
 func (m *NormalMode) Status() string {
 	if m.status != "" {
 		return m.status
@@ -771,6 +781,9 @@ func (m *NormalMode) Status() string {
 	return fmt.Sprintf("%v:%v:%v", m.f, m.cursor.l+1, m.cursor.O())
 }
 
+// Error returns an error of the last done action.
+// If there was no error, it will return an empty string.
+// The error will cleared when normal mode takes another event.
 func (m *NormalMode) Error() string {
 	return m.err
 }
