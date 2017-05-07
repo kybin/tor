@@ -12,7 +12,9 @@ type ExitMode struct {
 	mode   *ModeSelector
 }
 
-func (m *ExitMode) Start() {}
+func (m *ExitMode) Start() {
+	term.SetInputMode(term.InputEsc)
+}
 
 func (m *ExitMode) End() {}
 
@@ -21,7 +23,7 @@ func (m *ExitMode) Handle(ev term.Event) {
 		saveLastPosition(m.f, m.cursor.l, m.cursor.b)
 		term.Close()
 		os.Exit(0)
-	} else if ev.Ch == 'n' || ev.Key == term.KeyCtrlK {
+	} else if ev.Ch == 'n' || ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
 		m.mode.ChangeTo(m.mode.normal)
 	}
 }

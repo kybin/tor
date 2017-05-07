@@ -15,13 +15,15 @@ type GotoLineMode struct {
 	mode   *ModeSelector
 }
 
-func (m *GotoLineMode) Start() {}
+func (m *GotoLineMode) Start() {
+	term.SetInputMode(term.InputEsc)
+}
 
 func (m *GotoLineMode) End() {}
 
 func (m *GotoLineMode) Handle(ev term.Event) {
 	switch ev.Key {
-	case term.KeyCtrlK:
+	case term.KeyEsc, term.KeyCtrlK:
 		m.linestr = ""
 		m.mode.ChangeTo(m.mode.normal)
 	case term.KeyEnter:

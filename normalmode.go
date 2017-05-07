@@ -26,7 +26,9 @@ type NormalMode struct {
 }
 
 // Start prepare things to start a normal mode.
-func (m *NormalMode) Start() {}
+func (m *NormalMode) Start() {
+	term.SetInputMode(term.InputAlt)
+}
 
 // End prepare things to end a normal mode.
 func (m *NormalMode) End() {}

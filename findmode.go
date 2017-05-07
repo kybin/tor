@@ -16,6 +16,8 @@ type FindMode struct {
 }
 
 func (m *FindMode) Start() {
+	term.SetInputMode(term.InputEsc)
+
 	nm := m.mode.normal
 	if nm.selection.on {
 		m.str = nm.text.DataInside(nm.selection.MinMax())
@@ -27,7 +29,7 @@ func (m *FindMode) End() {}
 
 func (m *FindMode) Handle(ev term.Event) {
 	switch ev.Key {
-	case term.KeyCtrlK:
+	case term.KeyEsc, term.KeyCtrlK:
 		if len(m.olds) == 0 {
 			m.str = ""
 		} else {

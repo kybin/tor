@@ -10,7 +10,7 @@ Tor has different key binding set from other editors.
 
 Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is for selection.
 
-Most impotantly key `Ctrl+K` cancels everything. Not `Esc`!
+`Esc` or `Ctrl+K` terminates any special mode and return to normal mode.
 
 ### How to use
 
