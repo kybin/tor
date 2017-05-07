@@ -679,9 +679,9 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 			c.SetB(len(indentStr))
 			return true
 		}
-		// move at most 8 lines.
+		// move at most pageoffset lines.
 		n++
-		if n == 8 {
+		if n == pageoffset {
 			c.GotoLine(l)
 			c.SetB(len(indentStr))
 			return true
@@ -726,9 +726,9 @@ func (c *Cursor) GotoNextIndentMatch() bool {
 			c.SetB(len(indentStr))
 			return true
 		}
-		// move at most 8 lines.
+		// move at most pageoffset lines.
 		n++
-		if n == 8 {
+		if n == pageoffset {
 			c.GotoLine(l)
 			c.SetB(len(indentStr))
 			return true
