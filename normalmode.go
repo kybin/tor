@@ -40,7 +40,6 @@ func (m *NormalMode) Handle(ev term.Event) {
 	rememberActions := make([]*Action, 0)
 	cut := false
 	actions := m.parseEvent(ev)
-	// TODO: Move to history.Add()
 	for _, a := range actions {
 		m.do(a)
 		a.text = m.text
