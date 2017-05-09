@@ -4,21 +4,27 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 
 	term "github.com/nsf/termbox-go"
 )
 
 func main() {
+	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var newFlag bool
-	flag.BoolVar(&newFlag, "new", false, "let tor to edit a new file.")
-	flag.Parse()
+	flagset.BoolVar(&newFlag, "new", false, "let tor to edit a new file.")
 
-	args := flag.Args()
-	if len(args) == 0 {
+	// sort args, so let flags always placed ahead of file arg.
+	args := os.Args[1:]
+	sort.Strings(args)
+	flagset.Parse(args)
+
+	fileArgs := flagset.Args()
+	if len(fileArgs) == 0 {
 		fmt.Println("please, set text file")
 		os.Exit(1)
 	}
-	farg := args[len(args)-1]
+	farg := fileArgs[len(fileArgs)-1]
 
 	f, initL, initO, err := parseFileArg(farg)
 	if err != nil {
