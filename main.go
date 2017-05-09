@@ -24,7 +24,7 @@ func main() {
 		fmt.Println("please, set text file")
 		os.Exit(1)
 	}
-	farg := fileArgs[len(fileArgs)-1]
+	farg := fileArgs[0]
 
 	f, initL, initO, err := parseFileArg(farg)
 	if err != nil {
