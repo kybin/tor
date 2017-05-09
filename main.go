@@ -9,6 +9,22 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
+var usage = `
+
+  tor [flag...] file
+
+file
+  filename[:line[:offset]]
+
+flag
+`
+
+func printUsage(f *flag.FlagSet) {
+	fmt.Fprintf(os.Stderr, "Usage of %s:", os.Args[0])
+	fmt.Fprintf(os.Stderr, usage)
+	f.PrintDefaults()
+}
+
 func main() {
 	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var newFlag bool
@@ -20,15 +36,15 @@ func main() {
 	flagset.Parse(args)
 
 	fileArgs := flagset.Args()
-	if len(fileArgs) == 0 {
-		fmt.Println("please, set text file")
+	if len(fileArgs) != 1 {
+		printUsage(flagset)
 		os.Exit(1)
 	}
 	farg := fileArgs[0]
 
 	f, initL, initO, err := parseFileArg(farg)
 	if err != nil {
-		fmt.Println("file arg is invalid: ", err)
+		printUsage(flagset)
 		os.Exit(1)
 	}
 
