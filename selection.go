@@ -5,7 +5,7 @@ type Selection struct {
 	start Cursor
 	end   Cursor
 
-	m *NormalMode
+	text *Text
 }
 
 func (s *Selection) SetStart(c *Cursor) {
@@ -61,7 +61,7 @@ func (s *Selection) Data() string {
 	if !s.on {
 		return ""
 	}
-	return s.m.text.DataInside(s.MinMax())
+	return s.text.DataInside(s.MinMax())
 }
 
 func (s *Selection) Contains(p Point) bool {

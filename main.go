@@ -97,9 +97,10 @@ func main() {
 	}
 	mode.current = mode.normal // will start tor as normal mode.
 
-	selection.m = mode.normal
+	selection.text = mode.normal.text
+
 	// Set cursor.
-	cursor.m = mode.normal
+	cursor.text = mode.normal.text
 	if initL != -1 {
 		l := initL
 		// to internal line number

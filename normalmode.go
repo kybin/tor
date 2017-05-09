@@ -366,6 +366,7 @@ func (m *NormalMode) do(a *Action) {
 					return
 				}
 				m.text = text
+				m.cursor.text = text
 				oldl := m.cursor.l
 				oldb := m.cursor.b
 				m.cursor.GotoLine(oldl)
@@ -646,6 +647,7 @@ func (m *NormalMode) do(a *Action) {
 		for i := len(undoActions) - 1; i >= 0; i-- {
 			u := undoActions[i]
 			m.text = u.text
+			m.cursor.text = u.text
 			switch u.kind {
 			case "insert":
 				m.cursor.Copy(u.afterCursor)
@@ -711,6 +713,7 @@ func (m *NormalMode) do(a *Action) {
 		m.history.head++
 		for _, r := range redoActions {
 			m.text = r.text
+			m.cursor.text = r.text
 			switch r.kind {
 			case "insert":
 				m.cursor.Copy(r.beforeCursor)
