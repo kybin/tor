@@ -666,7 +666,7 @@ func (c *Cursor) GotoPrevIndentMatch() bool {
 			// We are at indentation edge.
 			// If this is a starting point, jump it. Or stop.
 			if n != 0 {
-				c.GotoLine(l + 1)
+				c.GotoLine(lastMatched)
 				c.SetB(len(indentStr))
 				return true
 			}
@@ -713,7 +713,7 @@ func (c *Cursor) GotoNextIndentMatch() bool {
 			// We are at indentation edge.
 			// If this is a starting point, jump it. Or stop.
 			if n != 0 {
-				c.GotoLine(l - 1)
+				c.GotoLine(lastMatched)
 				c.SetB(len(indentStr))
 				return true
 			}
