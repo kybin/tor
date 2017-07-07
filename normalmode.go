@@ -242,13 +242,13 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}}
 			case 'O':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "eol"}}
-			case 'q':
+			case 'w':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pageup"}}
-			case 'Q':
+			case 'W':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "pageup"}}
-			case 'a':
+			case 's':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pagedown"}}
-			case 'A':
+			case 'S':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "pagedown"}}
 			case 'e':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bof"}}
@@ -274,13 +274,13 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextGlobal"}}
 			case ')':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextGlobal"}}
-			case 'w':
+			case 'q':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "prevIndentMatch"}}
-			case 'W':
+			case 'Q':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevIndentMatch"}}
-			case 's':
+			case 'a':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextIndentMatch"}}
-			case 'S':
+			case 'A':
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextIndentMatch"}}
 			case ']', 'x':
 				return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "nextArg"}}
