@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"time"
 
 	term "github.com/nsf/termbox-go"
 )
@@ -143,6 +144,12 @@ func main() {
 	go func() {
 		for {
 			events <- term.PollEvent()
+		}
+	}()
+	ticker := time.NewTicker(time.Second)
+	go func() {
+		for range ticker.C {
+			term.Sync()
 		}
 	}()
 	for {

@@ -15,7 +15,6 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 
 func clearScreen(ar *Area) {
 	term.Clear(term.ColorDefault, term.ColorDefault)
-	term.Sync()
 }
 
 func resizeScreen(ar *Area, win *Window, w, h int) {
