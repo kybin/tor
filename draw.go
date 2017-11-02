@@ -14,11 +14,8 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 func clearScreen(ar *Area) {
-	for l := ar.min.l; l < ar.max.l; l++ {
-		for o := ar.min.o; o < ar.max.o; o++ {
-			SetCell(l, o, ' ', term.ColorWhite, term.ColorBlack)
-		}
-	}
+	term.Clear(term.ColorDefault, term.ColorDefault)
+	term.Sync()
 }
 
 func resizeScreen(ar *Area, win *Window, w, h int) {
@@ -153,7 +150,6 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			oldR = r
 			oldBg = bg
 		}
-		SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '\n', term.ColorWhite, term.ColorBlack)
 	}
 }
 
