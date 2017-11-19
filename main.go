@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"sync"
 	"time"
 
 	term "github.com/nsf/termbox-go"
@@ -142,8 +143,11 @@ func main() {
 
 	events := make(chan term.Event, 20)
 	go func() {
+		mu := &sync.Mutex{}
 		for {
+			mu.Lock()
 			events <- term.PollEvent()
+			mu.Unlock()
 		}
 	}()
 	ticker := time.NewTicker(time.Second)
