@@ -1,0 +1,17 @@
+package main
+
+// this is a comment.
+
+/*
+	this is a multi-line comment.
+	that has multiple lines.
+		with irregular indents.
+*/
+
+func main() {
+	s := "yo"	  
+	t := "\"string\" inside of a string"
+	r := 'rune'
+	
+}
+
