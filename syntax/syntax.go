@@ -1,7 +1,6 @@
 package syntax
 
 import (
-	"fmt"
 	"regexp"
 	"unicode/utf8"
 
@@ -37,7 +36,6 @@ Loop:
 				m := ms[0]
 				if len(ms) == 2 {
 					m = ms[1]
-					fmt.Printf("%s\n", m)
 				}
 				if string(m) == "" {
 					continue
