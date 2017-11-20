@@ -9,19 +9,15 @@ import (
 
 func init() {
 	Syntaxes["go"] = Syntax{
-		Matchers: []Matcher{
-			Matcher{"string", regexp.MustCompile(`^(?m)".*?[^\\]"`), termbox.ColorRed, termbox.ColorBlack},
-			Matcher{"rune", regexp.MustCompile(`^(?m)'.*?[^\\]'`), termbox.ColorYellow, termbox.ColorBlack},
-			Matcher{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
-			Matcher{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?[*]/`), termbox.ColorMagenta, termbox.ColorBlack},
-			Matcher{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
-		},
+		Matcher{"string", regexp.MustCompile(`^(?m)".*?[^\\]"`), termbox.ColorRed, termbox.ColorBlack},
+		Matcher{"rune", regexp.MustCompile(`^(?m)'.*?[^\\]'`), termbox.ColorYellow, termbox.ColorBlack},
+		Matcher{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
+		Matcher{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?[*]/`), termbox.ColorMagenta, termbox.ColorBlack},
+		Matcher{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
 	}
 }
 
-type Syntax struct {
-	Matchers []Matcher
-}
+type Syntax []Matcher
 
 var Syntaxes = make(map[string]Syntax)
 
@@ -30,7 +26,7 @@ func (s Syntax) Parse(text []byte) []Match {
 	matches := []Match{}
 Loop:
 	for {
-		for _, matcher := range s.Matchers {
+		for _, matcher := range s {
 			ms := matcher.Re.FindSubmatch(c.Remain())
 			if ms != nil {
 				m := ms[0]
