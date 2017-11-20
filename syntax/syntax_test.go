@@ -11,11 +11,11 @@ func TestUsage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	syn, ok := Syntaxes["go"]
+	lang, ok := Languages["go"]
 	if !ok {
 		return
 	}
-	matches := syn.Parse(testText)
+	matches := lang.Parse(testText)
 	for _, m := range matches {
 		fmt.Println(m)
 	}

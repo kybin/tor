@@ -8,26 +8,26 @@ import (
 )
 
 func init() {
-	Syntaxes["go"] = Syntax{
-		Matcher{"string", regexp.MustCompile(`^(?m)".*?[^\\]"`), termbox.ColorRed, termbox.ColorBlack},
-		Matcher{"rune", regexp.MustCompile(`^(?m)'.*?[^\\]'`), termbox.ColorYellow, termbox.ColorBlack},
-		Matcher{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
-		Matcher{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?[*]/`), termbox.ColorMagenta, termbox.ColorBlack},
-		Matcher{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
+	Languages["go"] = Language{
+		Syntax{"string", regexp.MustCompile(`^(?m)".*?[^\\]"`), termbox.ColorRed, termbox.ColorBlack},
+		Syntax{"rune", regexp.MustCompile(`^(?m)'.*?[^\\]'`), termbox.ColorYellow, termbox.ColorBlack},
+		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
+		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?[*]/`), termbox.ColorMagenta, termbox.ColorBlack},
+		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
 	}
 }
 
-type Syntax []Matcher
+type Language []Syntax
 
-var Syntaxes = make(map[string]Syntax)
+var Languages = make(map[string]Language)
 
-func (s Syntax) Parse(text []byte) []Match {
+func (l Language) Parse(text []byte) []Match {
 	c := NewCursor(text)
 	matches := []Match{}
 Loop:
 	for {
-		for _, matcher := range s {
-			ms := matcher.Re.FindSubmatch(c.Remain())
+		for _, syn := range l {
+			ms := syn.Re.FindSubmatch(c.Remain())
 			if ms != nil {
 				m := ms[0]
 				if len(ms) == 2 {
@@ -39,7 +39,7 @@ Loop:
 				start := c.Pos()
 				c.Skip(len(m))
 				end := c.Pos()
-				matches = append(matches, matcher.NewMatch(start, end))
+				matches = append(matches, syn.NewMatch(start, end))
 				continue Loop
 			}
 		}
@@ -99,15 +99,15 @@ func (c *Cursor) next() (r rune, size int) {
 	return r, size
 }
 
-type Matcher struct {
+type Syntax struct {
 	Name string
 	Re   *regexp.Regexp
 	Fg   termbox.Attribute
 	Bg   termbox.Attribute
 }
 
-func (m Matcher) NewMatch(start, end Pos) Match {
-	return Match{Name: m.Name, Start: start, End: end, Fg: m.Fg, Bg: m.Bg}
+func (s Syntax) NewMatch(start, end Pos) Match {
+	return Match{Name: s.Name, Start: start, End: end, Fg: s.Fg, Bg: s.Bg}
 }
 
 type Match struct {
