@@ -39,20 +39,21 @@ Loop:
 	for {
 		for _, syn := range l {
 			ms := syn.Re.FindSubmatch(c.Remain())
-			if ms != nil {
-				m := ms[0]
-				if len(ms) == 2 {
-					m = ms[1]
-				}
-				if string(m) == "" {
-					continue
-				}
-				start := c.Pos()
-				c.Skip(len(m))
-				end := c.Pos()
-				matches = append(matches, syn.NewMatch(start, end))
-				continue Loop
+			if ms == nil {
+				continue
 			}
+			m := ms[0]
+			if len(ms) == 2 {
+				m = ms[1]
+			}
+			if string(m) == "" {
+				continue
+			}
+			start := c.Pos()
+			c.Skip(len(m))
+			end := c.Pos()
+			matches = append(matches, syn.NewMatch(start, end))
+			continue Loop
 		}
 		if !c.Advance() {
 			break
