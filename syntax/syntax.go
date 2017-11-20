@@ -17,6 +17,17 @@ func init() {
 	}
 }
 
+type Syntax struct {
+	Name string
+	Re   *regexp.Regexp
+	Fg   termbox.Attribute
+	Bg   termbox.Attribute
+}
+
+func (s Syntax) NewMatch(start, end Pos) Match {
+	return Match{Name: s.Name, Start: start, End: end, Fg: s.Fg, Bg: s.Bg}
+}
+
 type Language []Syntax
 
 var Languages = make(map[string]Language)
@@ -97,17 +108,6 @@ func (c *Cursor) next() (r rune, size int) {
 		c.o = 0
 	}
 	return r, size
-}
-
-type Syntax struct {
-	Name string
-	Re   *regexp.Regexp
-	Fg   termbox.Attribute
-	Bg   termbox.Attribute
-}
-
-func (s Syntax) NewMatch(start, end Pos) Match {
-	return Match{Name: s.Name, Start: start, End: end, Fg: s.Fg, Bg: s.Bg}
 }
 
 type Match struct {
