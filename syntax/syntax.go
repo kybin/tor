@@ -10,6 +10,7 @@ import (
 func init() {
 	Languages["go"] = Language{
 		Syntax{"string", regexp.MustCompile(`^(?m)".*?[^\\]"`), termbox.ColorRed, termbox.ColorBlack},
+		Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), termbox.ColorRed, termbox.ColorBlack},
 		Syntax{"rune", regexp.MustCompile(`^(?m)'.*?[^\\]'`), termbox.ColorYellow, termbox.ColorBlack},
 		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
 		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?[*]/`), termbox.ColorMagenta, termbox.ColorBlack},
