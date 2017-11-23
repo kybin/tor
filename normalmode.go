@@ -316,7 +316,7 @@ func (m *NormalMode) do(a *Action) {
 	defer func() {
 		a.afterCursor = *m.cursor
 		if m.selection.on {
-			m.selection.SetEnd(m.cursor)
+			m.selection.SetEnd(m.cursor.BytePos())
 		}
 	}()
 
@@ -394,7 +394,7 @@ func (m *NormalMode) do(a *Action) {
 	case "selection":
 		if a.value == "on" && !m.selection.on {
 			m.selection.on = true
-			m.selection.SetStart(m.cursor)
+			m.selection.SetStart(m.cursor.BytePos())
 		} else if a.value == "off" {
 			m.selection.on = false
 		}
@@ -406,17 +406,13 @@ func (m *NormalMode) do(a *Action) {
 			m.cursor.MoveRight()
 		case "selLeft":
 			if m.selection.on {
-				minc := m.selection.Min()
-				m.cursor.GotoLine(minc.l)
-				m.cursor.SetB(minc.b)
+				m.cursor.SetBytePos(m.selection.Min())
 			} else {
 				m.cursor.MoveLeft()
 			}
 		case "selRight":
 			if m.selection.on {
-				maxc := m.selection.Max()
-				m.cursor.GotoLine(maxc.l)
-				m.cursor.SetB(maxc.b)
+				m.cursor.SetBytePos(m.selection.Max())
 			} else {
 				m.cursor.MoveRight()
 			}
@@ -493,11 +489,11 @@ func (m *NormalMode) do(a *Action) {
 				for range m.mode.find.str {
 					m.cursor.MoveRight()
 				}
-				m.selection.SetStart(m.cursor)
+				m.selection.SetStart(m.cursor.BytePos())
 				for range m.mode.find.str {
 					m.cursor.MoveLeft()
 				}
-				m.selection.SetEnd(m.cursor)
+				m.selection.SetEnd(m.cursor.BytePos())
 			}
 		case "findNextSelect":
 			ok := m.cursor.GotoNext(m.mode.find.str)
@@ -509,11 +505,11 @@ func (m *NormalMode) do(a *Action) {
 				for range m.mode.find.str {
 					m.cursor.MoveRight()
 				}
-				m.selection.SetStart(m.cursor)
+				m.selection.SetStart(m.cursor.BytePos())
 				for range m.mode.find.str {
 					m.cursor.MoveLeft()
 				}
-				m.selection.SetEnd(m.cursor)
+				m.selection.SetEnd(m.cursor.BytePos())
 			}
 		default:
 			panic(fmt.Sprintln("what the..", a.value, "move?"))
@@ -531,7 +527,7 @@ func (m *NormalMode) do(a *Action) {
 	case "delete":
 		if a.value == "selection" {
 			if m.selection.on {
-				*m.cursor, _ = m.selection.MinMax()
+				m.cursor.SetBytePos(m.selection.Min())
 				a.beforeCursor = *m.cursor // rewrite before cursor.
 			}
 			a.value = m.selection.Data()
@@ -612,31 +608,31 @@ func (m *NormalMode) do(a *Action) {
 	case "selectAll":
 		m.cursor.MoveBof()
 		m.selection.on = true
-		m.selection.SetStart(m.cursor)
+		m.selection.SetStart(m.cursor.BytePos())
 		m.cursor.MoveEof()
-		m.selection.SetEnd(m.cursor)
+		m.selection.SetEnd(m.cursor.BytePos())
 	case "selectLine":
 		m.cursor.MoveBol()
 		if !m.selection.on {
 			m.selection.on = true
-			m.selection.SetStart(m.cursor)
+			m.selection.SetStart(m.cursor.BytePos())
 		}
 		if m.cursor.OnLastLine() {
 			m.cursor.MoveEol()
 		} else {
 			m.cursor.MoveDown()
 		}
-		m.selection.SetEnd(m.cursor)
+		m.selection.SetEnd(m.cursor.BytePos())
 	case "selectWord":
 		if !m.cursor.AtBow() {
 			m.cursor.MovePrevBowEow()
 		}
 		if !m.selection.on {
 			m.selection.on = true
-			m.selection.SetStart(m.cursor)
+			m.selection.SetStart(m.cursor.BytePos())
 		}
 		m.cursor.MoveNextBowEow()
-		m.selection.SetEnd(m.cursor)
+		m.selection.SetEnd(m.cursor.BytePos())
 	case "undo":
 		// TODO: Move to history.Undo()
 		if m.history.head == 0 {

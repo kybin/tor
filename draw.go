@@ -70,7 +70,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 
 		// draw
 		o := 0
-		for _, r := range ln.data {
+		for b, r := range ln.data {
 			if o >= w.Max().o {
 				break
 			}
@@ -79,7 +79,7 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			if o >= eoc {
 				bg = term.ColorYellow
 			}
-			if sel.on && sel.Contains(Point{l, o}) {
+			if sel.on && sel.Contains(Point{l, b}) {
 				bg = term.ColorGreen
 			}
 			if r == '/' && oldR == '/' && oldOldR != '\\' {

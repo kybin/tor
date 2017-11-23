@@ -2,18 +2,18 @@ package main
 
 type Selection struct {
 	on    bool
-	start Cursor
-	end   Cursor
+	start Point
+	end   Point
 
 	text *Text
 }
 
-func (s *Selection) SetStart(c *Cursor) {
-	s.start = *c
+func (s *Selection) SetStart(p Point) {
+	s.start = p
 }
 
-func (s *Selection) SetEnd(c *Cursor) {
-	s.end = *c
+func (s *Selection) SetEnd(p Point) {
+	s.end = p
 }
 
 // Lines return selected line numbers as int slice.
@@ -36,22 +36,22 @@ func (s *Selection) Lines() []int {
 	return lns
 }
 
-func (s *Selection) Min() Cursor {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
+func (s *Selection) Min() Point {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
 		return s.end
 	}
 	return s.start
 }
 
-func (s *Selection) Max() Cursor {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
+func (s *Selection) Max() Point {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
 		return s.start
 	}
 	return s.end
 }
 
-func (s *Selection) MinMax() (Cursor, Cursor) {
-	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.b > s.end.b) {
+func (s *Selection) MinMax() (Point, Point) {
+	if (s.start.l > s.end.l) || (s.start.l == s.end.l && s.start.o > s.end.o) {
 		return s.end, s.start
 	}
 	return s.start, s.end

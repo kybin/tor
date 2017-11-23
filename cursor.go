@@ -24,6 +24,15 @@ func (c *Cursor) Copy(c2 Cursor) {
 	c.o = c2.o
 }
 
+func (c *Cursor) BytePos() Point {
+	return Point{l: c.l, o: c.b}
+}
+
+func (c *Cursor) SetBytePos(bpos Point) {
+	c.l = bpos.l
+	c.SetB(bpos.o)
+}
+
 func (c *Cursor) B() int {
 	return c.b
 }
