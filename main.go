@@ -143,17 +143,17 @@ func main() {
 
 	events := make(chan term.Event, 20)
 	go func() {
-		mu := &sync.Mutex{}
 		for {
-			mu.Lock()
 			events <- term.PollEvent()
-			mu.Unlock()
 		}
 	}()
 	ticker := time.NewTicker(time.Second)
 	go func() {
+		mu := &sync.Mutex{}
 		for range ticker.C {
+			mu.Lock()
 			term.Sync()
+			mu.Unlock()
 		}
 	}()
 	for {
