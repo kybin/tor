@@ -16,6 +16,15 @@ func init() {
 		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), termbox.ColorMagenta, termbox.ColorBlack},
 		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
 	}
+
+	Languages["py"] = Language{
+		Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), termbox.ColorRed, termbox.ColorBlack},
+		Syntax{"multi line string1", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), termbox.ColorYellow, termbox.ColorBlack},
+		Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]"|$)`), termbox.ColorRed, termbox.ColorBlack},
+		Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]'|$)`), termbox.ColorYellow, termbox.ColorBlack},
+		Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), termbox.ColorMagenta, termbox.ColorBlack},
+		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
+	}
 }
 
 type Syntax struct {

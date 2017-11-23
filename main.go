@@ -4,10 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
 
+	"github.com/kybin/tor/syntax"
 	term "github.com/nsf/termbox-go"
 )
 
@@ -73,6 +75,12 @@ func main() {
 		lines := make([]Line, 0)
 		lines = append(lines, Line{""})
 		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
+	}
+
+	ext := filepath.Ext(farg)
+	var lang syntax.Language
+	if ext != "" {
+		lang = syntax.Languages[ext[1:]]
 	}
 
 	err = term.Init()
@@ -159,7 +167,7 @@ func main() {
 	for {
 		win.Follow(cursor, 3)
 		clearScreen(mainarea)
-		drawScreen(mainarea, win, mode.normal.text, selection, cursor)
+		drawScreen(mainarea, win, mode.normal.text, selection, cursor, lang)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
 		} else {
