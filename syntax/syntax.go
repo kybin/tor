@@ -19,7 +19,7 @@ func init() {
 
 	Languages["py"] = Language{
 		Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), termbox.ColorRed, termbox.ColorBlack},
-		Syntax{"multi line string1", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), termbox.ColorYellow, termbox.ColorBlack},
+		Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), termbox.ColorYellow, termbox.ColorBlack},
 		Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]"|$)`), termbox.ColorRed, termbox.ColorBlack},
 		Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]'|$)`), termbox.ColorYellow, termbox.ColorBlack},
 		Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), termbox.ColorMagenta, termbox.ColorBlack},
