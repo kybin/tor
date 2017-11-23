@@ -1,10 +1,7 @@
 package main
 
 import (
-	"strconv"
-	"unicode"
-	"unicode/utf8"
-
+	"github.com/kybin/tor/syntax"
 	"github.com/mattn/go-runewidth"
 	term "github.com/nsf/termbox-go"
 )
@@ -25,50 +22,13 @@ func resizeScreen(ar *Area, win *Window, w, h int) {
 
 // draw text inside of window at mainarea.
 func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
-	multiLineComment := false
+	syn := syntax.Languages["go"]
+	matches := syn.Parse(t.Bytes())
+
 	for l, ln := range t.lines {
 		if l < w.min.l || l >= w.Max().l {
 			continue
 		}
-
-		inStr := false
-		inStrStarter := ' '
-		inStrFinished := false
-		commented := false
-		oldR := ' '
-		oldOldR := ' '
-		var oldBg term.Attribute
-
-		eoc := 0
-		if ln.data != "" {
-			// ++
-			for _, r := range ln.data {
-				if r == '\t' {
-					eoc += t.tabWidth
-				} else {
-					eoc += runewidth.RuneWidth(r)
-				}
-			}
-			// --
-			remain := ln.data
-			for {
-				if remain == "" {
-					break
-				}
-				r, rlen := utf8.DecodeLastRuneInString(remain)
-				remain = remain[:len(remain)-rlen]
-				if !unicode.IsSpace(r) {
-					break
-				}
-				if r == '\t' {
-					eoc -= t.tabWidth
-				} else {
-					eoc -= runewidth.RuneWidth(r)
-				}
-			}
-		}
-
-		// draw
 		o := 0
 		for b, r := range ln.data {
 			if o >= w.Max().o {
@@ -76,61 +36,20 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 			}
 
 			bg := term.ColorBlack
-			if o >= eoc {
-				bg = term.ColorYellow
+			fg := term.ColorWhite
+			for _, m := range matches {
+				start := Point{m.Start.L, m.Start.O}
+				end := Point{m.End.L, m.End.O}
+				rng := &Range{start, end}
+				if rng.Contains(Point{l, b}) {
+					bg = m.Bg
+					fg = m.Fg
+					break
+				}
 			}
 			if sel.on && sel.Contains(Point{l, b}) {
 				bg = term.ColorGreen
 			}
-			if r == '/' && oldR == '/' && oldOldR != '\\' {
-				if !inStr {
-					commented = true
-					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
-				}
-			} else if r == '*' && oldR == '/' && oldOldR != '\\' {
-				if !inStr {
-					multiLineComment = true
-					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o-1, '/', term.ColorMagenta, oldBg) // hacky way to color the first '/' cell.
-				}
-			} else if r == '/' && oldR == '*' && oldOldR != '\\' {
-				if !inStr {
-					multiLineComment = false
-					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, '/', term.ColorMagenta, oldBg) // hacky way to color the last '/' cell.
-					continue
-				}
-			}
-			if inStrFinished {
-				inStr = false
-				inStrStarter = ' '
-			}
-			if r == '\'' || r == '"' {
-				if !(oldR == '\\' && oldOldR != '\\') {
-					if !inStr {
-						inStr = true
-						inStrStarter = r
-						inStrFinished = false
-					} else if inStrStarter == r {
-						inStrFinished = true
-					}
-				}
-			}
-
-			fg := term.ColorWhite
-			if commented || multiLineComment {
-				fg = term.ColorMagenta
-			} else if inStr {
-				if inStrStarter == '\'' {
-					fg = term.ColorYellow
-				} else {
-					fg = term.ColorRed
-				}
-			} else {
-				_, err := strconv.Atoi(string(r))
-				if err == nil {
-					fg = term.ColorCyan
-				}
-			}
-
 			if r == '\t' {
 				for i := 0; i < t.tabWidth; i++ {
 					if o >= w.min.o {
@@ -144,10 +63,6 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor) {
 				}
 				o += runewidth.RuneWidth(r)
 			}
-
-			oldOldR = oldR
-			oldR = r
-			oldBg = bg
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"unicode"
 	"unicode/utf8"
 )
@@ -115,4 +116,12 @@ func (t *Text) DataInside(min, max Point) string {
 		}
 	}
 	return data
+}
+
+func (t *Text) Bytes() []byte {
+	datas := []string{}
+	for _, l := range t.lines {
+		datas = append(datas, l.data)
+	}
+	return []byte(strings.Join(datas, "\n"))
 }
