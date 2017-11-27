@@ -59,9 +59,6 @@ func main() {
 	if !exist && !newFlag {
 		fmt.Println("file not exist. please retry with -new flag.")
 		os.Exit(1)
-	} else if exist && newFlag {
-		fmt.Println("file already exist.")
-		os.Exit(1)
 	}
 
 	var text *Text
