@@ -18,6 +18,10 @@ type Cursor struct {
 	text *Text
 }
 
+func NewCursor(text *Text) *Cursor {
+	return &Cursor{text: text}
+}
+
 func (c *Cursor) Copy(c2 Cursor) {
 	c.l = c2.l
 	c.b = c2.b

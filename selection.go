@@ -7,6 +7,10 @@ type Selection struct {
 	text *Text
 }
 
+func NewSelection(text *Text) *Selection {
+	return &Selection{text: text}
+}
+
 func (s *Selection) SetStart(p Point) {
 	s.rng.SetStart(p)
 }
