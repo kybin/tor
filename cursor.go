@@ -785,6 +785,10 @@ func (c *Cursor) GotoMatchingBracket() bool {
 		m = ')'
 	case ')':
 		m = '('
+	case '<':
+		m = '>'
+	case '>':
+		m = '<'
 	}
 	if dir == "left" && rb == m {
 		return true
