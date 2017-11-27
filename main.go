@@ -95,7 +95,7 @@ func main() {
 	win := NewWindow(mainarea.Size())
 	cursor := &Cursor{}
 	selection := &Selection{}
-	history := newHistory()
+	history := NewHistory()
 
 	mode := &ModeSelector{}
 	mode.normal = &NormalMode{

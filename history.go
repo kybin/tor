@@ -27,8 +27,8 @@ type History struct {
 	actions [][]*Action
 }
 
-// newHistory create a new History.
-func newHistory() *History {
+// NewHistory create a new History.
+func NewHistory() *History {
 	return &History{
 		head:    0,
 		actions: make([][]*Action, 0),
