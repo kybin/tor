@@ -121,9 +121,9 @@ func main() {
 		cursor: cursor,
 		mode:   mode,
 	}
-	mode.current = mode.normal // will start tor as normal mode.
+	mode.current = mode.normal // start tor as normal mode.
 
-	// Set cursor.
+	// initial cursor position
 	if initL != -1 {
 		l := initL
 		// to internal line number
@@ -155,6 +155,8 @@ func main() {
 			mu.Unlock()
 		}
 	}()
+
+	// main loop
 	for {
 		win.Follow(cursor, 3)
 		term.Clear(term.ColorDefault, term.ColorDefault)
