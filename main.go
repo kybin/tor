@@ -163,7 +163,7 @@ func main() {
 	}()
 	for {
 		win.Follow(cursor, 3)
-		clearScreen(mainarea)
+		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(mainarea, win, mode.normal.text, selection, lang)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())

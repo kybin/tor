@@ -10,10 +10,6 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, r, fg, bg)
 }
 
-func clearScreen(ar *Area) {
-	term.Clear(term.ColorDefault, term.ColorDefault)
-}
-
 func resizeScreen(ar *Area, win *Window, w, h int) {
 	min := ar.min
 	*ar = Area{min, Point{min.l + h, min.o + w}}
