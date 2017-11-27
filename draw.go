@@ -21,7 +21,7 @@ func resizeScreen(ar *Area, win *Window, w, h int) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, c *Cursor, lang syntax.Language) {
+func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang syntax.Language) {
 	var matches []syntax.Match
 	if lang != nil {
 		matches = lang.Parse(t.Bytes())
