@@ -86,9 +86,6 @@ func main() {
 	}
 	defer term.Close()
 	term.SetInputMode(term.InputAlt)
-	// term.SetOutputMode(term.Output256)
-	term.Clear(term.ColorDefault, term.ColorDefault)
-	term.Flush()
 
 	termw, termh := term.Size()
 	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
