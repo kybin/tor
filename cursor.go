@@ -12,8 +12,8 @@ var (
 
 type Cursor struct {
 	l int // line offset
-	b int // byte offset
-	o int // visual offset - not always matches with Cursor.O()
+	b int // byte offset in line
+	o int // visual offset in line
 
 	text *Text
 }
@@ -41,6 +41,11 @@ func (c *Cursor) B() int {
 	return c.b
 }
 
+// O is visual offset from cursor's line origin.
+// It sometimes does not match with o because
+// o does not change when a cursor moves up or down,
+// but O always truncated to line's maximum offset.
+// when the cursor moves left or right, o will recaculated from O.
 func (c *Cursor) O() int {
 	maxo := vlen(c.LineData(), c.text.tabWidth)
 	if c.o > maxo {
