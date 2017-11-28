@@ -15,6 +15,7 @@ func init() {
 		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
 		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), termbox.ColorMagenta, termbox.ColorBlack},
 		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
+		Syntax{"package", regexp.MustCompile(`^package\s`), termbox.ColorYellow, termbox.ColorBlack},
 	}
 
 	Languages["py"] = Language{
