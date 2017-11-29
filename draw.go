@@ -17,12 +17,7 @@ func resizeScreen(ar *Area, win *Window, w, h int) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang syntax.Language) {
-	var matches []syntax.Match
-	if lang != nil {
-		matches = lang.Parse(t.Bytes())
-	}
-
+func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, syntaxMatches []syntax.Match) {
 	for l, ln := range t.lines {
 		if l < w.min.l || l >= w.Max().l {
 			continue
@@ -35,8 +30,8 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang syntax.Langua
 
 			bg := term.ColorBlack
 			fg := term.ColorWhite
-			if matches != nil {
-				for _, m := range matches {
+			if syntaxMatches != nil {
+				for _, m := range syntaxMatches {
 					start := Point{m.Start.L, m.Start.O}
 					end := Point{m.End.L, m.End.O}
 					rng := &Range{start, end}

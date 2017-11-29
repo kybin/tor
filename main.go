@@ -157,10 +157,17 @@ func main() {
 	}()
 
 	// main loop
+	matches := lang.Parse(mode.normal.text.Bytes())
 	for {
 		win.Follow(cursor, 3)
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mainarea, win, mode.normal.text, selection, lang)
+
+		if lang != nil && mode.current == mode.normal && mode.normal.dirty {
+			matches = lang.Parse(mode.normal.text.Bytes())
+			mode.normal.dirty = false
+		}
+
+		drawScreen(mainarea, win, mode.normal.text, selection, matches)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
 		} else {

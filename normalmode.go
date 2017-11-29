@@ -18,6 +18,7 @@ type NormalMode struct {
 	history   *History
 	f         string
 
+	dirty  bool // dirty indicates if it is drawed after text edited
 	copied string
 	status string
 	err    string
@@ -54,12 +55,16 @@ func (m *NormalMode) Handle(ev term.Event) {
 		case "insert", "delete", "backspace", "insertTab", "removeTab", "move":
 			if a.kind != "move" {
 				m.text.edited = true
+				m.dirty = true
 			}
 			nc := m.history.Cut(m.history.head)
 			if nc != 0 {
 				cut = true
 			}
 		default:
+			if a.kind == "undo" || a.kind == "redo" {
+				m.dirty = true // maybe
+			}
 			continue
 		}
 		// joining repeative same kind of actions.
