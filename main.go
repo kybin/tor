@@ -6,8 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"sync"
-	"time"
 
 	"github.com/kybin/tor/syntax"
 	term "github.com/nsf/termbox-go"
@@ -146,15 +144,6 @@ func main() {
 			events <- term.PollEvent()
 		}
 	}()
-	ticker := time.NewTicker(time.Second)
-	go func() {
-		mu := &sync.Mutex{}
-		for range ticker.C {
-			mu.Lock()
-			term.Sync()
-			mu.Unlock()
-		}
-	}()
 
 	// main loop
 	matches := lang.Parse(mode.normal.text.Bytes())
@@ -184,6 +173,7 @@ func main() {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
 		}
 		term.Flush()
+		term.Sync()
 
 		// wait for keyboard input
 		select {
