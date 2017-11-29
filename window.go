@@ -29,7 +29,9 @@ func (w *Window) Contains(c *Cursor) bool {
 	return false
 }
 
-func (w *Window) Follow(c *Cursor, margin int) {
+// Follow makes Window follows to Cursor c.
+// It returns true if Window is really moved, or false.
+func (w *Window) Follow(c *Cursor, margin int) bool {
 	var tl, to int
 	cp := c.Position()
 
@@ -56,5 +58,10 @@ func (w *Window) Follow(c *Cursor, margin int) {
 	if to < -w.min.o {
 		to = -w.min.o
 	}
+
+	if tl == 0 && to == 0 {
+		return false
+	}
 	w.Move(Point{tl, to})
+	return true
 }

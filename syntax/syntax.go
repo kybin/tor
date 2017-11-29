@@ -73,6 +73,74 @@ Loop:
 	return matches
 }
 
+// ParseRange checks and replace matches from min to max.
+// When there is an overwrap between old matches and min Pos,
+// it will recaculate matches from the overwrap begins.
+func (l Language) ParseRange(matches []Match, text []byte, min, max Pos) []Match {
+	// check where parse acutally started.
+	last := -1
+	overwrap := false
+	for i, m := range matches {
+		if m.Min().Compare(min) < 0 {
+			if m.Max().Compare(max) < 0 {
+				continue
+			}
+			overwrap = true
+			last = i
+			break
+		}
+		last = i
+		break
+	}
+
+	parseStart := min
+	if last != -1 {
+		if overwrap {
+			parseStart = matches[last].Min()
+		}
+		matches = matches[:last]
+	}
+
+	// move cursor to start position.
+	c := NewCursor(text)
+	for c.Pos().Compare(parseStart) < 0 {
+		ok := c.Advance()
+		if !ok {
+			// already end of text. nothing to do.
+			return matches
+		}
+	}
+
+Loop:
+	for {
+		if c.Pos().Compare(max) >= 0 {
+			break
+		}
+		for _, syn := range l {
+			ms := syn.Re.FindSubmatch(c.Remain())
+			if ms == nil {
+				continue
+			}
+			m := ms[0]
+			if len(ms) == 2 {
+				m = ms[1]
+			}
+			if string(m) == "" {
+				continue
+			}
+			start := c.Pos()
+			c.Skip(len(m))
+			end := c.Pos()
+			matches = append(matches, syn.NewMatch(start, end))
+			continue Loop
+		}
+		if !c.Advance() {
+			break
+		}
+	}
+	return matches
+}
+
 type Cursor struct {
 	text []byte
 	b    int // byte offset
@@ -130,7 +198,47 @@ type Match struct {
 	Bg    termbox.Attribute
 }
 
+func (m *Match) MinMax() (Pos, Pos) {
+	if m.Start.L < m.End.L {
+		return m.Start, m.End
+	}
+	if m.Start.L == m.End.L && m.Start.O <= m.End.O {
+		return m.Start, m.End
+	}
+	return m.End, m.Start
+}
+
+func (m *Match) Min() Pos {
+	min, _ := m.MinMax()
+	return min
+}
+
+func (m *Match) Max() Pos {
+	_, max := m.MinMax()
+	return max
+}
+
 type Pos struct {
 	L int
 	O int
+}
+
+// Compare compares two Pos a and b.
+// If a < b, it will return -1.
+// If a > b, it will return 1.
+// If a == b, it will return 0
+func (a Pos) Compare(b Pos) int {
+	if a.L < b.L {
+		return -1
+	}
+	if a.L == b.L {
+		if a.O <= b.O {
+			return -1
+		}
+		if a.O == b.O {
+			return 0
+		}
+		return 1
+	}
+	return 1
 }

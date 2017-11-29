@@ -159,14 +159,18 @@ func main() {
 	// main loop
 	matches := lang.Parse(mode.normal.text.Bytes())
 	for {
-		win.Follow(cursor, 3)
-		term.Clear(term.ColorDefault, term.ColorDefault)
-
-		if lang != nil && mode.current == mode.normal && mode.normal.dirty {
-			matches = lang.Parse(mode.normal.text.Bytes())
-			mode.normal.dirty = false
+		moved := win.Follow(cursor, 3)
+		if lang != nil {
+			if moved || (mode.current == mode.normal && mode.normal.dirty) {
+				// recalculate syntax matches from window's top.
+				// it will better to recalculate from edited position,
+				// but seems little harder to implement.
+				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), syntax.Pos{win.min.l, 0}, syntax.Pos{win.Max().l + 1, 0})
+				mode.normal.dirty = false
+			}
 		}
 
+		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(mainarea, win, mode.normal.text, selection, matches)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
