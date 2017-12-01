@@ -82,7 +82,7 @@ func (l Language) ParseRange(matches []Match, text []byte, min, max Pos) []Match
 	overwrap := false
 	for i, m := range matches {
 		if m.Min().Compare(min) < 0 {
-			if m.Max().Compare(max) < 0 {
+			if m.Max().Compare(min) < 0 {
 				continue
 			}
 			overwrap = true
@@ -232,7 +232,7 @@ func (a Pos) Compare(b Pos) int {
 		return -1
 	}
 	if a.L == b.L {
-		if a.O <= b.O {
+		if a.O < b.O {
 			return -1
 		}
 		if a.O == b.O {
