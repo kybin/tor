@@ -62,7 +62,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 				cut = true
 			}
 		default:
-			if a.kind == "undo" || a.kind == "redo" {
+			if a.kind == "undo" || a.kind == "redo" || a.kind == "save" {
 				m.dirty = true // maybe
 			}
 			continue
