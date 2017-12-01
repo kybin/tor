@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
+	"time"
 
 	"github.com/kybin/tor/syntax"
 	term "github.com/nsf/termbox-go"
@@ -145,6 +147,19 @@ func main() {
 		}
 	}()
 
+	mu := &sync.Mutex{}
+	go func() {
+		ticker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				mu.Lock()
+				term.Sync()
+				mu.Unlock()
+			}
+		}
+	}()
+
 	// main loop
 	matches := lang.Parse(mode.normal.text.Bytes())
 	for {
@@ -159,6 +174,7 @@ func main() {
 			}
 		}
 
+		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(mainarea, win, mode.normal.text, selection, matches)
 		if mode.current.Error() != "" {
@@ -173,7 +189,7 @@ func main() {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
 		}
 		term.Flush()
-		term.Sync()
+		mu.Unlock()
 
 		// wait for keyboard input
 		select {
@@ -182,9 +198,11 @@ func main() {
 			case term.EventKey:
 				mode.current.Handle(ev)
 			case term.EventResize:
+				mu.Lock()
 				term.Clear(term.ColorDefault, term.ColorDefault)
 				termw, termh = term.Size()
 				resizeScreen(mainarea, win, termw, termh)
+				mu.Unlock()
 			}
 		}
 	}
