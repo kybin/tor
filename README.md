@@ -61,4 +61,9 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 - ...And several other key maps, but they may changed frequently.
 
 #### Recommend
-- goimports : `go get golang.org/x/tools/cmd/goimports`
+- goimports :
+
+```
+go get golang.org/x/tools/cmd/goimports
+go get github.com/kybin/tor/syntax
+```
