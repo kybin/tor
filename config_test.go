@@ -15,12 +15,12 @@ func TestSaveAndLoadLastPosition(t *testing.T) {
 	}
 }
 
-func TestSaveAndLoadCopyString(t *testing.T) {
-	err := saveCopyString("yay")
+func TestSaveAndLoadConfig(t *testing.T) {
+	err := saveConfig("deleteme", "yay")
 	if err != nil {
 		t.Error(err)
 	}
-	copystr := loadCopyString()
+	copystr := loadConfig("deleteme")
 	if copystr != "yay" {
 		t.Error("Could not load copy string.")
 	}
