@@ -71,7 +71,7 @@ func main() {
 		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
 	}
 
-	ext := filepath.Ext(farg)
+	ext := filepath.Ext(f)
 	var lang syntax.Language
 	if ext != "" {
 		lang = syntax.Languages[ext[1:]]
