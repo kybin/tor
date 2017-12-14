@@ -46,11 +46,7 @@ func main() {
 	}
 	farg := fileArgs[0]
 
-	f, initL, initO, err := parseFileArg(farg)
-	if err != nil {
-		printUsage(flagset)
-		os.Exit(1)
-	}
+	f, initL, initO := parseFileArg(farg)
 
 	exist := true
 	if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -63,6 +59,7 @@ func main() {
 
 	var text *Text
 	if exist {
+		var err error
 		text, err = open(f)
 		if err != nil {
 			fmt.Println(err)
@@ -80,7 +77,7 @@ func main() {
 		lang = syntax.Languages[ext[1:]]
 	}
 
-	err = term.Init()
+	err := term.Init()
 	if err != nil {
 		panic(err)
 	}

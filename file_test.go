@@ -5,58 +5,84 @@ import (
 )
 
 func TestParseFileArg(t *testing.T) {
-	f, l, o, err := parseFileArg("hello.go:27:3")
-	if err != nil {
-		t.Error(err)
+	cases := []struct {
+		arg      string
+		wantFile string
+		wantL    int
+		wantO    int
+	}{
+		{
+			arg:      "hello.go:1:0",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    0,
+		},
+		{
+			arg:      "hello.go:27:3",
+			wantFile: "hello.go",
+			wantL:    27,
+			wantO:    3,
+		},
+		{
+			// make negative offsets to 0.
+			arg:      "hello.go:-1:-1",
+			wantFile: "hello.go",
+			wantL:    0,
+			wantO:    0,
+		},
+		{
+			arg:      "hello.go",
+			wantFile: "hello.go",
+			wantL:    -1,
+			wantO:    -1,
+		},
+		{
+			arg:      "hello.go:",
+			wantFile: "hello.go",
+			wantL:    -1,
+			wantO:    -1,
+		},
+		{
+			arg:      "hello.go:1",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    0,
+		},
+		{
+			arg:      "hello.go:1:",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    0,
+		},
+		{
+			arg:      "hello.go:1:1",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    1,
+		},
+		{
+			arg:      "hello.go:1:1:",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    1,
+		},
+		{
+			arg:      "hello.go:a",
+			wantFile: "hello.go",
+			wantL:    0,
+			wantO:    0,
+		},
+		{
+			arg:      "hello.go:1:b",
+			wantFile: "hello.go",
+			wantL:    1,
+			wantO:    0,
+		},
 	}
-	if f != "hello.go" || l != 27 || o != 3 {
-		t.Errorf("expect hello:27:3, got %v:%v:%v", f, l, o)
-	}
-
-	f, l, o, err = parseFileArg("hello.go:1:0")
-	if err != nil {
-		t.Error(err)
-	}
-	if f != "hello.go" || l != 1 || o != 0 {
-		t.Errorf("expect hello:1:0, got %v:%v:%v", f, l, o)
-	}
-
-	f, l, o, err = parseFileArg("hello.go:-1:-1")
-	if err != nil {
-		t.Error(err)
-	}
-	if f != "hello.go" || l != 0 || o != 0 {
-		t.Errorf("expect hello:0:0, got %v:%v:%v", f, l, o)
-	}
-
-	f, l, o, err = parseFileArg("hello.go:30:-5")
-	if err != nil {
-		t.Error(err)
-	}
-	if f != "hello.go" || l != 30 || o != 0 {
-		t.Errorf("expect hello:30:0, got %v:%v:%v", f, l, o)
-	}
-
-	f, l, o, err = parseFileArg("hello.go:-10:15")
-	if err != nil {
-		t.Error(err)
-	}
-	if f != "hello.go" || l != 0 || o != 15 {
-		t.Errorf("expect hello:0:15, got %v:%v:%v", f, l, o)
-	}
-
-	f, l, o, err = parseFileArg("hello.go:")
-	if err == nil {
-		t.Error("shold return parse arugment error")
-	}
-
-	f, l, o, err = parseFileArg("hello.go:-1:")
-	if err == nil {
-		t.Error("shold return parse arugment error")
-	}
-
-	f, l, o, err = parseFileArg("hello.go:-1:-1:")
-	if err == nil {
-		t.Error("shold return too many colon error")
+	for _, c := range cases {
+		gotFile, gotL, gotO := parseFileArg(c.arg)
+		if gotFile != c.wantFile || gotL != c.wantL || gotO != c.wantO {
+			t.Fatalf("parseFileArg(%v): got %v:%v:%v, want %v:%v:%v", c.arg, gotFile, gotL, gotO, c.wantFile, c.wantL, c.wantO)
+		}
 	}
 }
