@@ -1,6 +1,6 @@
 package main
 
-// ~/.config/tor 디렉토리 안의 설정파일을 저장하거나 부를때 사용하는 함수들
+// config files are at $HOME/.config/tor
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 	"strings"
 )
 
-// saveLastPosition는 해당 파일을 닫을 때의 커서위치를 저장한다.
-// 이 정보는 ~/.config/tor/lastpos 파일에 쌓이며 그 형식은
-// {filepath}:{line}:{offset} 이다.
+// saveLastPosition saves a cursor position to
+// the 'lastpos' config file.
+// Each line is formatted as {filepath}:{line}:{offset}
 func saveLastPosition(relpath string, l, b int) error {
 	abspath, err := filepath.Abs(relpath)
 	if err != nil {
@@ -54,10 +54,10 @@ func saveLastPosition(relpath string, l, b int) error {
 	return nil
 }
 
-// loadLastPosition는 마지막으로 해당 파일을 닫을 때의 커서위치를 가지고 온다.
-// 이 정보는 ~/.config/tor/lastpos 파일에 쌓이며 그 형식은
-// {filepath}:{line}:{offset} 이다.
-// 만일 이 파일을 전에 닫은 적이 없다면 (0, 0)을 반환한다.
+// loadLastPosition loads a cursor position from
+// the 'lastpos' config file.
+// If there is no information about the file in 'lastpos',
+// it will return 0, 0.
 func loadLastPosition(relpath string) (int, int) {
 	abspath, err := filepath.Abs(relpath)
 	if err != nil {
@@ -99,7 +99,8 @@ func loadLastPosition(relpath string) (int, int) {
 	return l, b
 }
 
-// saveConfig save string to ~/.config/tor/{fname} file.
+// saveConfig saves a string to ~/.config/tor/{fname} file.
+// It will return error if exists.
 func saveConfig(fname, s string) error {
 	u, err := user.Current()
 	if err != nil {
@@ -117,7 +118,7 @@ func saveConfig(fname, s string) error {
 	return nil
 }
 
-// saveConfig load string from ~/.config/tor/{fname} file.
+// loadConfig loads a string from ~/.config/tor/{fname} file.
 // On any error, it will return empty string.
 func loadConfig(fname string) string {
 	u, err := user.Current()
