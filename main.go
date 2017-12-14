@@ -52,7 +52,7 @@ func main() {
 		exist = false
 	}
 	if !exist && !newFlag {
-		fmt.Println("file not exist. please retry with -new flag.")
+		fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
 		os.Exit(1)
 	}
 
@@ -61,7 +61,7 @@ func main() {
 		var err error
 		text, err = open(f)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 	} else {
