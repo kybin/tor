@@ -14,7 +14,6 @@ import (
 )
 
 var usage = `
-
   tor [flag...] file
 
 file
@@ -24,8 +23,8 @@ flag
 `
 
 func printUsage(f *flag.FlagSet) {
-	fmt.Fprintf(os.Stderr, "Usage of %s:", os.Args[0])
-	fmt.Fprintf(os.Stderr, usage)
+	fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+	fmt.Fprint(os.Stderr, usage)
 	f.PrintDefaults()
 }
 
