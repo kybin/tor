@@ -60,7 +60,7 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 #### Other
 - ...And several other key maps, but they may changed frequently.
 
-#### Install
+### Install
 
 Install tor as other go programs.
 
