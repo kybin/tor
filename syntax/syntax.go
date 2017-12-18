@@ -4,35 +4,35 @@ import (
 	"regexp"
 	"unicode/utf8"
 
-	termbox "github.com/nsf/termbox-go"
+	term "github.com/nsf/termbox-go"
 )
 
 func init() {
 	Languages["go"] = Language{
-		Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), termbox.ColorRed, termbox.ColorBlack},
-		Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), termbox.ColorRed, termbox.ColorBlack},
-		Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), termbox.ColorYellow, termbox.ColorBlack},
-		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), termbox.ColorMagenta, termbox.ColorBlack},
-		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), termbox.ColorMagenta, termbox.ColorBlack},
-		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
-		Syntax{"package", regexp.MustCompile(`^package\s`), termbox.ColorYellow, termbox.ColorBlack},
+		Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), term.ColorRed, term.ColorBlack},
+		Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), term.ColorRed, term.ColorBlack},
+		Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), term.ColorYellow, term.ColorBlack},
+		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), term.ColorMagenta, term.ColorBlack},
+		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), term.ColorMagenta, term.ColorBlack},
+		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), term.ColorBlack, term.ColorYellow},
+		Syntax{"package", regexp.MustCompile(`^package\s`), term.ColorYellow, term.ColorBlack},
 	}
 
 	Languages["py"] = Language{
-		Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), termbox.ColorRed, termbox.ColorBlack},
-		Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), termbox.ColorYellow, termbox.ColorBlack},
-		Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), termbox.ColorRed, termbox.ColorBlack},
-		Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), termbox.ColorYellow, termbox.ColorBlack},
-		Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), termbox.ColorMagenta, termbox.ColorBlack},
-		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), termbox.ColorBlack, termbox.ColorYellow},
+		Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), term.ColorRed, term.ColorBlack},
+		Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), term.ColorYellow, term.ColorBlack},
+		Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), term.ColorRed, term.ColorBlack},
+		Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), term.ColorYellow, term.ColorBlack},
+		Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), term.ColorMagenta, term.ColorBlack},
+		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), term.ColorBlack, term.ColorYellow},
 	}
 }
 
 type Syntax struct {
 	Name string
 	Re   *regexp.Regexp
-	Fg   termbox.Attribute
-	Bg   termbox.Attribute
+	Fg   term.Attribute
+	Bg   term.Attribute
 }
 
 func (s Syntax) NewMatch(start, end Pos) Match {
@@ -194,8 +194,8 @@ type Match struct {
 	Name  string
 	Start Pos
 	End   Pos
-	Fg    termbox.Attribute
-	Bg    termbox.Attribute
+	Fg    term.Attribute
+	Bg    term.Attribute
 }
 
 func (m *Match) MinMax() (Pos, Pos) {
