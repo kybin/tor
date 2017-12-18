@@ -28,7 +28,7 @@ func saveLastPosition(relpath string, l, b int) error {
 	f := path.Join(u.HomeDir, ".config", "tor", "lastpos")
 	if _, err = os.Stat(f); os.IsNotExist(err) {
 		d := path.Join(u.HomeDir, ".config", "tor")
-		os.MkdirAll(d, 0777)
+		os.MkdirAll(d, 0755)
 		os.Create(f)
 	}
 	input, err := ioutil.ReadFile(f)
@@ -109,7 +109,7 @@ func saveConfig(fname, s string) error {
 	f := path.Join(u.HomeDir, ".config", "tor", fname)
 	if _, err = os.Stat(f); os.IsNotExist(err) {
 		d := path.Join(u.HomeDir, ".config", "tor")
-		os.MkdirAll(d, 0777)
+		os.MkdirAll(d, 0755)
 	}
 	err = ioutil.WriteFile(f, []byte(s), 0644)
 	if err != nil {
