@@ -45,7 +45,7 @@ func main() {
 	}
 	farg := fileArgs[0]
 
-	f, initL, initO := parseFileArg(farg)
+	f, initL, initB := parseFileArg(farg)
 
 	exist := true
 	if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -127,9 +127,7 @@ func main() {
 			l--
 		}
 		cursor.GotoLine(l)
-		if initO != -1 {
-			cursor.SetO(initO)
-		}
+		cursor.SetCloseToB(initB)
 	} else {
 		l, b := loadLastPosition(f)
 		cursor.GotoLine(l)
