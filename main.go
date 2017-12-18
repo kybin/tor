@@ -165,7 +165,7 @@ func main() {
 				// recalculate syntax matches from window's top.
 				// it will better to recalculate from edited position,
 				// but seems little harder to implement.
-				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), syntax.Pos{win.min.l, 0}, syntax.Pos{win.Max().l + 1, 0})
+				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), syntax.Pos{L: win.min.l, O: 0}, syntax.Pos{L: win.Max().l + 1, O: 0})
 				mode.normal.dirty = false
 			}
 		}

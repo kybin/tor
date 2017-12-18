@@ -65,7 +65,6 @@ func (c *Cursor) O() int {
 			return lasto
 		}
 	}
-	panic("should not reach here")
 }
 
 func (c *Cursor) SetB(b int) {
@@ -835,7 +834,6 @@ func (c *Cursor) GotoMatchingBracket() bool {
 			depth--
 		}
 	}
-	return false
 }
 
 func (c *Cursor) GotoLine(l int) {
