@@ -71,7 +71,7 @@ func main() {
 	}
 
 	ext := filepath.Ext(f)
-	var lang syntax.Language
+	var lang *syntax.Language
 	if ext != "" {
 		lang = syntax.Languages[ext[1:]]
 	}
@@ -170,7 +170,7 @@ func main() {
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mainarea, win, mode.normal.text, selection, matches)
+		drawScreen(mainarea, win, mode.normal.text, selection, lang, matches)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
 		} else {

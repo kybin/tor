@@ -7,48 +7,74 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
-var Languages = make(map[string]Language)
+var Languages = make(map[string]*Language)
 
 func init() {
-	Languages["go"] = Language{
-		Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), term.ColorRed, term.ColorBlack},
-		Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), term.ColorRed, term.ColorBlack},
-		Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), term.ColorYellow, term.ColorBlack},
-		Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), term.ColorMagenta, term.ColorBlack},
-		Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), term.ColorMagenta, term.ColorBlack},
-		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), term.ColorBlack, term.ColorYellow},
-		Syntax{"package", regexp.MustCompile(`^package\s`), term.ColorYellow, term.ColorBlack},
-	}
+	golang := NewLanguage()
+	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)}, Color{term.ColorRed, term.ColorBlack})
+	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")}, Color{term.ColorRed, term.ColorBlack})
+	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)}, Color{term.ColorYellow, term.ColorBlack})
+	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`)}, Color{term.ColorMagenta, term.ColorBlack})
+	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`)}, Color{term.ColorMagenta, term.ColorBlack})
+	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
+	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`)}, Color{term.ColorYellow, term.ColorBlack})
+	Languages["go"] = golang
 
-	Languages["py"] = Language{
-		Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), term.ColorRed, term.ColorBlack},
-		Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), term.ColorYellow, term.ColorBlack},
-		Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), term.ColorRed, term.ColorBlack},
-		Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), term.ColorYellow, term.ColorBlack},
-		Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), term.ColorMagenta, term.ColorBlack},
-		Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), term.ColorBlack, term.ColorYellow},
-	}
+	py := NewLanguage()
+	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`)}, Color{term.ColorRed, term.ColorBlack})
+	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`)}, Color{term.ColorYellow, term.ColorBlack})
+	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)}, Color{term.ColorRed, term.ColorBlack})
+	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)}, Color{term.ColorYellow, term.ColorBlack})
+	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`)}, Color{term.ColorMagenta, term.ColorBlack})
+	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
+	Languages["py"] = py
 }
 
 type Syntax struct {
 	Name string
 	Re   *regexp.Regexp
-	Fg   term.Attribute
-	Bg   term.Attribute
 }
 
 func (s Syntax) NewMatch(start, end Pos) Match {
-	return Match{Name: s.Name, Start: start, End: end, Fg: s.Fg, Bg: s.Bg}
+	return Match{Name: s.Name, Start: start, End: end}
 }
 
-type Language []Syntax
+type Color struct {
+	Fg term.Attribute
+	Bg term.Attribute
+}
 
-func (l Language) Parse(text []byte) []Match {
+type Language struct {
+	syntaxes []Syntax // should be ordered
+	colors   map[string]Color
+}
+
+func NewLanguage() *Language {
+	return &Language{
+		syntaxes: []Syntax{},
+		colors:   make(map[string]Color),
+	}
+}
+
+func (l *Language) AddSyntax(s Syntax, c Color) {
+	l.syntaxes = append(l.syntaxes, s)
+	l.colors[s.Name] = c
+}
+
+func (l *Language) Color(synName string) Color {
+	c, ok := l.colors[synName]
+	if !ok {
+		return Color{term.ColorWhite, term.ColorBlack}
+	}
+	return c
+}
+
+func (l *Language) Parse(text []byte) []Match {
 	c := NewCursor(text)
 	matches := []Match{}
 Loop:
 	for {
-		for _, syn := range l {
+		for _, syn := range l.syntaxes {
 			ms := syn.Re.FindSubmatch(c.Remain())
 			if ms == nil {
 				continue
@@ -76,7 +102,7 @@ Loop:
 // ParseRange checks and replace matches from min to max.
 // When there is an overwrap between old matches and min Pos,
 // it will recaculate matches from the overwrap begins.
-func (l Language) ParseRange(matches []Match, text []byte, min, max Pos) []Match {
+func (l *Language) ParseRange(matches []Match, text []byte, min, max Pos) []Match {
 	// check where parse acutally started.
 	last := -1
 	overwrap := false
@@ -116,7 +142,7 @@ Loop:
 		if c.Pos().Compare(max) >= 0 {
 			break
 		}
-		for _, syn := range l {
+		for _, syn := range l.syntaxes {
 			ms := syn.Re.FindSubmatch(c.Remain())
 			if ms == nil {
 				continue
@@ -194,8 +220,6 @@ type Match struct {
 	Name  string
 	Start Pos
 	End   Pos
-	Fg    term.Attribute
-	Bg    term.Attribute
 }
 
 func (m *Match) MinMax() (Pos, Pos) {
