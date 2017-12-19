@@ -7,6 +7,8 @@ import (
 	term "github.com/nsf/termbox-go"
 )
 
+var Languages = make(map[string]Language)
+
 func init() {
 	Languages["go"] = Language{
 		Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), term.ColorRed, term.ColorBlack},
@@ -40,8 +42,6 @@ func (s Syntax) NewMatch(start, end Pos) Match {
 }
 
 type Language []Syntax
-
-var Languages = make(map[string]Language)
 
 func (l Language) Parse(text []byte) []Match {
 	c := NewCursor(text)
