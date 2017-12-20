@@ -52,7 +52,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 		}
 		// skip action types that are not specified below.
 		switch a.kind {
-		case "insert", "delete", "backspace", "insertTab", "removeTab", "move":
+		case "insert", "paste", "delete", "backspace", "insertTab", "removeTab", "move":
 			if a.kind != "move" {
 				m.text.edited = true
 				m.dirty = true
@@ -62,13 +62,13 @@ func (m *NormalMode) Handle(ev term.Event) {
 				cut = true
 			}
 		default:
-			if a.kind == "undo" || a.kind == "redo" || a.kind == "save" {
+			if a.kind == "unread" || a.kind == "redo" || a.kind == "save" {
 				m.dirty = true // maybe
 			}
 			continue
 		}
 		// joining repeative same kind of actions.
-		if a.kind == "insert" || a.kind == "delete" || a.kind == "backspace" || a.kind == "move" {
+		if a.kind == "insert" || a.kind == "paste" || a.kind == "delete" || a.kind == "backspace" || a.kind == "move" {
 			var last *Action
 			if len(rememberActions) != 0 {
 				last = rememberActions[len(rememberActions)-1]
@@ -77,7 +77,7 @@ func (m *NormalMode) Handle(ev term.Event) {
 				last = lastGroup[len(lastGroup)-1]
 			}
 			if last != nil && a.kind == last.kind {
-				if last.kind == "insert" || a.kind == "delete" {
+				if last.kind == "insert" || a.kind == "paste" || a.kind == "delete" {
 					last.value = last.value + a.value
 				} else if a.kind == "backspace" {
 					last.value = a.value + last.value
@@ -179,6 +179,11 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.copied}}
 		}
 		return []*Action{{kind: "insert", value: m.copied}}
+	case term.KeyCtrlP:
+		if m.selection.on {
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "paste", value: m.copied}}
+		}
+		return []*Action{{kind: "paste", value: m.copied}}
 	case term.KeyCtrlJ:
 		if m.selection.on {
 			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.mode.replace.str}}
@@ -529,6 +534,10 @@ func (m *NormalMode) do(a *Action) {
 			return
 		}
 		m.cursor.Insert(a.value)
+	case "paste":
+		c := *m.cursor
+		m.cursor.Insert(a.value)
+		m.cursor.Copy(c)
 	case "delete":
 		if a.value == "selection" {
 			if m.selection.on {
@@ -657,6 +666,11 @@ func (m *NormalMode) do(a *Action) {
 				for range u.value {
 					m.cursor.Backspace()
 				}
+			case "paste":
+				m.cursor.Copy(u.afterCursor)
+				for range u.value {
+					m.cursor.Delete()
+				}
 			case "insertTab":
 				lineInfos := strings.Split(u.value, ",")
 				for _, li := range lineInfos {
@@ -722,6 +736,10 @@ func (m *NormalMode) do(a *Action) {
 			case "insert":
 				m.cursor.Copy(r.beforeCursor)
 				m.cursor.Insert(r.value)
+			case "paste":
+				m.cursor.Copy(r.beforeCursor)
+				m.cursor.Insert(r.value)
+				m.cursor.Copy(r.beforeCursor)
 			case "insertTab":
 				lineInfos := strings.Split(r.value, ",")
 				for _, li := range lineInfos {
