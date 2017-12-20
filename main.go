@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,14 +29,25 @@ func printUsage(f *flag.FlagSet) {
 	f.PrintDefaults()
 }
 
+// sortArgs sorts args to make flags always placed ahead of file arg.
+func sortArgs(args []string) {
+	sort.Slice(args, func(i, j int) bool {
+		iIsFlag := strings.HasPrefix(args[i], "-")
+		jIsFlag := strings.HasPrefix(args[j], "-")
+		if iIsFlag && !jIsFlag {
+			return true
+		}
+		return false
+	})
+}
+
 func main() {
 	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var newFlag bool
 	flagset.BoolVar(&newFlag, "new", false, "let tor to edit a new file.")
 
-	// sort args, so let flags always placed ahead of file arg.
 	args := os.Args[1:]
-	sort.Strings(args)
+	sortArgs(args)
 	flagset.Parse(args)
 
 	fileArgs := flagset.Args()
