@@ -167,7 +167,10 @@ func main() {
 	}()
 
 	// main loop
-	matches := lang.Parse(mode.normal.text.Bytes())
+	var matches []syntax.Match
+	if lang != nil {
+		matches = lang.Parse(mode.normal.text.Bytes())
+	}
 	for {
 		moved := win.Follow(cursor, 3)
 		if lang != nil {
