@@ -41,12 +41,12 @@ func (c *Cursor) B() int {
 	return c.b
 }
 
-// O is visual offset from cursor's line origin.
-// It sometimes does not match with o because
+// vo is visual offset from cursor's line origin.
+// It is not same as o because
 // o does not change when a cursor moves up or down,
-// but O always truncated to line's maximum offset.
-// when the cursor moves left or right, o will recaculated from O.
-func (c *Cursor) O() int {
+// but vo always truncated to line's maximum offset.
+// when the cursor moves left or right, o will recaculated from vo.
+func (c *Cursor) vo() int {
 	maxo := vlen(c.LineData(), c.text.tabWidth)
 	if c.o > maxo {
 		return maxo
@@ -67,6 +67,11 @@ func (c *Cursor) O() int {
 	}
 }
 
+// O is a 1 based visual offset from line origin for outside.
+func (c *Cursor) O() int {
+	return c.vo() + 1
+}
+
 func (c *Cursor) SetB(b int) {
 	o := 0
 	remain := c.LineData()[:b]
@@ -79,8 +84,12 @@ func (c *Cursor) SetB(b int) {
 	c.b = b
 }
 
+// SetO sets a 1 based visual offset from line origin for outside.
 func (c *Cursor) SetO(o int) {
-	c.o = o
+	if o < 1 {
+		o = 1
+	}
+	c.o = o - 1
 	c.RecalcB()
 }
 
@@ -111,7 +120,7 @@ func (c *Cursor) SetCloseToB(tb int) {
 
 // After MoveUp or MoveDown, we need reclaculate byte offset.
 func (c *Cursor) RecalcB() {
-	c.b = BFromO(c.LineData(), c.O(), c.text.tabWidth)
+	c.b = BFromO(c.LineData(), c.vo(), c.text.tabWidth)
 }
 
 func BFromO(line string, o, tabWidth int) (b int) {
@@ -126,7 +135,7 @@ func BFromO(line string, o, tabWidth int) (b int) {
 }
 
 func (c *Cursor) Position() Point {
-	return Point{c.l, c.O()}
+	return Point{c.l, c.vo()}
 }
 
 func (c *Cursor) Line() *Line {
@@ -207,7 +216,7 @@ func (c *Cursor) InStrings() bool {
 }
 
 func (c *Cursor) MoveLeft() {
-	c.o = c.O()
+	c.o = c.vo()
 	if c.AtBof() {
 		return
 	} else if c.AtBol() {
@@ -221,7 +230,7 @@ func (c *Cursor) MoveLeft() {
 }
 
 func (c *Cursor) MoveRight() {
-	c.o = c.O()
+	c.o = c.vo()
 	if c.AtEof() {
 		return
 	} else if c.AtEol() {
