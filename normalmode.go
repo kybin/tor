@@ -804,7 +804,7 @@ func (m *NormalMode) Status() string {
 	if m.status != "" {
 		return m.status
 	}
-	return fmt.Sprintf("%v:%v:%v", m.f, m.cursor.l+1, m.cursor.O())
+	return fmt.Sprintf("%v:%v:%v", m.f, m.cursor.l+1, m.cursor.O()+1)
 }
 
 // Error returns an error of the last done action.
