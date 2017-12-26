@@ -58,6 +58,9 @@ func main() {
 	farg := fileArgs[0]
 
 	f, initL, initB := parseFileArg(farg)
+	if initL == -1 {
+		initL, initB = loadLastPosition(f)
+	}
 
 	exist := true
 	if _, err := os.Stat(f); os.IsNotExist(err) {
@@ -99,6 +102,8 @@ func main() {
 	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
 	win := NewWindow(mainarea.Size())
 	cursor := NewCursor(text)
+	cursor.GotoLine(initL)
+	cursor.SetCloseToB(initB)
 	selection := NewSelection(text)
 	history := NewHistory()
 
@@ -130,21 +135,6 @@ func main() {
 		mode:   mode,
 	}
 	mode.current = mode.normal // start tor as normal mode.
-
-	// initial cursor position
-	if initL != -1 {
-		l := initL
-		// to internal line number
-		if l != 0 {
-			l--
-		}
-		cursor.GotoLine(l)
-		cursor.SetCloseToB(initB)
-	} else {
-		l, b := loadLastPosition(f)
-		cursor.GotoLine(l)
-		cursor.SetCloseToB(b)
-	}
 
 	events := make(chan term.Event, 20)
 	go func() {

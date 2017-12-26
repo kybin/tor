@@ -73,6 +73,10 @@ func open(f string) (*Text, error) {
 // parseFileArg parses farg. Which looks like "filepath:line:offset"
 // The correspond return values are (filepath, linenum, offset).
 //
+// Offsets from the arg treated as 1 based offsets.
+// And tor internally uses 0 based offsets.
+// So they will all smaller by 1 when return.
+//
 // If linenum or offset is given but invalid, it will be 0.
 // If both are ungiven, those will be -1.
 func parseFileArg(farg string) (string, int, int) {
@@ -88,17 +92,19 @@ func parseFileArg(farg string) (string, int, int) {
 	}
 
 	l, err := strconv.Atoi(finfo[1])
-	if err != nil || l < 0 {
-		l = 0
+	if err != nil || l < 1 {
+		l = 1
 	}
+	l -= 1 // to base 0.
 	if len(finfo) == 2 {
 		return f, l, 0
 	}
 
 	o, err := strconv.Atoi(finfo[2])
-	if err != nil || o < 0 {
-		o = 0
+	if err != nil || o < 1 {
+		o = 1
 	}
+	o -= 1 // to base 0.
 	return f, l, o
 }
 
