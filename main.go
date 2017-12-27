@@ -85,12 +85,6 @@ func main() {
 		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
 	}
 
-	ext := filepath.Ext(f)
-	var lang *syntax.Language
-	if ext != "" {
-		lang = syntax.Languages[ext[1:]]
-	}
-
 	err := term.Init()
 	if err != nil {
 		panic(err)
@@ -156,11 +150,18 @@ func main() {
 		}
 	}()
 
-	// main loop
+	// parse syntax
+	ext := filepath.Ext(f)
+	var lang *syntax.Language
+	if ext != "" {
+		lang = syntax.Languages[ext[1:]]
+	}
 	var matches []syntax.Match
 	if lang != nil {
 		matches = lang.Parse(mode.normal.text.Bytes())
 	}
+
+	// main loop
 	for {
 		moved := win.Follow(cursor, 3)
 		if lang != nil {
