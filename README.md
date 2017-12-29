@@ -67,6 +67,6 @@ Install tor as other go programs.
 `go get -u github.com/kybin/tor`
 
 
-It is not must but recommended to install goimports when you programming in go.
+It is recommended to install goimports if you do programming in go.
 
 - goimports : `go get -u golang.org/x/tools/cmd/goimports`
