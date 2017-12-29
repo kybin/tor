@@ -12,16 +12,16 @@ func TestParseFileArg(t *testing.T) {
 		wantO    int
 	}{
 		{
-			arg:      "hello.go:1:0",
+			arg:      "hello.go:1:1",
 			wantFile: "hello.go",
-			wantL:    1,
+			wantL:    0,
 			wantO:    0,
 		},
 		{
 			arg:      "hello.go:27:3",
 			wantFile: "hello.go",
-			wantL:    27,
-			wantO:    3,
+			wantL:    26,
+			wantO:    2,
 		},
 		{
 			// make negative offsets to 0.
@@ -43,25 +43,25 @@ func TestParseFileArg(t *testing.T) {
 			wantO:    -1,
 		},
 		{
-			arg:      "hello.go:1",
+			arg:      "hello.go:2",
 			wantFile: "hello.go",
 			wantL:    1,
 			wantO:    0,
 		},
 		{
-			arg:      "hello.go:1:",
+			arg:      "hello.go:2:",
 			wantFile: "hello.go",
 			wantL:    1,
 			wantO:    0,
 		},
 		{
-			arg:      "hello.go:1:1",
+			arg:      "hello.go:2:2",
 			wantFile: "hello.go",
 			wantL:    1,
 			wantO:    1,
 		},
 		{
-			arg:      "hello.go:1:1:",
+			arg:      "hello.go:2:2:",
 			wantFile: "hello.go",
 			wantL:    1,
 			wantO:    1,
@@ -73,7 +73,7 @@ func TestParseFileArg(t *testing.T) {
 			wantO:    0,
 		},
 		{
-			arg:      "hello.go:1:b",
+			arg:      "hello.go:2:b",
 			wantFile: "hello.go",
 			wantL:    1,
 			wantO:    0,
