@@ -201,7 +201,7 @@ func main() {
 				mu.Lock()
 				term.Clear(term.ColorDefault, term.ColorDefault)
 				termw, termh = term.Size()
-				resizeScreen(win, termw, termh)
+				win.size = cell.Pt{termh - 1, termw}
 				mu.Unlock()
 			}
 		}

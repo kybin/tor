@@ -11,10 +11,6 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, r, fg, bg)
 }
 
-func resizeScreen(win *Window, w, h int) {
-	win.size = cell.Pt{h, w}
-}
-
 // draw text inside of window at mainarea.
 func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, syntaxMatches []syntax.Match) {
 	for l, ln := range t.lines {
