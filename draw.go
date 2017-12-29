@@ -55,7 +55,8 @@ func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, synta
 	}
 }
 
-func printStatus(status string) {
+// drawStatus draws current status to status line.
+func drawStatus(status string) {
 	termw, termh := term.Size()
 	statusLine := termh - 1
 	// clear
@@ -70,7 +71,8 @@ func printStatus(status string) {
 	}
 }
 
-func printErrorStatus(err string) {
+// drawErrorStatus draws error to status line.
+func drawErrorStatus(err string) {
 	termw, termh := term.Size()
 	statusLine := termh - 1
 	// clear

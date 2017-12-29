@@ -178,9 +178,9 @@ func main() {
 		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(win, mode.normal.text, selection, lang, matches)
 		if mode.current.Error() != "" {
-			printErrorStatus(mode.current.Error())
+			drawErrorStatus(mode.current.Error())
 		} else {
-			printStatus(mode.current.Status())
+			drawStatus(mode.current.Status())
 		}
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)
