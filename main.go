@@ -101,6 +101,7 @@ func main() {
 	selection := NewSelection(text)
 	history := NewHistory()
 
+	// create modes for handling events.
 	mode := &ModeSelector{}
 	mode.normal = &NormalMode{
 		text:      text,
@@ -128,8 +129,9 @@ func main() {
 		cursor: cursor,
 		mode:   mode,
 	}
-	mode.current = mode.normal // start tor as normal mode.
+	mode.current = mode.normal // start as normal mode.
 
+	// get events from termbox.
 	events := make(chan term.Event, 20)
 	go func() {
 		for {
@@ -137,7 +139,12 @@ func main() {
 		}
 	}()
 
+	// mutex for commucation with termbox.
 	mu := &sync.Mutex{}
+
+	// Sync redraws terminal from buffer.
+	// sometimes Flush is insufficient,
+	// it is better to Sync frequently.
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		for {
