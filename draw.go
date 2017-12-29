@@ -31,10 +31,7 @@ func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, synta
 			fg := term.ColorWhite
 			if syntaxMatches != nil {
 				for _, m := range syntaxMatches {
-					start := cell.Pt{m.Start.L, m.Start.O}
-					end := cell.Pt{m.End.L, m.End.O}
-					rng := cell.Range{start, end}
-					if rng.Contains(cell.Pt{l, b}) {
+					if m.Range.Contains(cell.Pt{l, b}) {
 						c := lang.Color(m.Name)
 						bg = c.Bg
 						fg = c.Fg

@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"unicode/utf8"
 
+	"github.com/kybin/tor/cell"
 	term "github.com/nsf/termbox-go"
 )
 
@@ -35,8 +36,8 @@ type Syntax struct {
 	Re   *regexp.Regexp
 }
 
-func (s Syntax) NewMatch(start, end Pos) Match {
-	return Match{Name: s.Name, Start: start, End: end}
+func (s Syntax) NewMatch(start, end cell.Pt) Match {
+	return Match{Name: s.Name, Range: cell.Range{start, end}}
 }
 
 type Color struct {
@@ -100,15 +101,15 @@ Loop:
 }
 
 // ParseRange checks and replace matches from min to max.
-// When there is an overwrap between old matches and min Pos,
+// When there is an overwrap between old matches and min position,
 // it will recaculate matches from the overwrap begins.
-func (l *Language) ParseRange(matches []Match, text []byte, min, max Pos) []Match {
+func (l *Language) ParseRange(matches []Match, text []byte, min, max cell.Pt) []Match {
 	// check where parse acutally started.
 	last := -1
 	overwrap := false
 	for i, m := range matches {
-		if m.Min().Compare(min) < 0 {
-			if m.Max().Compare(min) < 0 {
+		if m.Range.Min().Compare(min) < 0 {
+			if m.Range.Max().Compare(min) < 0 {
 				continue
 			}
 			overwrap = true
@@ -122,7 +123,7 @@ func (l *Language) ParseRange(matches []Match, text []byte, min, max Pos) []Matc
 	parseStart := min
 	if last != -1 {
 		if overwrap {
-			parseStart = matches[last].Min()
+			parseStart = matches[last].Range.Min()
 		}
 		matches = matches[:last]
 	}
@@ -178,8 +179,8 @@ func NewCursor(text []byte) *Cursor {
 	return &Cursor{text: text}
 }
 
-func (c *Cursor) Pos() Pos {
-	return Pos{c.l, c.o}
+func (c *Cursor) Pos() cell.Pt {
+	return cell.Pt{c.l, c.o}
 }
 
 func (c *Cursor) Remain() []byte {
@@ -218,51 +219,5 @@ func (c *Cursor) next() (r rune, size int) {
 
 type Match struct {
 	Name  string
-	Start Pos
-	End   Pos
-}
-
-func (m *Match) MinMax() (Pos, Pos) {
-	if m.Start.L < m.End.L {
-		return m.Start, m.End
-	}
-	if m.Start.L == m.End.L && m.Start.O <= m.End.O {
-		return m.Start, m.End
-	}
-	return m.End, m.Start
-}
-
-func (m *Match) Min() Pos {
-	min, _ := m.MinMax()
-	return min
-}
-
-func (m *Match) Max() Pos {
-	_, max := m.MinMax()
-	return max
-}
-
-type Pos struct {
-	L int
-	O int
-}
-
-// Compare compares two Pos a and b.
-// If a < b, it will return -1.
-// If a > b, it will return 1.
-// If a == b, it will return 0
-func (a Pos) Compare(b Pos) int {
-	if a.L < b.L {
-		return -1
-	}
-	if a.L == b.L {
-		if a.O < b.O {
-			return -1
-		}
-		if a.O == b.O {
-			return 0
-		}
-		return 1
-	}
-	return 1
+	Range cell.Range
 }

@@ -3,6 +3,8 @@ package syntax
 import (
 	"reflect"
 	"testing"
+
+	"github.com/kybin/tor/cell"
 )
 
 func TestUsage(t *testing.T) {
@@ -31,15 +33,15 @@ func main() {
 `),
 			langName: "go",
 			want: []Match{
-				{"package", Pos{0, 0}, Pos{0, 8}},
-				{"comment", Pos{2, 0}, Pos{2, 21}},
-				{"multi line comment", Pos{4, 0}, Pos{8, 2}},
-				{"string", Pos{11, 6}, Pos{11, 10}},
-				{"trailing spaces", Pos{11, 10}, Pos{11, 13}},
-				{"string", Pos{12, 6}, Pos{12, 9}},
-				{"string", Pos{12, 16}, Pos{12, 37}},
-				{"rune", Pos{13, 6}, Pos{13, 12}},
-				{"trailing spaces", Pos{14, 0}, Pos{14, 1}},
+				{"package", cell.Range{cell.Pt{0, 0}, cell.Pt{0, 8}}},
+				{"comment", cell.Range{cell.Pt{2, 0}, cell.Pt{2, 21}}},
+				{"multi line comment", cell.Range{cell.Pt{4, 0}, cell.Pt{8, 2}}},
+				{"string", cell.Range{cell.Pt{11, 6}, cell.Pt{11, 10}}},
+				{"trailing spaces", cell.Range{cell.Pt{11, 10}, cell.Pt{11, 13}}},
+				{"string", cell.Range{cell.Pt{12, 6}, cell.Pt{12, 9}}},
+				{"string", cell.Range{cell.Pt{12, 16}, cell.Pt{12, 37}}},
+				{"rune", cell.Range{cell.Pt{13, 6}, cell.Pt{13, 12}}},
+				{"trailing spaces", cell.Range{cell.Pt{14, 0}, cell.Pt{14, 1}}},
 			},
 		},
 	}
@@ -53,45 +55,5 @@ func main() {
 			t.Fatalf("(%v).Parse(%v): got %v, want %v", lang, c.text, got, c.want)
 		}
 
-	}
-}
-
-func TestPosCompare(t *testing.T) {
-	cases := []struct {
-		a    Pos
-		b    Pos
-		want int
-	}{
-		{
-			a:    Pos{0, 0},
-			b:    Pos{0, 0},
-			want: 0,
-		},
-		{
-			a:    Pos{0, 1},
-			b:    Pos{0, 2},
-			want: -1,
-		},
-		{
-			a:    Pos{0, 2},
-			b:    Pos{0, 1},
-			want: 1,
-		},
-		{
-			a:    Pos{0, 1},
-			b:    Pos{1, 0},
-			want: -1,
-		},
-		{
-			a:    Pos{1, 0},
-			b:    Pos{0, 1},
-			want: 1,
-		},
-	}
-	for _, c := range cases {
-		got := c.a.Compare(c.b)
-		if got != c.want {
-			t.Fatalf("(%v).Compare(%v): got %v, want %v", c.a, c.b, got, c.want)
-		}
 	}
 }
