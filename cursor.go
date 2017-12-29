@@ -4,6 +4,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/kybin/tor/cell"
 )
 
 var (
@@ -28,13 +30,13 @@ func (c *Cursor) Copy(c2 Cursor) {
 	c.o = c2.o
 }
 
-func (c *Cursor) BytePos() Point {
-	return Point{l: c.l, o: c.b}
+func (c *Cursor) BytePos() cell.Pt {
+	return cell.Pt{c.l, c.b}
 }
 
-func (c *Cursor) SetBytePos(bpos Point) {
-	c.l = bpos.l
-	c.SetB(bpos.o)
+func (c *Cursor) SetBytePos(bpos cell.Pt) {
+	c.l = bpos.L
+	c.SetB(bpos.O)
 }
 
 func (c *Cursor) B() int {
@@ -125,8 +127,8 @@ func BFromO(line string, o, tabWidth int) (b int) {
 	return
 }
 
-func (c *Cursor) Position() Point {
-	return Point{c.l, c.O()}
+func (c *Cursor) Position() cell.Pt {
+	return cell.Pt{c.l, c.O()}
 }
 
 func (c *Cursor) Line() *Line {
@@ -421,11 +423,11 @@ func (c *Cursor) Backspace() string {
 
 func (c *Cursor) DeleteSelection(sel *Selection) string {
 	min, max := sel.MinMax()
-	bmin := Point{min.l, BFromO(c.text.lines[min.l].data, min.o, c.text.tabWidth)}
-	bmax := Point{max.l, BFromO(c.text.lines[max.l].data, max.o, c.text.tabWidth)}
+	bmin := cell.Pt{min.L, BFromO(c.text.lines[min.L].data, min.O, c.text.tabWidth)}
+	bmax := cell.Pt{max.L, BFromO(c.text.lines[max.L].data, max.O, c.text.tabWidth)}
 	deleted := c.text.RemoveRange(bmin, bmax)
-	c.l = min.l
-	c.SetB(bmin.o)
+	c.l = min.L
+	c.SetB(bmin.O)
 	return deleted
 }
 

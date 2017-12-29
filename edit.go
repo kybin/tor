@@ -4,6 +4,8 @@ import (
 	"strings"
 	"unicode"
 	"unicode/utf8"
+
+	"github.com/kybin/tor/cell"
 )
 
 // Line
@@ -68,25 +70,25 @@ func (t *Text) RemoveLine(l int) string {
 	return deleted.data + "\n"
 }
 
-func (t *Text) RemoveRange(min, max Point) string {
+func (t *Text) RemoveRange(min, max cell.Pt) string {
 	deleted := ""
-	if min.l == max.l {
-		deleted = t.lines[min.l].data[min.o:max.o]
+	if min.L == max.L {
+		deleted = t.lines[min.L].data[min.O:max.O]
 	} else {
-		focusLines := t.lines[min.l : max.l+1]
+		focusLines := t.lines[min.L : max.L+1]
 		for i, line := range focusLines {
 			if i == 0 {
-				deleted += line.data[min.o:]
+				deleted += line.data[min.O:]
 			} else if i == len(focusLines)-1 {
 				deleted += "\n"
-				deleted += line.data[:max.o]
+				deleted += line.data[:max.O]
 			} else {
 				deleted += "\n"
 				deleted += line.data
 			}
 		}
 	}
-	t.lines = append(append(append([]Line{}, t.lines[:min.l]...), Line{t.lines[min.l].data[:min.o] + t.lines[max.l].data[max.o:]}), t.lines[max.l+1:]...)
+	t.lines = append(append(append([]Line{}, t.lines[:min.L]...), Line{t.lines[min.L].data[:min.O] + t.lines[max.L].data[max.O:]}), t.lines[max.L+1:]...)
 	return deleted
 }
 
@@ -98,20 +100,20 @@ func (t *Text) Remove(l, from, to int) string {
 	return t.lines[l].Remove(from, to)
 }
 
-func (t *Text) DataInside(min, max Point) string {
-	if min.l == max.l {
-		return t.lines[min.l].data[min.o:max.o]
+func (t *Text) DataInside(min, max cell.Pt) string {
+	if min.L == max.L {
+		return t.lines[min.L].data[min.O:max.O]
 	}
 	data := ""
-	for l := min.l; l < max.l+1; l++ {
-		if l == min.l {
-			data += t.lines[l].data[min.o:]
-		} else if l == max.l {
-			data += t.lines[l].data[:max.o]
+	for l := min.L; l < max.L+1; l++ {
+		if l == min.L {
+			data += t.lines[l].data[min.O:]
+		} else if l == max.L {
+			data += t.lines[l].data[:max.O]
 		} else {
 			data += t.lines[l].data
 		}
-		if l != max.l {
+		if l != max.L {
 			data += "\n"
 		}
 	}

@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kybin/tor/cell"
 	"github.com/kybin/tor/syntax"
 	term "github.com/nsf/termbox-go"
 )
@@ -93,8 +94,7 @@ func main() {
 	term.SetInputMode(term.InputAlt)
 
 	termw, termh := term.Size()
-	mainarea := NewArea(Point{0, 0}, Point{termh - 1, termw})
-	win := NewWindow(mainarea.Size())
+	win := NewWindow(cell.Pt{termh - 1, termw})
 	cursor := NewCursor(text)
 	cursor.GotoLine(initL)
 	cursor.SetCloseToB(initB)
@@ -169,14 +169,14 @@ func main() {
 				// recalculate syntax matches from window's top.
 				// it will better to recalculate from edited position,
 				// but seems little harder to implement.
-				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), syntax.Pos{L: win.min.l, O: 0}, syntax.Pos{L: win.Max().l + 1, O: 0})
+				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), syntax.Pos{L: win.min.L, O: 0}, syntax.Pos{L: win.Max().L + 1, O: 0})
 				mode.normal.dirty = false
 			}
 		}
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mainarea, win, mode.normal.text, selection, lang, matches)
+		drawScreen(win, mode.normal.text, selection, lang, matches)
 		if mode.current.Error() != "" {
 			printErrorStatus(mode.current.Error())
 		} else {
@@ -184,7 +184,7 @@ func main() {
 		}
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)
-			term.SetCursor(mainarea.min.o+winP.o, mainarea.min.l+winP.l)
+			term.SetCursor(winP.O, winP.L)
 		} else {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
 		}
@@ -201,7 +201,7 @@ func main() {
 				mu.Lock()
 				term.Clear(term.ColorDefault, term.ColorDefault)
 				termw, termh = term.Size()
-				resizeScreen(mainarea, win, termw, termh)
+				resizeScreen(win, termw, termh)
 				mu.Unlock()
 			}
 		}

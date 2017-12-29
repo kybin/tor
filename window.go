@@ -1,29 +1,31 @@
 package main
 
+import "github.com/kybin/tor/cell"
+
 // Window is a area that follows a cursor.
 // It used for clipping text.
 // It's size should same as tor's main layout size.
 type Window struct {
-	min  Point
-	size Point
+	min  cell.Pt
+	size cell.Pt
 }
 
-func NewWindow(size Point) *Window {
-	w := Window{Point{0, 0}, size}
+func NewWindow(size cell.Pt) *Window {
+	w := Window{cell.Pt{0, 0}, size}
 	return &w
 }
 
-func (w *Window) Max() Point {
+func (w *Window) Max() cell.Pt {
 	return w.min.Add(w.size)
 }
 
-func (w *Window) Move(t Point) {
+func (w *Window) Move(t cell.Pt) {
 	w.min = w.min.Add(t)
 }
 
 func (w *Window) Contains(c *Cursor) bool {
 	cp := c.Position()
-	if (w.min.o <= cp.o && cp.o < w.Max().o) && (w.min.l <= cp.l && cp.l < w.Max().l) {
+	if (w.min.O <= cp.O && cp.O < w.Max().O) && (w.min.L <= cp.L && cp.L < w.Max().L) {
 		return true
 	}
 	return false
@@ -35,33 +37,33 @@ func (w *Window) Follow(c *Cursor, margin int) bool {
 	var tl, to int
 	cp := c.Position()
 
-	minl := w.min.l + margin
-	maxl := w.Max().l - margin
-	if cp.l < minl {
-		tl = cp.l - minl
-	} else if cp.l >= maxl {
-		tl = cp.l - maxl + 1
+	minl := w.min.L + margin
+	maxl := w.Max().L - margin
+	if cp.L < minl {
+		tl = cp.L - minl
+	} else if cp.L >= maxl {
+		tl = cp.L - maxl + 1
 	}
 	// tl should not smaller than -w.min.l
-	if tl < -w.min.l {
-		tl = -w.min.l
+	if tl < -w.min.L {
+		tl = -w.min.L
 	}
 
-	mino := w.min.o + margin
-	maxo := w.Max().o - margin
-	if cp.o < mino {
-		to = cp.o - mino
-	} else if cp.o >= maxo {
-		to = cp.o - maxo + 1
+	mino := w.min.O + margin
+	maxo := w.Max().O - margin
+	if cp.O < mino {
+		to = cp.O - mino
+	} else if cp.O >= maxo {
+		to = cp.O - maxo + 1
 	}
 	// to should not smaller than -w.min.o
-	if to < -w.min.o {
-		to = -w.min.o
+	if to < -w.min.O {
+		to = -w.min.O
 	}
 
 	if tl == 0 && to == 0 {
 		return false
 	}
-	w.Move(Point{tl, to})
+	w.Move(cell.Pt{tl, to})
 	return true
 }

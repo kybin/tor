@@ -2,12 +2,14 @@ package main
 
 import (
 	"testing"
+
+	"github.com/kybin/tor/cell"
 )
 
 func TestRemoveRange(t *testing.T) {
 	cases := []struct {
 		in       Text
-		min, max Point
+		min, max cell.Pt
 		want     Text
 	}{
 		{
@@ -16,7 +18,7 @@ func TestRemoveRange(t *testing.T) {
 				{"This is the test string."},
 				{"You are great."},
 			}},
-			Point{0, 6}, Point{2, 7},
+			cell.Pt{0, 6}, cell.Pt{2, 7},
 			Text{lines: []Line{
 				{"Hello, great."},
 			}},
@@ -27,7 +29,7 @@ func TestRemoveRange(t *testing.T) {
 				{"	wow"},
 				{"	Diablo"},
 			}},
-			Point{0, 0}, Point{1, 0},
+			cell.Pt{0, 0}, cell.Pt{1, 0},
 			Text{lines: []Line{
 				{"	wow"},
 				{"	Diablo"},
@@ -41,7 +43,7 @@ func TestRemoveRange(t *testing.T) {
 				{"If m is nil or there is no such element,"},
 				{"delete is a no-op."},
 			}},
-			Point{0, 0}, Point{4, 18},
+			cell.Pt{0, 0}, cell.Pt{4, 18},
 			Text{lines: []Line{
 				{""},
 			}},
@@ -51,7 +53,7 @@ func TestRemoveRange(t *testing.T) {
 				{"Text is a set of lines."},
 				{"Lines is a slice of bytes."},
 			}},
-			Point{0, 10}, Point{0, 10},
+			cell.Pt{0, 10}, cell.Pt{0, 10},
 			Text{lines: []Line{
 				{"Text is a set of lines."},
 				{"Lines is a slice of bytes."},
@@ -62,7 +64,7 @@ func TestRemoveRange(t *testing.T) {
 				{"		for o := viewer.min.o ; o < viewer.max.o ; o++ {"},
 				{"			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)"},
 			}},
-			Point{0, BFromO("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17, 4)}, Point{1, BFromO("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19, 4)},
+			cell.Pt{0, BFromO("		for o := viewer.min.o ; o < viewer.max.o ; o++ {", 17, 4)}, cell.Pt{1, BFromO("			SetCell(l, o, ' ', term.ColorDefault, term.ColorDefault)", 19, 4)},
 			Text{lines: []Line{
 				{"		for o := (l, o, ' ', term.ColorDefault, term.ColorDefault)"},
 			}},

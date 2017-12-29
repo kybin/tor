@@ -1,8 +1,10 @@
 package main
 
+import "github.com/kybin/tor/cell"
+
 type Selection struct {
 	on  bool
-	rng Range
+	rng cell.Range
 
 	text *Text
 }
@@ -11,12 +13,12 @@ func NewSelection(text *Text) *Selection {
 	return &Selection{text: text}
 }
 
-func (s *Selection) SetStart(p Point) {
-	s.rng.SetStart(p)
+func (s *Selection) SetStart(p cell.Pt) {
+	s.rng.Start = p
 }
 
-func (s *Selection) SetEnd(p Point) {
-	s.rng.SetEnd(p)
+func (s *Selection) SetEnd(p cell.Pt) {
+	s.rng.End = p
 }
 
 // Lines return selected line numbers as int slice.
@@ -28,19 +30,19 @@ func (s *Selection) Lines() []int {
 	return s.rng.Lines()
 }
 
-func (s *Selection) Min() Point {
+func (s *Selection) Min() cell.Pt {
 	return s.rng.Min()
 }
 
-func (s *Selection) Max() Point {
+func (s *Selection) Max() cell.Pt {
 	return s.rng.Max()
 }
 
-func (s *Selection) MinMax() (Point, Point) {
+func (s *Selection) MinMax() (cell.Pt, cell.Pt) {
 	return s.rng.MinMax()
 }
 
-func (s *Selection) Contains(p Point) bool {
+func (s *Selection) Contains(p cell.Pt) bool {
 	return s.rng.Contains(p)
 }
 

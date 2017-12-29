@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/kybin/tor/cell"
 	"github.com/kybin/tor/syntax"
 	"github.com/mattn/go-runewidth"
 	term "github.com/nsf/termbox-go"
@@ -10,21 +11,19 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 	term.SetCell(o, l, r, fg, bg)
 }
 
-func resizeScreen(ar *Area, win *Window, w, h int) {
-	min := ar.min
-	*ar = Area{min, Point{min.l + h, min.o + w}}
-	win.size = ar.Size()
+func resizeScreen(win *Window, w, h int) {
+	win.size = cell.Pt{h, w}
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang *syntax.Language, syntaxMatches []syntax.Match) {
+func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, syntaxMatches []syntax.Match) {
 	for l, ln := range t.lines {
-		if l < w.min.l || l >= w.Max().l {
+		if l < w.min.L || l >= w.Max().L {
 			continue
 		}
 		o := 0
 		for b, r := range ln.data {
-			if o >= w.Max().o {
+			if o >= w.Max().O {
 				break
 			}
 
@@ -32,10 +31,10 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang *syntax.Langu
 			fg := term.ColorWhite
 			if syntaxMatches != nil {
 				for _, m := range syntaxMatches {
-					start := Point{m.Start.L, m.Start.O}
-					end := Point{m.End.L, m.End.O}
-					rng := &Range{start, end}
-					if rng.Contains(Point{l, b}) {
+					start := cell.Pt{m.Start.L, m.Start.O}
+					end := cell.Pt{m.End.L, m.End.O}
+					rng := cell.Range{start, end}
+					if rng.Contains(cell.Pt{l, b}) {
 						c := lang.Color(m.Name)
 						bg = c.Bg
 						fg = c.Fg
@@ -43,19 +42,19 @@ func drawScreen(ar *Area, w *Window, t *Text, sel *Selection, lang *syntax.Langu
 					}
 				}
 			}
-			if sel.on && sel.Contains(Point{l, b}) {
+			if sel.on && sel.Contains(cell.Pt{l, b}) {
 				bg = term.ColorGreen
 			}
 			if r == '\t' {
 				for i := 0; i < t.tabWidth; i++ {
-					if o >= w.min.o {
-						SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(' '), fg, bg)
+					if o >= w.min.O {
+						SetCell(l-w.min.L, o-w.min.O, rune(' '), fg, bg)
 					}
 					o += 1
 				}
 			} else {
-				if o >= w.min.o {
-					SetCell(l-w.min.l+ar.min.l, o-w.min.o+ar.min.o, rune(r), fg, bg)
+				if o >= w.min.O {
+					SetCell(l-w.min.L, o-w.min.O, rune(r), fg, bg)
 				}
 				o += runewidth.RuneWidth(r)
 			}
