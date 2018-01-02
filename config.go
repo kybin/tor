@@ -1,7 +1,5 @@
 package main
 
-// config files are at $HOME/.config/tor
-
 import (
 	"fmt"
 	"io/ioutil"
@@ -13,6 +11,21 @@ import (
 	"strings"
 )
 
+// configDir is where config files will saved.
+// It is $HOME/.config/tor
+var configDir = ""
+
+func init() {
+	u, err := user.Current()
+	if err != nil {
+		panic(err)
+	}
+	configDir = path.Join(u.HomeDir, ".config", "tor")
+	if err := os.MkdirAll(configDir, 0755); err != nil && !os.IsExist(err) {
+		panic(err)
+	}
+}
+
 // saveLastPosition saves a cursor position to
 // the 'lastpos' config file.
 // Each line is formatted as {filepath}:{line}:{offset}
@@ -21,14 +34,8 @@ func saveLastPosition(relpath string, l, b int) error {
 	if err != nil {
 		return err
 	}
-	u, err := user.Current()
-	if err != nil {
-		return err
-	}
-	f := path.Join(u.HomeDir, ".config", "tor", "lastpos")
+	f := path.Join(configDir, "lastpos")
 	if _, err = os.Stat(f); os.IsNotExist(err) {
-		d := path.Join(u.HomeDir, ".config", "tor")
-		os.MkdirAll(d, 0755)
 		os.Create(f)
 	}
 	input, err := ioutil.ReadFile(f)
@@ -102,30 +109,14 @@ func loadLastPosition(relpath string) (int, int) {
 // saveConfig saves a string to ~/.config/tor/{fname} file.
 // It will return error if exists.
 func saveConfig(fname, s string) error {
-	u, err := user.Current()
-	if err != nil {
-		return err
-	}
-	f := path.Join(u.HomeDir, ".config", "tor", fname)
-	if _, err = os.Stat(f); os.IsNotExist(err) {
-		d := path.Join(u.HomeDir, ".config", "tor")
-		os.MkdirAll(d, 0755)
-	}
-	err = ioutil.WriteFile(f, []byte(s), 0644)
-	if err != nil {
-		return err
-	}
-	return nil
+	f := path.Join(configDir, fname)
+	return ioutil.WriteFile(f, []byte(s), 0644)
 }
 
 // loadConfig loads a string from ~/.config/tor/{fname} file.
 // On any error, it will return empty string.
 func loadConfig(fname string) string {
-	u, err := user.Current()
-	if err != nil {
-		return ""
-	}
-	f := path.Join(u.HomeDir, ".config", "tor", fname)
+	f := path.Join(configDir, fname)
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		return ""
