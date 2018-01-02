@@ -29,8 +29,8 @@ func init() {
 // saveLastPosition saves a cursor position to
 // the 'lastpos' config file.
 // Each line is formatted as {filepath}:{line}:{offset}
-func saveLastPosition(relpath string, l, b int) error {
-	abspath, err := filepath.Abs(relpath)
+func saveLastPosition(pth string, l, b int) error {
+	abspath, err := filepath.Abs(pth)
 	if err != nil {
 		return err
 	}
@@ -65,8 +65,8 @@ func saveLastPosition(relpath string, l, b int) error {
 // the 'lastpos' config file.
 // If there is no information about the file in 'lastpos',
 // it will return 0, 0.
-func loadLastPosition(relpath string) (int, int) {
-	abspath, err := filepath.Abs(relpath)
+func loadLastPosition(pth string) (int, int) {
+	abspath, err := filepath.Abs(pth)
 	if err != nil {
 		return 0, 0
 	}
