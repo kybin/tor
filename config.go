@@ -13,7 +13,7 @@ import (
 
 // configDir is where config files will saved.
 // It is $HOME/.config/tor
-var configDir = ""
+var configDir string
 
 func init() {
 	u, err := user.Current()
