@@ -43,15 +43,14 @@ func sortArgs(args []string) {
 	})
 }
 
-// parseFileArg parses farg. Which looks like "filepath:line:offset"
-// The correspond return values are (filepath, linenum, offset).
+// parseFileArg parses farg. Which looks like "filepath:linenum(1):offset(1)"
+// The correspond return values are (filepath, linenum(0), offset(0)).
 //
-// Offsets from the arg treated as 1 based offsets.
-// And tor internally uses 0 based offsets.
-// So they will all smaller by 1 when return.
+// Offset from the arg treated as 1 based offsets.
+// They will changed to 0 based offsets, means they are subtracted by 1.
 //
-// If linenum or offset is given but invalid, it will be 0.
-// If both are ungiven, those will be -1.
+// If linenum or offset is given but invalid, it's return value will be 0.
+// When both of them are ungiven, their return value will be -1, -1.
 func parseFileArg(farg string) (string, int, int) {
 	// final ":" is invalid but ignore it is sufficient.
 	if strings.HasSuffix(farg, ":") {
