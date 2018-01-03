@@ -59,10 +59,10 @@ func open(f string) (*Text, error) {
 		return nil, err
 	}
 
-	// if file created with `touch` cmd, scanner could not scan anything,
-	// which cause no line in text that makes program panic.
+	// `touch` cmd creates a file with no content.
+	// avoid program panic from empty text.
 	if len(lines) == 0 {
-		lines = append(lines, Line{""})
+		lines = []Line{{""}}
 	}
 
 	return &Text{lines, tabToSpace, tabWidth, false}, nil
