@@ -101,27 +101,23 @@ func main() {
 		initL, initB = loadLastPosition(f)
 	}
 
-	exist := true
-	if _, err := os.Stat(f); os.IsNotExist(err) {
-		exist = false
-	}
-	if !exist && !newFlag {
-		fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
-		os.Exit(1)
-	}
-
+	// get text from file or make new.
 	var text *Text
-	if exist {
+	if _, err := os.Stat(f); os.IsNotExist(err) {
+		if !newFlag {
+			fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
+			os.Exit(1)
+		}
+		lines := make([]Line, 0)
+		lines = append(lines, Line{""})
+		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
+	} else {
 		var err error
 		text, err = open(f)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
-	} else {
-		lines := make([]Line, 0)
-		lines = append(lines, Line{""})
-		text = &Text{lines: lines, tabToSpace: false, tabWidth: 4, edited: false}
 	}
 
 	err := term.Init()
