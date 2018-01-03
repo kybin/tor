@@ -15,10 +15,10 @@ func open(f string) (*Text, error) {
 	}
 	defer file.Close()
 
+	// aggregate the text info.
+	// tor uses tab (4 space) for indentation.
+	// but when parse an exist file, follow the file's rule.
 	lines := make([]Line, 0)
-
-	// tor use tab(shown as 4 space) for indentation as default.
-	// But when parse an exsit file, follow the file's rule.
 	tabToSpace := false
 	tabWidth := 4
 
