@@ -6,16 +6,9 @@ import (
 	"unicode/utf8"
 )
 
-// open read a file and return it as *Text.
-// If the file not exist, it will return *Text with one empty line.
+// open reads a file and returns it as *Text.
+// When the file is not exists, it will return error with nil *Text.
 func open(f string) (*Text, error) {
-	ex, err := exists(f)
-	if err != nil {
-		return nil, err
-	}
-	if !ex {
-		return &Text{lines: []Line{lines: Line{data: ""}}, tabToSpace: false, tabWidth: 4}, nil
-	}
 	file, err := os.Open(f)
 	if err != nil {
 		return nil, err
