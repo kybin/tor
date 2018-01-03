@@ -94,9 +94,8 @@ func main() {
 		printUsage(flagset)
 		os.Exit(1)
 	}
-	farg := fileArgs[0]
 
-	f, initL, initB := parseFileArg(farg)
+	f, initL, initB := parseFileArg(fileArgs[0])
 	if initL == -1 {
 		initL, initB = loadLastPosition(f)
 	}
