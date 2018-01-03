@@ -95,14 +95,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	f, initL, initB := parseFileArg(fileArgs[0])
+	editFile, initL, initB := parseFileArg(fileArgs[0])
 	if initL == -1 {
-		initL, initB = loadLastPosition(f)
+		initL, initB = loadLastPosition(editFile)
 	}
 
 	// get text from file or make new.
 	var text *Text
-	if _, err := os.Stat(f); os.IsNotExist(err) {
+	if _, err := os.Stat(editFile); os.IsNotExist(err) {
 		if !newFlag {
 			fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
 			os.Exit(1)
@@ -110,7 +110,7 @@ func main() {
 		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4}
 	} else {
 		var err error
-		text, err = open(f)
+		text, err = open(editFile)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -139,7 +139,7 @@ func main() {
 		cursor:    cursor,
 		selection: selection,
 		history:   history,
-		f:         f,
+		f:         editFile,
 		mode:      mode,
 		copied:    loadConfig("copy"),
 	}
@@ -156,7 +156,7 @@ func main() {
 		mode:   mode,
 	}
 	mode.exit = &ExitMode{
-		f:      f,
+		f:      editFile,
 		cursor: cursor,
 		mode:   mode,
 	}
@@ -189,7 +189,7 @@ func main() {
 	}()
 
 	// parse syntax
-	ext := filepath.Ext(f)
+	ext := filepath.Ext(editFile)
 	var lang *syntax.Language
 	if ext != "" {
 		lang = syntax.Languages[ext[1:]]
