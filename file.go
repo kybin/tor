@@ -61,6 +61,7 @@ func open(f string) (*Text, error) {
 	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth}, nil
 }
 
+// save saves Text to a file.
 func save(f string, t *Text) error {
 	file, err := os.Create(f)
 	if err != nil {
