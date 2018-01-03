@@ -108,7 +108,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
 			os.Exit(1)
 		}
-		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, edited: false}
+		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4}
 	} else {
 		var err error
 		text, err = open(f)

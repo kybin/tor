@@ -14,7 +14,7 @@ func open(f string) (*Text, error) {
 		return nil, err
 	}
 	if !ex {
-		return &Text{lines: []Line{Line{data: ""}}}, nil
+		return &Text{lines: []Line{lines: Line{data: ""}}, tabToSpace: false, tabWidth: 4}, nil
 	}
 	file, err := os.Open(f)
 	if err != nil {
@@ -65,7 +65,7 @@ func open(f string) (*Text, error) {
 		lines = []Line{{""}}
 	}
 
-	return &Text{lines, tabToSpace, tabWidth, false}, nil
+	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth}, nil
 }
 
 func save(f string, t *Text) error {
