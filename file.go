@@ -6,6 +6,20 @@ import (
 	"unicode/utf8"
 )
 
+// isWritable checks whether f is writable file or not.
+// If it couldn't open the file for check, it will return error.
+func isWritable(f string) (bool, error) {
+	file, err := os.OpenFile(f, os.O_WRONLY, 0666)
+	if err != nil {
+		if os.IsPermission(err) {
+			return false, nil
+		}
+		return false, err
+	}
+	file.Close()
+	return true, nil
+}
+
 // open reads a file and returns it as *Text.
 // When the file is not exists, it will return error with nil *Text.
 func open(f string) (*Text, error) {
@@ -14,6 +28,12 @@ func open(f string) (*Text, error) {
 		return nil, err
 	}
 	defer file.Close()
+
+	writable, err := isWritable(f)
+	if err != nil {
+		return nil, err
+	}
+	readOnly := !writable
 
 	// aggregate the text info.
 	// tor uses tab (4 space) for indentation.
@@ -58,7 +78,7 @@ func open(f string) (*Text, error) {
 		lines = []Line{{""}}
 	}
 
-	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth}, nil
+	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth, readOnly: readOnly}, nil
 }
 
 // save saves Text to a file.
