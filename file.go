@@ -2,13 +2,46 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"unicode/utf8"
 )
 
+// isCreatable check if users has permission to create.
+// If the file already exists, it will return error.
+//
+// NOTE: It actually creates the file then delete.
+func isCreatable(f string) (bool, error) {
+	// ensure the file does not exist.
+	_, err := os.Stat(f)
+	if err == nil {
+		return false, fmt.Errorf("file should not exists: %v", f)
+	}
+	if !os.IsNotExist(err) {
+		return false, err
+	}
+	// file creation checking.
+	file, err := os.Create(f)
+	if err != nil {
+		if !os.IsPermission(err) {
+			return false, err
+		}
+		return false, nil
+	}
+	if err := file.Close(); err != nil {
+		return false, err
+	}
+	if err := os.Remove(f); err != nil {
+		// TODO: better finalization for remove failure?
+		return false, err
+	}
+	return true, nil
+}
+
 // isWritable checks whether f is writable file or not.
 // If it couldn't open the file for check, it will return error.
 func isWritable(f string) (bool, error) {
+	// file exists.
 	file, err := os.OpenFile(f, os.O_WRONLY, 0666)
 	if err != nil {
 		if os.IsPermission(err) {

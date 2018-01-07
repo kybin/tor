@@ -107,7 +107,12 @@ func main() {
 			fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
 			os.Exit(1)
 		}
-		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4}
+		writable, err := isCreatable(editFile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}
 	} else {
 		var err error
 		text, err = open(editFile)
