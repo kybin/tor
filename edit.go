@@ -43,7 +43,7 @@ type Text struct {
 	tabToSpace bool
 	tabWidth   int
 	edited     bool
-	readOnly   bool
+	writable   bool
 }
 
 func (t *Text) Line(l int) *Line {

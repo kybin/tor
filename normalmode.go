@@ -811,7 +811,7 @@ func (m *NormalMode) Status() string {
 // If there was no error, it will return an empty string.
 // The error will cleared when normal mode takes another event.
 func (m *NormalMode) Error() string {
-	if m.text.readOnly && m.err == "" {
+	if !m.text.writable && m.err == "" {
 		return fmt.Sprintf("READ-ONLY: %v", m.Status())
 	}
 	return m.err

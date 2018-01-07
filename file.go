@@ -33,7 +33,6 @@ func open(f string) (*Text, error) {
 	if err != nil {
 		return nil, err
 	}
-	readOnly := !writable
 
 	// aggregate the text info.
 	// tor uses tab (4 space) for indentation.
@@ -78,7 +77,7 @@ func open(f string) (*Text, error) {
 		lines = []Line{{""}}
 	}
 
-	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth, readOnly: readOnly}, nil
+	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth, writable: writable}, nil
 }
 
 // save saves Text to a file.
