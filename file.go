@@ -41,7 +41,6 @@ func isCreatable(f string) (bool, error) {
 // isWritable checks whether f is writable file or not.
 // If it couldn't open the file for check, it will return error.
 func isWritable(f string) (bool, error) {
-	// file exists.
 	file, err := os.OpenFile(f, os.O_WRONLY, 0666)
 	if err != nil {
 		if os.IsPermission(err) {
