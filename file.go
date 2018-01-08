@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"unicode/utf8"
@@ -50,6 +51,31 @@ func isWritable(f string) (bool, error) {
 	}
 	file.Close()
 	return true, nil
+}
+
+// openOrCreate open f and return it's Text.
+// When f doesn't exist and allow to create, it will create a new Text.
+func openOrCreate(f string, allowCreate bool) (*Text, error) {
+	if _, err := os.Stat(f); err != nil {
+		if os.IsNotExist(err) {
+			if allowCreate {
+				return create(f)
+			}
+			return nil, errors.New("file not exist. please retry with -new flag.")
+		}
+		return nil, err
+	}
+	return open(f)
+}
+
+// create creates a new Text for f.
+// When f is not creatable, it will return error.
+func create(f string) (*Text, error) {
+	writable, err := isCreatable(f)
+	if err != nil {
+		return nil, err
+	}
+	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}, nil
 }
 
 // open reads a file and returns it as *Text.

@@ -101,28 +101,13 @@ func main() {
 	}
 
 	// get text from file or make new.
-	var text *Text
-	if _, err := os.Stat(editFile); os.IsNotExist(err) {
-		if !newFlag {
-			fmt.Fprintln(os.Stderr, "file not exist. please retry with -new flag.")
-			os.Exit(1)
-		}
-		writable, err := isCreatable(editFile)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		text = &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}
-	} else {
-		var err error
-		text, err = open(editFile)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
+	text, err := openOrCreate(editFile, newFlag)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 
-	err := term.Init()
+	err = term.Init()
 	if err != nil {
 		panic(err)
 	}
