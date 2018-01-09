@@ -205,11 +205,7 @@ func main() {
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(win, mode.normal.text, selection, lang, matches)
-		if mode.current.Error() != "" {
-			drawErrorStatus(mode.current.Error())
-		} else {
-			drawStatus(mode.current.Status())
-		}
+		drawStatus(mode.current)
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)
 			term.SetCursor(winP.O, winP.L)

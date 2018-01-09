@@ -54,34 +54,28 @@ func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, synta
 	}
 }
 
-// drawStatus draws current status to status line.
-func drawStatus(status string) {
+// drawStatus draws current status of m at bottom of terminal.
+// If m has Error, it will printed with red background.
+func drawStatus(m Mode) {
+	var bg term.Attribute
+	var status string
+	if m.Error() != "" {
+		bg = term.ColorRed
+		status = m.Error()
+	} else {
+		bg = term.ColorWhite
+		status = m.Status()
+	}
+
 	termw, termh := term.Size()
 	statusLine := termh - 1
-	// clear
+	// clear and draw
 	for i := 0; i < termw; i++ {
-		SetCell(statusLine, i, ' ', term.ColorBlack, term.ColorWhite)
+		SetCell(statusLine, i, ' ', term.ColorBlack, bg)
 	}
-	// draw
 	o := 0
 	for _, r := range status {
-		SetCell(statusLine, o, r, term.ColorBlack, term.ColorWhite)
-		o += runewidth.RuneWidth(r)
-	}
-}
-
-// drawErrorStatus draws error to status line.
-func drawErrorStatus(err string) {
-	termw, termh := term.Size()
-	statusLine := termh - 1
-	// clear
-	for i := 0; i < termw; i++ {
-		SetCell(statusLine, i, ' ', term.ColorBlack, term.ColorRed)
-	}
-	// draw
-	o := 0
-	for _, r := range err {
-		SetCell(statusLine, o, r, term.ColorBlack, term.ColorRed)
+		SetCell(statusLine, o, r, term.ColorBlack, bg)
 		o += runewidth.RuneWidth(r)
 	}
 }
