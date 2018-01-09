@@ -75,6 +75,9 @@ func create(f string) (*Text, error) {
 	if err != nil {
 		return nil, err
 	}
+	if !writable {
+		return nil, errors.New("could not create the file. please check the directory permission.")
+	}
 	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}, nil
 }
 
