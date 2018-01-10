@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/kybin/tor/syntax"
 	term "github.com/nsf/termbox-go"
 )
 
@@ -19,6 +20,8 @@ type NormalMode struct {
 	f         string
 
 	dirty  bool // dirty indicates if it is drawed after text edited
+	parser *syntax.Parser
+
 	copied string
 	status string
 	err    string
@@ -378,6 +381,7 @@ func (m *NormalMode) do(a *Action) {
 				m.text = text
 				m.cursor.text = text
 				m.selection.text = text
+				m.parser.SetText(text)
 				oldl := m.cursor.l
 				oldb := m.cursor.b
 				m.cursor.GotoLine(oldl)
@@ -660,6 +664,7 @@ func (m *NormalMode) do(a *Action) {
 			m.text = u.text
 			m.cursor.text = u.text
 			m.selection.text = u.text
+			m.parser.SetText(u.text)
 			switch u.kind {
 			case "insert":
 				m.cursor.Copy(u.afterCursor)
@@ -732,6 +737,8 @@ func (m *NormalMode) do(a *Action) {
 			m.text = r.text
 			m.cursor.text = r.text
 			m.selection.text = r.text
+			m.parser.SetText(r.text)
+
 			switch r.kind {
 			case "insert":
 				m.cursor.Copy(r.beforeCursor)

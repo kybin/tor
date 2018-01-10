@@ -31,6 +31,66 @@ func init() {
 	Languages["py"] = py
 }
 
+// Byter could converted to []bytes.
+type Byter interface {
+	Bytes() []byte
+}
+
+// Parser is syntax parser.
+type Parser struct {
+	text        Byter
+	textChanged bool
+	lang        *Language
+	Matches     []Match
+}
+
+// NewParser creates a new Parser.
+func NewParser(text Byter, langName string) *Parser {
+	p := &Parser{}
+	lang, ok := Languages[langName]
+	if ok {
+		p.lang = lang
+	}
+	p.SetText(text)
+	return p
+}
+
+// SetText set it's text.
+// After doing this, it should re-Parse-d entirely.
+// Until then, TextChanged will return true.
+func (p *Parser) SetText(text Byter) {
+	p.text = text
+	p.textChanged = true
+}
+
+// TextChanged returns status whether
+// it's text changed but not Parsed yet.
+func (p *Parser) TextChanged() bool {
+	return p.textChanged
+}
+
+// Parse calculates it's matches entirely.
+func (p *Parser) Parse() {
+	if p.lang != nil {
+		p.Matches = p.lang.Parse(p.text.Bytes())
+	}
+	p.textChanged = false
+}
+
+// Parse calulate it's partial matches.
+// It will re-parse text from min to max range and
+// replace current matches if there is an overwrap.
+func (p *Parser) ParseRange(min, max cell.Pt) {
+	if p.lang != nil {
+		p.Matches = p.lang.ParseRange(p.Matches, p.text.Bytes(), min, max)
+	}
+}
+
+// Color returns any match's syntax color name.
+func (p *Parser) Color(synName string) Color {
+	return p.lang.Color(synName)
+}
+
 type Syntax struct {
 	Name string
 	Re   *regexp.Regexp

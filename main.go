@@ -121,6 +121,11 @@ func main() {
 	cursor.SetCloseToB(initB)
 	selection := NewSelection(text)
 	history := NewHistory()
+	ext := filepath.Ext(editFile)
+	if ext != "" {
+		ext = ext[1:]
+	}
+	parser := syntax.NewParser(text, ext)
 
 	// create modes for handling events.
 	mode := &ModeSelector{}
@@ -130,6 +135,7 @@ func main() {
 		selection: selection,
 		history:   history,
 		f:         editFile,
+		parser:    parser,
 		mode:      mode,
 		copied:    loadConfig("copy"),
 	}
@@ -178,33 +184,23 @@ func main() {
 		}
 	}()
 
-	// parse syntax
-	ext := filepath.Ext(editFile)
-	var lang *syntax.Language
-	if ext != "" {
-		lang = syntax.Languages[ext[1:]]
-	}
-	var matches []syntax.Match
-	if lang != nil {
-		matches = lang.Parse(mode.normal.text.Bytes())
-	}
-
 	// main loop
 	for {
 		moved := win.Follow(cursor, 3)
-		if lang != nil {
-			if moved || (mode.current == mode.normal && mode.normal.dirty) {
-				// recalculate syntax matches from window's top.
-				// it will better to recalculate from edited position,
-				// but seems little harder to implement.
-				matches = lang.ParseRange(matches, mode.normal.text.Bytes(), cell.Pt{L: win.min.L, O: 0}, cell.Pt{L: win.Max().L + 1, O: 0})
-				mode.normal.dirty = false
-			}
+
+		if mode.normal.parser.TextChanged() {
+			mode.normal.parser.Parse()
+		} else if moved || (mode.current == mode.normal && mode.normal.dirty) {
+			// recalculate syntax matches from window's top.
+			// it will better to recalculate from edited position,
+			// but seems little harder to implement.
+			mode.normal.parser.ParseRange(cell.Pt{L: win.min.L, O: 0}, cell.Pt{L: win.Max().L + 1, O: 0})
+			mode.normal.dirty = false
 		}
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(win, mode.normal.text, selection, lang, matches)
+		drawScreen(win, mode.normal.text, selection, parser)
 		drawStatus(mode.current)
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(win.min)

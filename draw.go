@@ -12,7 +12,7 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, syntaxMatches []syntax.Match) {
+func drawScreen(w *Window, t *Text, sel *Selection, parser *syntax.Parser) {
 	for l, ln := range t.lines {
 		if l < w.min.L || l >= w.Max().L {
 			continue
@@ -25,9 +25,9 @@ func drawScreen(w *Window, t *Text, sel *Selection, lang *syntax.Language, synta
 
 			bg := term.ColorBlack
 			fg := term.ColorWhite
-			for _, m := range syntaxMatches {
+			for _, m := range parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
-					c := lang.Color(m.Name)
+					c := parser.Color(m.Name)
 					bg = c.Bg
 					fg = c.Fg
 					break
