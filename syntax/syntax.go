@@ -56,7 +56,7 @@ func NewParser(text Byter, langName string) *Parser {
 }
 
 // SetText set it's text.
-// After doing this, it should re-Parse-d entirely.
+// After done this, it should Parse entirely again.
 // Until then, TextChanged will return true.
 func (p *Parser) SetText(text Byter) {
 	p.text = text
@@ -77,8 +77,8 @@ func (p *Parser) Parse() {
 	p.textChanged = false
 }
 
-// Parse calulate it's partial matches.
-// It will re-parse text from min to max range and
+// ParseRange calulates it's partial matches.
+// It will parse text from min to max range and
 // replace current matches if there is an overwrap.
 func (p *Parser) ParseRange(min, max cell.Pt) {
 	if p.lang != nil {
