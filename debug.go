@@ -4,16 +4,22 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sync"
 
 	term "github.com/nsf/termbox-go"
 )
 
 func debug(args ...interface{}) {
+	// there is another goroutine interacting with terminal.
+	mu := &sync.Mutex{}
+	mu.Lock()
+	defer mu.Unlock()
+
 	term.Close()
 
-	for _, a := range args {
-		fmt.Println(a)
-	}
+	fmt.Println(args)
+
+	// wait for enter
 	reader := bufio.NewReader(os.Stdin)
 	reader.ReadString('\n')
 
