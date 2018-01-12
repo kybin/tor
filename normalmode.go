@@ -373,7 +373,7 @@ func (m *NormalMode) do(a *Action) {
 					return
 				}
 				// reload the file.
-				text, err := open(m.f)
+				text, err := read(m.f)
 				if err != nil {
 					m.err = fmt.Sprint(err)
 					return
