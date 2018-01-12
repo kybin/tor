@@ -53,9 +53,9 @@ func isWritable(f string) (bool, error) {
 	return true, nil
 }
 
-// openOrCreate open f and return it's Text.
+// readOrCreate open f and read it's Text.
 // When f doesn't exist and allow to create, it will create a new Text.
-func openOrCreate(f string, allowCreate bool) (*Text, error) {
+func readOrCreate(f string, allowCreate bool) (*Text, error) {
 	if _, err := os.Stat(f); err != nil {
 		if os.IsNotExist(err) {
 			if allowCreate {
@@ -65,7 +65,7 @@ func openOrCreate(f string, allowCreate bool) (*Text, error) {
 		}
 		return nil, err
 	}
-	return open(f)
+	return read(f)
 }
 
 // create creates a new Text for f.
@@ -81,9 +81,9 @@ func create(f string) (*Text, error) {
 	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}, nil
 }
 
-// open reads a file and returns it as *Text.
+// read reads a file and returns it as *Text.
 // When the file is not exists, it will return error with nil *Text.
-func open(f string) (*Text, error) {
+func read(f string) (*Text, error) {
 	file, err := os.Open(f)
 	if err != nil {
 		return nil, err
