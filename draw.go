@@ -41,7 +41,7 @@ func drawScreen(norm *NormalMode, w *Window) {
 				}
 			}
 
-			if norm.selection.on && norm.selection.Contains(cell.Pt{l, b}) {
+			if norm.selection.Contains(cell.Pt{l, b}) {
 				bg = term.ColorGreen
 			}
 			if r == '\t' {
