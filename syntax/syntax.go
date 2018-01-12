@@ -65,8 +65,8 @@ func (p *Parser) SetText(text Byter) {
 	p.textChanged = true
 }
 
-// Parse calculates it's matches to pt.
-// If match started but not ended when reached to pt,
+// ParseTo calculates it's matches to pt.
+// If a match started but not ended when reached to pt,
 // it will continue parsing to the match's end.
 func (p *Parser) ParseTo(pt cell.Pt) {
 	if p.textChanged {
