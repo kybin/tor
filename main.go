@@ -101,7 +101,7 @@ func main() {
 	}
 
 	// get text from file or make new.
-	text, err := openOrCreate(editFile, newFlag)
+	text, err := readOrCreate(editFile, newFlag)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
