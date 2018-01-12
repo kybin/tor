@@ -188,12 +188,6 @@ func main() {
 	for {
 		win.Follow(cursor, 3)
 
-		if mode.normal.dirty {
-			mode.normal.parser.ClearFrom(cell.Pt{L: win.min.L, O: 0})
-			mode.normal.dirty = false
-		}
-		mode.normal.parser.ParseTo(cell.Pt{L: win.Max().L + 1, O: 0})
-
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
 		drawScreen(mode.normal, win)
