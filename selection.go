@@ -2,6 +2,8 @@ package main
 
 import "github.com/kybin/tor/cell"
 
+// Selection is selection for text.
+// When it is off, rng is invalid and treated as [(-1,-1):(-1,-1)].
 type Selection struct {
 	on  bool
 	rng cell.Range
@@ -31,18 +33,30 @@ func (s *Selection) Lines() []int {
 }
 
 func (s *Selection) Min() cell.Pt {
+	if !s.on {
+		return cell.Pt{-1, -1}
+	}
 	return s.rng.Min()
 }
 
 func (s *Selection) Max() cell.Pt {
+	if !s.on {
+		return cell.Pt{-1, -1}
+	}
 	return s.rng.Max()
 }
 
 func (s *Selection) MinMax() (cell.Pt, cell.Pt) {
+	if !s.on {
+		return cell.Pt{-1, -1}, cell.Pt{-1, -1}
+	}
 	return s.rng.MinMax()
 }
 
 func (s *Selection) Contains(p cell.Pt) bool {
+	if !s.on {
+		return false
+	}
 	return s.rng.Contains(p)
 }
 
