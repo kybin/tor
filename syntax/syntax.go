@@ -11,6 +11,10 @@ import (
 var Languages = make(map[string]*Language)
 
 func init() {
+	def := NewLanguage()
+	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
+	Languages[""] = def
+
 	golang := NewLanguage()
 	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)}, Color{term.ColorRed, term.ColorBlack})
 	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")}, Color{term.ColorRed, term.ColorBlack})
@@ -52,6 +56,8 @@ func NewParser(text Byter, langName string) *Parser {
 	lang, ok := Languages[langName]
 	if ok {
 		p.lang = lang
+	} else {
+		p.lang = Languages[""]
 	}
 	p.SetText(text)
 	return p
