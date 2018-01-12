@@ -42,6 +42,8 @@ type Parser struct {
 	textChanged bool
 	lang        *Language
 	Matches     []Match
+
+	nextStart cell.Pt // next parse starting point, exclusive.
 }
 
 // NewParser creates a new Parser.
@@ -56,34 +58,88 @@ func NewParser(text Byter, langName string) *Parser {
 }
 
 // SetText set it's text.
-// After done this, it should Parse entirely again.
-// Until then, TextChanged will return true.
+// After done this, first ParseTo will clear current matches
+// and calculate matches from start.
 func (p *Parser) SetText(text Byter) {
 	p.text = text
 	p.textChanged = true
 }
 
-// TextChanged returns status whether
-// it's text changed but not Parsed yet.
-func (p *Parser) TextChanged() bool {
-	return p.textChanged
+// Parse calculates it's matches to pt.
+// If match started but not ended when reached to pt,
+// it will continue parsing to the match's end.
+func (p *Parser) ParseTo(pt cell.Pt) {
+	if p.textChanged {
+		p.nextStart = cell.Pt{0, 0}
+		p.Matches = []Match{}
+		p.textChanged = false
+	}
+
+	// move cursor to start position.
+	c := NewCursor(p.text.Bytes())
+	for c.Pos().Compare(p.nextStart) < 0 {
+		ok := c.Advance()
+		if !ok {
+			// already end of text. nothing to do.
+			return
+		}
+	}
+
+	matches := []Match{}
+Loop:
+	for {
+		if c.Pos().Compare(pt) >= 0 {
+			break
+		}
+		for _, syn := range p.lang.syntaxes {
+			ms := syn.Re.FindSubmatch(c.Remain())
+			if ms == nil {
+				continue
+			}
+			m := ms[0]
+			if len(ms) == 2 {
+				// if the match has subgroup, use a first one.
+				m = ms[1]
+			}
+			if string(m) == "" {
+				continue
+			}
+			start := c.Pos()
+			c.Skip(len(m))
+			end := c.Pos()
+			matches = append(matches, syn.NewMatch(start, end))
+			continue Loop
+		}
+		if !c.Advance() {
+			break
+		}
+	}
+	p.Matches = append(p.Matches, matches...)
+	p.nextStart = cell.Pt{0, 0}
+	if len(p.Matches) != 0 {
+		p.nextStart = p.Matches[len(p.Matches)-1].Range.Max()
+	}
 }
 
-// Parse calculates it's matches entirely.
-func (p *Parser) Parse() {
-	if p.lang != nil {
-		p.Matches = p.lang.Parse(p.text.Bytes())
+// ClearFrom clears it's match from pt.
+// If there is an overwrap with a match,
+// it will clear that match too.
+func (p *Parser) ClearFrom(pt cell.Pt) {
+	clip := 0
+	for i, m := range p.Matches {
+		if m.Range.Max().Compare(pt) < 0 {
+			continue
+		}
+		clip = i
+		break
 	}
-	p.textChanged = false
-}
-
-// ParseRange calulates it's partial matches.
-// It will parse text from min to max range and
-// replace current matches if there is an overwrap.
-func (p *Parser) ParseRange(min, max cell.Pt) {
-	if p.lang != nil {
-		p.Matches = p.lang.ParseRange(p.Matches, p.text.Bytes(), min, max)
+	if clip == 0 {
+		p.nextStart = cell.Pt{0, 0}
+		p.Matches = []Match{}
+		return
 	}
+	p.nextStart = p.Matches[clip-1].Range.Max()
+	p.Matches = p.Matches[:clip]
 }
 
 // Color returns any match's syntax color name.
@@ -128,104 +184,6 @@ func (l *Language) Color(synName string) Color {
 		return Color{term.ColorWhite, term.ColorBlack}
 	}
 	return c
-}
-
-func (l *Language) Parse(text []byte) []Match {
-	c := NewCursor(text)
-	matches := []Match{}
-Loop:
-	for {
-		for _, syn := range l.syntaxes {
-			ms := syn.Re.FindSubmatch(c.Remain())
-			if ms == nil {
-				continue
-			}
-			m := ms[0]
-			if len(ms) == 2 {
-				m = ms[1]
-			}
-			if string(m) == "" {
-				continue
-			}
-			start := c.Pos()
-			c.Skip(len(m))
-			end := c.Pos()
-			matches = append(matches, syn.NewMatch(start, end))
-			continue Loop
-		}
-		if !c.Advance() {
-			break
-		}
-	}
-	return matches
-}
-
-// ParseRange checks and replace matches from min to max.
-// When there is an overwrap between old matches and min position,
-// it will recaculate matches from the overwrap begins.
-func (l *Language) ParseRange(matches []Match, text []byte, min, max cell.Pt) []Match {
-	// check where parse acutally started.
-	last := -1
-	overwrap := false
-	for i, m := range matches {
-		if m.Range.Min().Compare(min) < 0 {
-			if m.Range.Max().Compare(min) < 0 {
-				continue
-			}
-			overwrap = true
-			last = i
-			break
-		}
-		last = i
-		break
-	}
-
-	parseStart := min
-	if last != -1 {
-		if overwrap {
-			parseStart = matches[last].Range.Min()
-		}
-		matches = matches[:last]
-	}
-
-	// move cursor to start position.
-	c := NewCursor(text)
-	for c.Pos().Compare(parseStart) < 0 {
-		ok := c.Advance()
-		if !ok {
-			// already end of text. nothing to do.
-			return matches
-		}
-	}
-
-Loop:
-	for {
-		if c.Pos().Compare(max) >= 0 {
-			break
-		}
-		for _, syn := range l.syntaxes {
-			ms := syn.Re.FindSubmatch(c.Remain())
-			if ms == nil {
-				continue
-			}
-			m := ms[0]
-			if len(ms) == 2 {
-				m = ms[1]
-			}
-			if string(m) == "" {
-				continue
-			}
-			start := c.Pos()
-			c.Skip(len(m))
-			end := c.Pos()
-			matches = append(matches, syn.NewMatch(start, end))
-			continue Loop
-		}
-		if !c.Advance() {
-			break
-		}
-	}
-	return matches
 }
 
 type Cursor struct {

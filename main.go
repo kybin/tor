@@ -186,17 +186,13 @@ func main() {
 
 	// main loop
 	for {
-		moved := win.Follow(cursor, 3)
+		win.Follow(cursor, 3)
 
-		if mode.normal.parser.TextChanged() {
-			mode.normal.parser.Parse()
-		} else if moved || (mode.current == mode.normal && mode.normal.dirty) {
-			// recalculate syntax matches from window's top.
-			// it will better to recalculate from edited position,
-			// but seems little harder to implement.
-			mode.normal.parser.ParseRange(cell.Pt{L: win.min.L, O: 0}, cell.Pt{L: win.Max().L + 1, O: 0})
+		if mode.normal.dirty {
+			mode.normal.parser.ClearFrom(cell.Pt{L: win.min.L, O: 0})
 			mode.normal.dirty = false
 		}
+		mode.normal.parser.ParseTo(cell.Pt{L: win.Max().L + 1, O: 0})
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
