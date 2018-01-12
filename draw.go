@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/kybin/tor/cell"
-	"github.com/kybin/tor/syntax"
 	"github.com/mattn/go-runewidth"
 	term "github.com/nsf/termbox-go"
 )
@@ -12,8 +11,8 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(w *Window, t *Text, sel *Selection, parser *syntax.Parser) {
-	for l, ln := range t.lines {
+func drawScreen(norm *NormalMode, w *Window) {
+	for l, ln := range norm.text.lines {
 		if l < w.min.L || l >= w.Max().L {
 			continue
 		}
@@ -25,20 +24,20 @@ func drawScreen(w *Window, t *Text, sel *Selection, parser *syntax.Parser) {
 
 			bg := term.ColorBlack
 			fg := term.ColorWhite
-			for _, m := range parser.Matches {
+			for _, m := range norm.parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
-					c := parser.Color(m.Name)
+					c := norm.parser.Color(m.Name)
 					bg = c.Bg
 					fg = c.Fg
 					break
 				}
 			}
 
-			if sel.on && sel.Contains(cell.Pt{l, b}) {
+			if norm.selection.on && norm.selection.Contains(cell.Pt{l, b}) {
 				bg = term.ColorGreen
 			}
 			if r == '\t' {
-				for i := 0; i < t.tabWidth; i++ {
+				for i := 0; i < norm.text.tabWidth; i++ {
 					if o >= w.min.O {
 						SetCell(l-w.min.L, o-w.min.O, rune(' '), fg, bg)
 					}
