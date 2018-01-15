@@ -1,0 +1,56 @@
+It is a design document for tor.
+
+Note that this is not a current implementation,
+but it will change based on this design slowly.
+
+I made this doc because I change code without much thinking.
+I should not change code directly, but organize this first.
+
+
+screen (singleton)
+	size
+	[]area
+
+
+area
+	size
+	window
+
+	Draw(text)
+	DrawCursor(cursor)
+
+
+modes
+	normalmode
+	findmode
+	replacemode
+	gotolinemode
+	exitmode
+
+
+mode
+	area
+	text
+	cursor
+
+	Handle(termbox.Ev) gets an event and modify it's text and cursor.
+	Draw() draws it's text and cursor to area.
+
+
+text
+	lines
+
+
+cursor
+	text
+
+	...() return result.
+
+
+action
+	Do() does it's job and return result.
+
+
+actionResult
+	Do() does itself again.
+	Undo() undoes itself.
