@@ -15,6 +15,10 @@ func NewWindow(size cell.Pt) *Window {
 	return &w
 }
 
+func (w *Window) Min() cell.Pt {
+	return w.min
+}
+
 func (w *Window) Max() cell.Pt {
 	return w.min.Add(w.size)
 }
@@ -25,7 +29,7 @@ func (w *Window) Move(t cell.Pt) {
 
 func (w *Window) Contains(c *Cursor) bool {
 	cp := c.Position()
-	if (w.min.O <= cp.O && cp.O < w.Max().O) && (w.min.L <= cp.L && cp.L < w.Max().L) {
+	if (w.Min().O <= cp.O && cp.O < w.Max().O) && (w.Min().L <= cp.L && cp.L < w.Max().L) {
 		return true
 	}
 	return false
@@ -37,28 +41,28 @@ func (w *Window) Follow(c *Cursor, margin int) bool {
 	var tl, to int
 	cp := c.Position()
 
-	minl := w.min.L + margin
+	minl := w.Min().L + margin
 	maxl := w.Max().L - margin
 	if cp.L < minl {
 		tl = cp.L - minl
 	} else if cp.L >= maxl {
 		tl = cp.L - maxl + 1
 	}
-	// tl should not smaller than -w.min.l
-	if tl < -w.min.L {
-		tl = -w.min.L
+	// tl should not smaller than -w.Min().l
+	if tl < -w.Min().L {
+		tl = -w.Min().L
 	}
 
-	mino := w.min.O + margin
+	mino := w.Min().O + margin
 	maxo := w.Max().O - margin
 	if cp.O < mino {
 		to = cp.O - mino
 	} else if cp.O >= maxo {
 		to = cp.O - maxo + 1
 	}
-	// to should not smaller than -w.min.o
-	if to < -w.min.O {
-		to = -w.min.O
+	// to should not smaller than -w.Min().o
+	if to < -w.Min().O {
+		to = -w.Min().O
 	}
 
 	if tl == 0 && to == 0 {

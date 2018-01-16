@@ -193,7 +193,7 @@ func main() {
 		drawScreen(mode.normal, win)
 		drawStatus(mode.current)
 		if mode.current == mode.normal {
-			winP := cursor.Position().Sub(win.min)
+			winP := cursor.Position().Sub(win.Min())
 			term.SetCursor(winP.O, winP.L)
 		} else {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)

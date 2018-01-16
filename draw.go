@@ -14,14 +14,14 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 func drawScreen(norm *NormalMode, w *Window) {
 	// parse syntax
 	if norm.dirty {
-		norm.parser.ClearFrom(cell.Pt{L: w.min.L, O: 0})
+		norm.parser.ClearFrom(cell.Pt{L: w.Min().L, O: 0})
 		norm.dirty = false
 	}
 	norm.parser.ParseTo(cell.Pt{L: w.Max().L + 1, O: 0})
 
 	// draw
 	for l, ln := range norm.text.lines {
-		if l < w.min.L || l >= w.Max().L {
+		if l < w.Min().L || l >= w.Max().L {
 			continue
 		}
 		o := 0
@@ -46,14 +46,14 @@ func drawScreen(norm *NormalMode, w *Window) {
 			}
 			if r == '\t' {
 				for i := 0; i < norm.text.tabWidth; i++ {
-					if o >= w.min.O {
-						SetCell(l-w.min.L, o-w.min.O, rune(' '), fg, bg)
+					if o >= w.Min().O {
+						SetCell(l-w.Min().L, o-w.Min().O, rune(' '), fg, bg)
 					}
 					o += 1
 				}
 			} else {
-				if o >= w.min.O {
-					SetCell(l-w.min.L, o-w.min.O, rune(r), fg, bg)
+				if o >= w.Min().O {
+					SetCell(l-w.Min().L, o-w.Min().O, rune(r), fg, bg)
 				}
 				o += runewidth.RuneWidth(r)
 			}
