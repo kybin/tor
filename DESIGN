@@ -9,7 +9,10 @@ I should not change code directly, but organize this first.
 
 screen (singleton)
 	size
-	[]area
+	main area
+	status area
+
+	Resize(cell.Pt)
 
 
 area
