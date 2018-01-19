@@ -12,26 +12,26 @@ var Languages = make(map[string]*Language)
 
 func init() {
 	def := NewLanguage()
-	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
+	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	Languages[""] = def
 
 	golang := NewLanguage()
-	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)}, Color{term.ColorRed, term.ColorBlack})
-	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")}, Color{term.ColorRed, term.ColorBlack})
-	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)}, Color{term.ColorYellow, term.ColorBlack})
-	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`)}, Color{term.ColorMagenta, term.ColorBlack})
-	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`)}, Color{term.ColorMagenta, term.ColorBlack})
-	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
-	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`)}, Color{term.ColorYellow, term.ColorBlack})
+	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), Color{term.ColorMagenta, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), Color{term.ColorMagenta, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`), Color{term.ColorYellow, term.ColorBlack}})
 	Languages["go"] = golang
 
 	py := NewLanguage()
-	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`)}, Color{term.ColorRed, term.ColorBlack})
-	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`)}, Color{term.ColorYellow, term.ColorBlack})
-	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)}, Color{term.ColorRed, term.ColorBlack})
-	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)}, Color{term.ColorYellow, term.ColorBlack})
-	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`)}, Color{term.ColorMagenta, term.ColorBlack})
-	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`)}, Color{term.ColorBlack, term.ColorYellow})
+	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), Color{term.ColorRed, term.ColorBlack}})
+	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), Color{term.ColorYellow, term.ColorBlack}})
+	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
+	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
+	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), Color{term.ColorMagenta, term.ColorBlack}})
+	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	Languages["py"] = py
 }
 
@@ -148,18 +148,14 @@ func (p *Parser) ClearFrom(pt cell.Pt) {
 	p.Matches = p.Matches[:clip]
 }
 
-// Color returns any match's syntax color name.
-func (p *Parser) Color(synName string) Color {
-	return p.lang.Color(synName)
-}
-
 type Syntax struct {
-	Name string
-	Re   *regexp.Regexp
+	Name  string
+	Re    *regexp.Regexp
+	Color Color
 }
 
 func (s Syntax) NewMatch(start, end cell.Pt) Match {
-	return Match{Name: s.Name, Range: cell.Range{start, end}}
+	return Match{Name: s.Name, Range: cell.Range{start, end}, Color: s.Color}
 }
 
 type Color struct {
@@ -169,27 +165,16 @@ type Color struct {
 
 type Language struct {
 	syntaxes []Syntax // should be ordered
-	colors   map[string]Color
 }
 
 func NewLanguage() *Language {
 	return &Language{
 		syntaxes: []Syntax{},
-		colors:   make(map[string]Color),
 	}
 }
 
-func (l *Language) AddSyntax(s Syntax, c Color) {
+func (l *Language) AddSyntax(s Syntax) {
 	l.syntaxes = append(l.syntaxes, s)
-	l.colors[s.Name] = c
-}
-
-func (l *Language) Color(synName string) Color {
-	c, ok := l.colors[synName]
-	if !ok {
-		return Color{term.ColorWhite, term.ColorBlack}
-	}
-	return c
 }
 
 type Cursor struct {
@@ -244,4 +229,5 @@ func (c *Cursor) next() (r rune, size int) {
 type Match struct {
 	Name  string
 	Range cell.Range
+	Color Color
 }

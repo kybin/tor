@@ -1,7 +1,6 @@
 package syntax
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/kybin/tor/cell"
@@ -33,27 +32,44 @@ func main() {
 `),
 			langName: "go",
 			want: []Match{
-				{"package", cell.Range{cell.Pt{0, 0}, cell.Pt{0, 8}}},
-				{"comment", cell.Range{cell.Pt{2, 0}, cell.Pt{2, 21}}},
-				{"multi line comment", cell.Range{cell.Pt{4, 0}, cell.Pt{8, 2}}},
-				{"string", cell.Range{cell.Pt{11, 6}, cell.Pt{11, 10}}},
-				{"trailing spaces", cell.Range{cell.Pt{11, 10}, cell.Pt{11, 13}}},
-				{"string", cell.Range{cell.Pt{12, 6}, cell.Pt{12, 9}}},
-				{"string", cell.Range{cell.Pt{12, 16}, cell.Pt{12, 37}}},
-				{"rune", cell.Range{cell.Pt{13, 6}, cell.Pt{13, 12}}},
-				{"trailing spaces", cell.Range{cell.Pt{14, 0}, cell.Pt{14, 1}}},
+				{Name: "package", Range: cell.Range{cell.Pt{0, 0}, cell.Pt{0, 8}}},
+				{Name: "comment", Range: cell.Range{cell.Pt{2, 0}, cell.Pt{2, 21}}},
+				{Name: "multi line comment", Range: cell.Range{cell.Pt{4, 0}, cell.Pt{8, 2}}},
+				{Name: "string", Range: cell.Range{cell.Pt{11, 6}, cell.Pt{11, 10}}},
+				{Name: "trailing spaces", Range: cell.Range{cell.Pt{11, 10}, cell.Pt{11, 13}}},
+				{Name: "string", Range: cell.Range{cell.Pt{12, 6}, cell.Pt{12, 9}}},
+				{Name: "string", Range: cell.Range{cell.Pt{12, 16}, cell.Pt{12, 37}}},
+				{Name: "rune", Range: cell.Range{cell.Pt{13, 6}, cell.Pt{13, 12}}},
+				{Name: "trailing spaces", Range: cell.Range{cell.Pt{14, 0}, cell.Pt{14, 1}}},
 			},
 		},
 	}
 	for _, c := range cases {
-		lang, ok := Languages[c.langName]
-		if !ok {
-			return
+		p := NewParser(&B{c.text}, c.langName)
+		p.ParseTo(cell.Pt{1000, 0})
+		got := p.Matches
+		if len(got) != len(c.want) {
+			t.Fatalf("(%v).ParseTo(end): got %v, want %v", p, got, c.want)
 		}
-		got := lang.Parse(c.text)
-		if !reflect.DeepEqual(got, c.want) {
-			t.Fatalf("(%v).Parse(%v): got %v, want %v", lang, c.text, got, c.want)
+		for i := range got {
+			if !sameMatch(got[i], c.want[i]) {
+				t.Fatalf("(%v).ParseTo(end): got %v, want %v", p, got, c.want)
+			}
 		}
-
 	}
+}
+
+// B implements Byter
+type B struct {
+	text []byte
+}
+
+func (b *B) Bytes() []byte {
+	return b.text
+}
+
+// sameMatch returns whether those are same match.
+// It does not care of the matches' color.
+func sameMatch(m, n Match) bool {
+	return m.Name == n.Name && m.Range == n.Range
 }

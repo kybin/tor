@@ -34,7 +34,7 @@ func drawScreen(norm *NormalMode, w *Window) {
 			fg := term.ColorWhite
 			for _, m := range norm.parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
-					c := norm.parser.Color(m.Name)
+					c := m.Color
 					bg = c.Bg
 					fg = c.Fg
 					break
