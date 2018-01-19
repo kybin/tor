@@ -13,6 +13,7 @@ import (
 
 // NormalMode is a mode for text editing.
 type NormalMode struct {
+	area      *Area
 	text      *Text
 	cursor    *Cursor
 	selection *Selection

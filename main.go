@@ -115,7 +115,7 @@ func main() {
 	term.SetInputMode(term.InputAlt)
 
 	termw, termh := term.Size()
-	win := NewWindow(cell.Pt{termh - 1, termw})
+	screen := NewScreen(cell.Pt{termh, termw})
 	cursor := NewCursor(text)
 	cursor.GotoLine(initL)
 	cursor.SetCloseToB(initB)
@@ -130,6 +130,7 @@ func main() {
 	// create modes for handling events.
 	mode := &ModeSelector{}
 	mode.normal = &NormalMode{
+		area:      screen.main,
 		text:      text,
 		cursor:    cursor,
 		selection: selection,
@@ -186,14 +187,14 @@ func main() {
 
 	// main loop
 	for {
-		win.Follow(cursor, 3)
+		mode.normal.area.Win.Follow(mode.normal.cursor, 3)
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mode.normal, win)
+		drawScreen(mode.normal, mode.normal.area.Win)
 		drawStatus(mode.current)
 		if mode.current == mode.normal {
-			winP := cursor.Position().Sub(win.Min())
+			winP := cursor.Position().Sub(mode.normal.area.Win.Min())
 			term.SetCursor(winP.O, winP.L)
 		} else {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
@@ -209,9 +210,8 @@ func main() {
 				mode.current.Handle(ev)
 			case term.EventResize:
 				mu.Lock()
-				term.Clear(term.ColorDefault, term.ColorDefault)
 				termw, termh = term.Size()
-				win.size = cell.Pt{termh - 1, termw}
+				screen.Resize(cell.Pt{termh, termw})
 				mu.Unlock()
 			}
 		}
