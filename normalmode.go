@@ -104,7 +104,7 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 	}
 
 	switch ev.Key {
-	case term.KeyCtrlW:
+	case term.KeyCtrlQ:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "exit"}}
 	case term.KeyCtrlS:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "save"}}

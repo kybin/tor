@@ -18,7 +18,7 @@ Basically you could think `Ctrl` is for action, `Alt` is for move, `Shift` is fo
 - New file : `$ tor -new filename.ext`
 - Save : `Ctrl+S`
 - Undo : `Ctrl+Z`
-- Quit : `Ctrl+W`
+- Quit : `Ctrl+Q`
 
 #### Move
 - Left : `Alt+J`
