@@ -210,6 +210,7 @@ func main() {
 				mode.current.Handle(ev)
 			case term.EventResize:
 				mu.Lock()
+				term.Clear(term.ColorDefault, term.ColorDefault)
 				termw, termh = term.Size()
 				screen.Resize(cell.Pt{termh, termw})
 				mu.Unlock()
