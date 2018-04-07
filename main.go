@@ -173,13 +173,17 @@ func main() {
 	// Sync redraws terminal from buffer.
 	// sometimes Flush is insufficient,
 	// it is better to Sync frequently.
+	synced := true
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		for {
 			select {
 			case <-ticker.C:
 				mu.Lock()
-				term.Sync()
+				if !synced {
+					term.Sync()
+					synced = true
+				}
 				mu.Unlock()
 			}
 		}
@@ -200,6 +204,7 @@ func main() {
 			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
 		}
 		term.Flush()
+		synced = false
 		mu.Unlock()
 
 		// wait for keyboard input
