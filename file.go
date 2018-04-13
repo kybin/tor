@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"unicode/utf8"
 )
@@ -132,13 +133,27 @@ func read(f string) (*Text, error) {
 		return nil, err
 	}
 
+	// check line ending
+	lineEnding := "\n"
+	if len(lines) != 0 {
+		file.Seek(0, 0)
+		reader := bufio.NewReader(file)
+		firstLine, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			return nil, err
+		}
+		if len(firstLine) >= 2 && firstLine[len(firstLine)-2:] == "\r\n" {
+			lineEnding = "\r\n"
+		}
+	}
+
 	// `touch` cmd creates a file with no content.
 	// avoid program panic from empty text.
 	if len(lines) == 0 {
 		lines = []Line{{""}}
 	}
 
-	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth, writable: writable}, nil
+	return &Text{lines: lines, tabToSpace: tabToSpace, tabWidth: tabWidth, writable: writable, lineEnding: lineEnding}, nil
 }
 
 // save saves Text to a file.
@@ -149,7 +164,8 @@ func save(f string, t *Text) error {
 	}
 	defer file.Close()
 	for _, line := range t.lines {
-		file.WriteString(line.data + "\n")
+		file.WriteString(line.data)
+		file.WriteString(t.lineEnding)
 	}
 	return nil
 }

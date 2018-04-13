@@ -44,6 +44,7 @@ type Text struct {
 	tabWidth   int
 	edited     bool
 	writable   bool
+	lineEnding string
 }
 
 func (t *Text) Line(l int) *Line {
