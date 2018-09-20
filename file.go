@@ -79,7 +79,7 @@ func create(f string) (*Text, error) {
 	if !writable {
 		return nil, errors.New("could not create the file. please check the directory permission.")
 	}
-	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable}, nil
+	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable, lineEnding: "\n"}, nil
 }
 
 // read reads a file and returns it as *Text.
