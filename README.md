@@ -2,7 +2,7 @@
 
 Tor is a simple terminal text editor. 
 
-It's not stable or well coded, but usable for me. 
+It's not stable nor well coded, but usable for me. 
 
 ### Key Binding
 
