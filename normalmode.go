@@ -354,16 +354,17 @@ func (m *NormalMode) do(a *Action) {
 
 		// post save
 		if strings.HasSuffix(m.f, ".go") {
-			cmds := []*exec.Cmd{
-				exec.Command("goimports", "-w", m.f),
-				exec.Command("go", "fmt", m.f),
+			cmdGroups := []cmdGroup{
+				{
+					kind: orCmdGroup,
+					cmds: []*exec.Cmd{
+						exec.Command("goimports", "-w", m.f),
+						exec.Command("go", "fmt", m.f),
+					},
+				},
 			}
-			for _, cmd := range cmds {
-				if cmd.Path == "" {
-					// Could not find the command.
-					continue
-				}
-				out, err := cmd.CombinedOutput()
+			for _, g := range cmdGroups {
+				out, err := g.CombinedOutput()
 				if err != nil {
 					outs := strings.Split(string(out), "\n")
 					if len(outs) == 0 {
@@ -373,21 +374,21 @@ func (m *NormalMode) do(a *Action) {
 					}
 					return
 				}
-				// reload the file.
-				text, err := read(m.f)
-				if err != nil {
-					m.err = fmt.Sprint(err)
-					return
-				}
-				m.text = text
-				m.cursor.text = text
-				m.selection.text = text
-				m.parser.SetText(text)
-				oldl := m.cursor.l
-				oldb := m.cursor.b
-				m.cursor.GotoLine(oldl)
-				m.cursor.SetCloseToB(oldb)
 			}
+			// reload the file.
+			text, err := read(m.f)
+			if err != nil {
+				m.err = fmt.Sprint(err)
+				return
+			}
+			m.text = text
+			m.cursor.text = text
+			m.selection.text = text
+			m.parser.SetText(text)
+			oldl := m.cursor.l
+			oldb := m.cursor.b
+			m.cursor.GotoLine(oldl)
+			m.cursor.SetCloseToB(oldb)
 		}
 	case "copy":
 		if m.selection.on {
