@@ -48,6 +48,10 @@ func (m *NormalMode) Handle(ev term.Event) {
 	cut := false
 	actions := m.parseEvent(ev)
 	for _, a := range actions {
+		// in read-only mode, tor only accepts move and exit.
+		if !m.text.writable && a.kind != "move" && a.kind != "exit" {
+			continue
+		}
 		m.do(a)
 		a.text = m.text
 		// delete selection usally don't delete anything.
