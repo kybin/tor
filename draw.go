@@ -11,7 +11,8 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(norm *NormalMode, w *Window) {
+func drawScreen(norm *NormalMode, a *Area) {
+	w := a.Win
 	// parse syntax
 	if norm.dirty {
 		norm.parser.ClearFrom(cell.Pt{L: w.Min().L, O: 0})
@@ -24,7 +25,7 @@ func drawScreen(norm *NormalMode, w *Window) {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
 		}
-		o := 0
+		o := a.min.O
 		for b, r := range ln.data {
 			if o >= w.Max().O {
 				break
