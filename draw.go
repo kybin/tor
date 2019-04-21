@@ -25,7 +25,7 @@ func drawScreen(norm *NormalMode, a *Area) {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
 		}
-		o := a.min.O
+		o := 0
 		for b, r := range ln.data {
 			if o >= w.Max().O {
 				break
@@ -48,13 +48,13 @@ func drawScreen(norm *NormalMode, a *Area) {
 			if r == '\t' {
 				for i := 0; i < norm.text.tabWidth; i++ {
 					if o >= w.Min().O {
-						SetCell(l-w.Min().L, o-w.Min().O, rune(' '), fg, bg)
+						SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(' '), fg, bg)
 					}
 					o += 1
 				}
 			} else {
 				if o >= w.Min().O {
-					SetCell(l-w.Min().L, o-w.Min().O, rune(r), fg, bg)
+					SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(r), fg, bg)
 				}
 				o += runewidth.RuneWidth(r)
 			}
