@@ -23,9 +23,10 @@ func mainAreaOffset(screenWidth int) int {
 
 // NewScreen creates a new Screen.
 func NewScreen(size cell.Pt) *Screen {
+	off := mainAreaOffset(size.O)
 	s := &Screen{
 		size:   size,
-		main:   NewArea(cell.Pt{0, mainAreaOffset(size.O)}, cell.Pt{size.L - 1, size.O}),
+		main:   NewArea(cell.Pt{0, off}, cell.Pt{size.L - 1, size.O - off}),
 		status: NewArea(cell.Pt{size.L - 1, 0}, cell.Pt{1, size.O}),
 	}
 	return s
@@ -34,6 +35,7 @@ func NewScreen(size cell.Pt) *Screen {
 // Resize resizes it and it's sub areas.
 func (s *Screen) Resize(size cell.Pt) {
 	s.size = size
-	s.main.Set(cell.Pt{0, mainAreaOffset(size.O)}, cell.Pt{size.L - 1, size.O})
+	off := mainAreaOffset(size.O)
+	s.main.Set(cell.Pt{0, off}, cell.Pt{size.L - 1, size.O - off})
 	s.status.Set(cell.Pt{size.L - 1, 0}, cell.Pt{1, size.O})
 }
