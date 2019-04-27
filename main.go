@@ -195,7 +195,7 @@ func main() {
 
 		mu.Lock()
 		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mode.normal, mode.normal.area, mode.normal.cursor)
+		drawScreen(mode.normal, mode.normal.area)
 		drawStatus(mode.current)
 		if mode.current == mode.normal {
 			winP := cursor.Position().Sub(mode.normal.area.Win.Min())

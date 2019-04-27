@@ -11,7 +11,7 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
+func drawScreen(norm *NormalMode, a *Area) {
 	w := a.Win
 	// parse syntax
 	if norm.dirty {
@@ -24,12 +24,6 @@ func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
 	for l, ln := range norm.text.lines {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
-		}
-		if l == c.l {
-			// actually it does not draw 'on' the screen.
-			// it draws to the left side of screen to indicate bounding of main area.
-			// should refine it.
-			SetCell(l-w.Min().L, a.min.O-2, rune('>'), term.ColorCyan, term.ColorBlack)
 		}
 		o := 0
 		for b, r := range ln.data {
@@ -66,6 +60,14 @@ func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
 			}
 		}
 	}
+
+	if true {
+		// it draws to the left side of screen to indicate bounding of main area.
+		// it does not draw 'on' the screen and should refine it. (move it some where?)
+		SetCell(a.min.L, a.min.O-2, rune('`'), term.ColorCyan, term.ColorBlack)
+		SetCell(a.min.L+a.size.L-1, a.min.O-2, rune('`'), term.ColorCyan, term.ColorBlack)
+	}
+
 }
 
 // drawStatus draws current status of m at bottom of terminal.
