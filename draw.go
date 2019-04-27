@@ -11,7 +11,7 @@ func SetCell(l, o int, r rune, fg, bg term.Attribute) {
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(norm *NormalMode, a *Area) {
+func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
 	w := a.Win
 	// parse syntax
 	if norm.dirty {
@@ -24,6 +24,12 @@ func drawScreen(norm *NormalMode, a *Area) {
 	for l, ln := range norm.text.lines {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
+		}
+		if l == c.l {
+			// actually it does not draw 'on' the screen.
+			// it draws to the left side of screen to indicate bounding of main area.
+			// should refine it.
+			SetCell(l-w.Min().L, a.min.O-2, rune('>'), term.ColorCyan, term.ColorBlack)
 		}
 		o := 0
 		for b, r := range ln.data {
