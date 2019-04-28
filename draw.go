@@ -64,8 +64,11 @@ func drawScreen(norm *NormalMode, a *Area) {
 	if true {
 		// it draws to the left side of screen to indicate bounding of main area.
 		// it does not draw 'on' the screen and should refine it. (move it some where?)
-		SetCell(a.min.L, a.min.O-2, rune('`'), term.ColorCyan, term.ColorBlack)
-		SetCell(a.min.L+a.size.L-1, a.min.O-2, rune('`'), term.ColorCyan, term.ColorBlack)
+		o := a.min.O - 1
+		lmin := a.min.L
+		lmax := a.min.L + a.size.L - 1
+		SetCell(lmin, o, rune('·'), term.ColorCyan, term.ColorBlack)
+		SetCell(lmax, o, rune('·'), term.ColorCyan, term.ColorBlack)
 	}
 
 }
