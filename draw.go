@@ -25,14 +25,16 @@ func drawScreen(norm *NormalMode, a *Area) {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
 		}
+		origFg := term.ColorWhite
+		origBg := term.ColorBlack
 		o := 0
 		for b, r := range ln.data {
 			if o >= w.Max().O {
 				break
 			}
 
-			bg := term.ColorBlack
-			fg := term.ColorWhite
+			fg := origFg
+			bg := origBg
 			for _, m := range norm.parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
 					c := m.Color
@@ -59,6 +61,9 @@ func drawScreen(norm *NormalMode, a *Area) {
 				o += runewidth.RuneWidth(r)
 			}
 		}
+		// set original color to the last cell. (white and black)
+		// if not set, the cursor's color will look different.
+		SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(' '), origFg, origBg)
 	}
 
 	if true {
