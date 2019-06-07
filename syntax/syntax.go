@@ -33,6 +33,17 @@ func init() {
 	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), Color{term.ColorMagenta, term.ColorBlack}})
 	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	Languages["py"] = py
+
+	ts := NewLanguage()
+	ts.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), Color{term.ColorMagenta, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	ts.AddSyntax(Syntax{"import", regexp.MustCompile(`^import\s`), Color{term.ColorYellow, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"function", regexp.MustCompile(`^function\s`), Color{term.ColorYellow, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"let", regexp.MustCompile(`^let\s`), Color{term.ColorYellow, term.ColorBlack}})
+	Languages["ts"] = ts
 }
 
 // Byter could converted to []bytes.
