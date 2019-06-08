@@ -40,7 +40,7 @@ func init() {
 	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
 	ts.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), Color{term.ColorMagenta, term.ColorBlack}})
 	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
-	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export|function)\s`), Color{term.ColorYellow, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export)\s`), Color{term.ColorYellow, term.ColorBlack}})
 	Languages["ts"] = ts
 }
 
