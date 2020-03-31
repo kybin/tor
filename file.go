@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 	"unicode/utf8"
+
+	"github.com/kybin/tor/syntax"
 )
 
 // isCreatable check if users has permission to create.
@@ -79,7 +83,18 @@ func create(f string) (*Text, error) {
 	if !writable {
 		return nil, errors.New("could not create the file. please check the directory permission.")
 	}
-	return &Text{lines: []Line{{""}}, tabToSpace: false, tabWidth: 4, writable: writable, lineEnding: "\n"}, nil
+	ext := filepath.Ext(f)
+	if ext != "" {
+		ext = strings.TrimPrefix(ext, ".")
+	}
+	tabToSpace := false
+	tabWidth := 4
+	lang, ok := syntax.Languages[ext]
+	if ok {
+		tabToSpace = lang.TabToSpace
+		tabWidth = lang.TabWidth
+	}
+	return &Text{lines: []Line{{""}}, tabToSpace: tabToSpace, tabWidth: tabWidth, writable: writable, lineEnding: "\n"}, nil
 }
 
 // read reads a file and returns it as *Text.

@@ -11,11 +11,11 @@ import (
 var Languages = make(map[string]*Language)
 
 func init() {
-	def := NewLanguage()
+	def := NewLanguage(false, 4)
 	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	Languages[""] = def
 
-	golang := NewLanguage()
+	golang := NewLanguage(false, 4)
 	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
 	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
 	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
@@ -25,7 +25,7 @@ func init() {
 	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`), Color{term.ColorYellow, term.ColorBlack}})
 	Languages["go"] = golang
 
-	py := NewLanguage()
+	py := NewLanguage(false, 4)
 	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), Color{term.ColorRed, term.ColorBlack}})
 	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), Color{term.ColorYellow, term.ColorBlack}})
 	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
@@ -34,7 +34,7 @@ func init() {
 	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	Languages["py"] = py
 
-	ts := NewLanguage()
+	ts := NewLanguage(true, 2)
 	ts.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
 	ts.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
 	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
@@ -42,6 +42,10 @@ func init() {
 	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
 	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export)\s`), Color{term.ColorYellow, term.ColorBlack}})
 	Languages["ts"] = ts
+
+	elm := NewLanguage(true, 2)
+	elm.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	Languages["elm"] = elm
 }
 
 // Byter could converted to []bytes.
@@ -173,12 +177,16 @@ type Color struct {
 }
 
 type Language struct {
-	syntaxes []Syntax // should be ordered
+	TabToSpace bool
+	TabWidth   int
+	syntaxes   []Syntax // should be ordered
 }
 
-func NewLanguage() *Language {
+func NewLanguage(tabToSpace bool, tabWidth int) *Language {
 	return &Language{
-		syntaxes: []Syntax{},
+		TabToSpace: tabToSpace,
+		TabWidth:   tabWidth,
+		syntaxes:   []Syntax{},
 	}
 }
 
