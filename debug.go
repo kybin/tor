@@ -17,7 +17,7 @@ func debug(args ...interface{}) {
 
 	term.Close()
 
-	fmt.Println(args)
+	fmt.Println(args...)
 
 	// wait for enter
 	reader := bufio.NewReader(os.Stdin)
