@@ -4,21 +4,17 @@ import (
 	"fmt"
 	"unicode/utf8"
 
-	term "github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 type ReplaceMode struct {
 	str   string
 	start bool
 	olds  []string
-
-	mode *ModeSelector
 }
 
 func (m *ReplaceMode) Start() {
-	term.SetInputMode(term.InputEsc)
-
-	nm := m.mode.normal
+	nm := tor.normal
 	if nm.selection.on {
 		m.str = nm.text.DataInside(nm.selection.MinMax())
 	}
@@ -27,26 +23,20 @@ func (m *ReplaceMode) Start() {
 
 func (m *ReplaceMode) End() {}
 
-func (m *ReplaceMode) Handle(ev term.Event) {
-	switch ev.Key {
-	case term.KeyEsc, term.KeyCtrlK:
+func (m *ReplaceMode) Handle(ev *tcell.EventKey) {
+	switch ev.Key() {
+	case tcell.KeyEsc, tcell.KeyCtrlK:
 		if len(m.olds) == 0 {
 			m.str = ""
 		} else {
 			m.str = m.olds[len(m.olds)-1]
 		}
-		m.mode.ChangeTo(m.mode.normal)
-	case term.KeyEnter:
-		m.mode.ChangeTo(m.mode.normal)
+		tor.ChangeMode(tor.normal)
+	case tcell.KeyEnter:
+		tor.ChangeMode(tor.normal)
 		m.olds = append(m.olds, m.str)
 		saveConfig("replace", m.str)
-	case term.KeySpace:
-		if m.start {
-			m.str = ""
-			m.start = false
-		}
-		m.str += " "
-	case term.KeyBackspace, term.KeyBackspace2:
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if m.start {
 			m.str = ""
 			m.start = false
@@ -55,14 +45,14 @@ func (m *ReplaceMode) Handle(ev term.Event) {
 		_, rlen := utf8.DecodeLastRuneInString(m.str)
 		m.str = m.str[:len(m.str)-rlen]
 	default:
-		if ev.Mod&term.ModAlt != 0 {
+		if ev.Modifiers()&tcell.ModAlt != 0 {
 			return
 		}
-		if ev.Ch != 0 {
+		if ev.Rune() != 0 {
 			if m.start {
 				m.str = ""
 			}
-			m.str += string(ev.Ch)
+			m.str += string(ev.Rune())
 		}
 		m.start = false
 	}

@@ -4,47 +4,51 @@ import (
 	"regexp"
 	"unicode/utf8"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/kybin/tor/cell"
-	term "github.com/nsf/termbox-go"
 )
 
 var Languages = make(map[string]*Language)
 
+func color(fg, bg tcell.Color) tcell.Style {
+	return tcell.StyleDefault.Foreground(fg).Background(bg)
+}
+
 func init() {
 	def := NewLanguage(false, 4)
-	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
 	Languages[""] = def
 
 	golang := NewLanguage(false, 4)
-	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
-	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
-	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
-	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), Color{term.ColorMagenta, term.ColorBlack}})
-	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), Color{term.ColorMagenta, term.ColorBlack}})
-	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
-	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`), Color{term.ColorYellow, term.ColorBlack}})
+	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), color(tcell.ColorRed, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), color(tcell.ColorPurple, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
+	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`), color(tcell.ColorYellow, tcell.ColorBlack)})
 	Languages["go"] = golang
 
 	py := NewLanguage(false, 4)
-	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), Color{term.ColorRed, term.ColorBlack}})
-	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), Color{term.ColorYellow, term.ColorBlack}})
-	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
-	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
-	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), Color{term.ColorMagenta, term.ColorBlack}})
-	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
+	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
+	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
+	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
 	Languages["py"] = py
 
 	ts := NewLanguage(true, 2)
-	ts.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), Color{term.ColorRed, term.ColorBlack}})
-	ts.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), Color{term.ColorRed, term.ColorBlack}})
-	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), Color{term.ColorYellow, term.ColorBlack}})
-	ts.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), Color{term.ColorMagenta, term.ColorBlack}})
-	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
-	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export)\s`), Color{term.ColorYellow, term.ColorBlack}})
+	ts.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), color(tcell.ColorRed, tcell.ColorBlack)})
+	ts.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
+	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	ts.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
+	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
+	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export)\s`), color(tcell.ColorYellow, tcell.ColorBlack)})
 	Languages["ts"] = ts
 
 	elm := NewLanguage(true, 2)
-	elm.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), Color{term.ColorBlack, term.ColorYellow}})
+	elm.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
 	Languages["elm"] = elm
 }
 
@@ -164,16 +168,11 @@ func (p *Parser) ClearFrom(pt cell.Pt) {
 type Syntax struct {
 	Name  string
 	Re    *regexp.Regexp
-	Color Color
+	Style tcell.Style
 }
 
 func (s Syntax) NewMatch(start, end cell.Pt) Match {
-	return Match{Name: s.Name, Range: cell.Range{start, end}, Color: s.Color}
-}
-
-type Color struct {
-	Fg term.Attribute
-	Bg term.Attribute
+	return Match{Name: s.Name, Range: cell.Range{start, end}, Style: s.Style}
 }
 
 type Language struct {
@@ -246,5 +245,5 @@ func (c *Cursor) next() (r rune, size int) {
 type Match struct {
 	Name  string
 	Range cell.Range
-	Color Color
+	Style tcell.Style
 }

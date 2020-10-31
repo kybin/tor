@@ -8,12 +8,10 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/kybin/tor/cell"
 	"github.com/kybin/tor/syntax"
-	term "github.com/nsf/termbox-go"
 )
 
 var usage = `
@@ -80,6 +78,54 @@ func parseFileArg(farg string) (string, int, int) {
 	return f, l, o
 }
 
+type Tor struct {
+	screen     tcell.Screen
+	mainArea   *Area
+	statusArea *Area
+
+	// current is a mode that will handle terminal events.
+	current Mode
+
+	// All modes that could be current mode.
+	normal   *NormalMode
+	find     *FindMode
+	replace  *ReplaceMode
+	gotoline *GotoLineMode
+	exit     *ExitMode
+}
+
+// tor will be initialized in main
+var tor *Tor = nil
+
+func (t *Tor) InitAreas() {
+	w, h := t.screen.Size()
+	left := w/2 - 80/2
+	if left < 0 {
+		left = 0
+	}
+	t.mainArea = NewArea(cell.Pt{0, left}, cell.Pt{h - 1, w - left})
+	t.statusArea = NewArea(cell.Pt{h - 1, 0}, cell.Pt{1, w})
+}
+
+// Refit refits it's areas.
+func (t *Tor) RefitAreas() {
+	w, h := t.screen.Size()
+	left := w/2 - 80/2
+	if left < 0 {
+		left = 0
+	}
+	t.mainArea.Set(cell.Pt{0, left}, cell.Pt{h - 1, w - left})
+	t.statusArea.Set(cell.Pt{h - 1, 0}, cell.Pt{1, w})
+}
+
+// ChangeMode changes current mode.
+// It also calls old current's End() and new current's Start().
+func (t *Tor) ChangeMode(m Mode) {
+	t.current.End()
+	t.current = m
+	t.current.Start()
+}
+
 func main() {
 	flagset := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	var newFlag bool
@@ -107,15 +153,18 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = term.Init()
+	screen, err := tcell.NewScreen()
 	if err != nil {
 		panic(err)
 	}
-	defer term.Close()
-	term.SetInputMode(term.InputAlt)
+	if err := screen.Init(); err != nil {
+		panic(err)
+	}
+	defer screen.Fini()
+	screen.SetStyle(tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset))
+	screen.EnablePaste()
+	screen.Clear()
 
-	termw, termh := term.Size()
-	screen := NewScreen(cell.Pt{termh, termw})
 	cursor := NewCursor(text)
 	cursor.GotoLine(initL)
 	cursor.SetCloseToB(initB)
@@ -128,98 +177,65 @@ func main() {
 	parser := syntax.NewParser(text, ext)
 
 	// create modes for handling events.
-	mode := &ModeSelector{}
-	mode.normal = &NormalMode{
-		area:      screen.main,
+	tor = &Tor{}
+	tor.screen = screen
+	tor.InitAreas()
+	tor.normal = &NormalMode{
 		text:      text,
 		cursor:    cursor,
 		selection: selection,
 		history:   history,
 		f:         editFile,
 		parser:    parser,
-		mode:      mode,
 		copied:    loadConfig("copy"),
+		area:      tor.mainArea,
 	}
-	mode.find = &FindMode{
-		mode: mode,
-		str:  loadConfig("find"),
+	tor.find = &FindMode{
+		str: loadConfig("find"),
 	}
-	mode.replace = &ReplaceMode{
-		mode: mode,
-		str:  loadConfig("replace"),
+	tor.replace = &ReplaceMode{
+		str: loadConfig("replace"),
 	}
-	mode.gotoline = &GotoLineMode{
+	tor.gotoline = &GotoLineMode{
 		cursor: cursor,
-		mode:   mode,
 	}
-	mode.exit = &ExitMode{
+	tor.exit = &ExitMode{
 		f:      editFile,
 		cursor: cursor,
-		mode:   mode,
 	}
-	mode.current = mode.normal // start as normal mode.
+	tor.current = tor.normal // start as normal mode.
 
-	// get events from termbox.
-	events := make(chan term.Event, 20)
-	go func() {
-		for {
-			events <- term.PollEvent()
-		}
-	}()
-
-	// mutex for commucation with termbox.
-	mu := &sync.Mutex{}
-
-	// Sync redraws terminal from buffer.
-	// sometimes Flush is insufficient,
-	// it is better to Sync frequently.
-	synced := true
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				mu.Lock()
-				if !synced {
-					term.Sync()
-					synced = true
-				}
-				mu.Unlock()
-			}
-		}
-	}()
+	tor.exit.exit = func() {
+		saveLastPosition(editFile, cursor.l, cursor.b)
+		screen.Fini()
+		os.Exit(0)
+	}
 
 	// main loop
 	for {
-		mode.normal.area.Win.Follow(mode.normal.cursor, 3)
+		tor.normal.area.Win.Follow(tor.normal.cursor, 3)
 
-		mu.Lock()
-		term.Clear(term.ColorDefault, term.ColorDefault)
-		drawScreen(mode.normal, mode.normal.area, mode.normal.cursor)
-		drawStatus(mode.current)
-		if mode.current == mode.normal {
-			winP := cursor.Position().Sub(mode.normal.area.Win.Min())
-			term.SetCursor(winP.O+mode.normal.area.min.O, winP.L)
+		screen.Clear()
+		drawScreen(screen, tor.normal)
+		drawStatus(screen, tor.current)
+		if tor.current == tor.normal {
+			winP := cursor.Position().Sub(tor.normal.area.Win.Min())
+			screen.ShowCursor(winP.O+tor.normal.area.min.O, winP.L)
 		} else {
-			term.SetCursor(vlen(mode.current.Status(), mode.normal.text.tabWidth), termh)
+			_, h := screen.Size()
+			screen.ShowCursor(vlen(tor.current.Status(), tor.normal.text.tabWidth), h)
 		}
-		term.Flush()
-		synced = false
-		mu.Unlock()
+		screen.Show()
 
 		// wait for keyboard input
-		select {
-		case ev := <-events:
-			switch ev.Type {
-			case term.EventKey:
-				mode.current.Handle(ev)
-			case term.EventResize:
-				mu.Lock()
-				term.Clear(term.ColorDefault, term.ColorDefault)
-				termw, termh = term.Size()
-				screen.Resize(cell.Pt{termh, termw})
-				mu.Unlock()
-			}
+		ev := screen.PollEvent()
+
+		switch ev := ev.(type) {
+		case *tcell.EventKey:
+			tor.current.Handle(ev)
+		case *tcell.EventResize:
+			tor.RefitAreas()
+			screen.Sync()
 		}
 	}
 }

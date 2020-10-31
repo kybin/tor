@@ -1,18 +1,18 @@
 package main
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/kybin/tor/cell"
 	"github.com/mattn/go-runewidth"
-	term "github.com/nsf/termbox-go"
 )
 
-func SetCell(l, o int, r rune, fg, bg term.Attribute) {
-	term.SetCell(o, l, r, fg, bg)
+func SetCell(s tcell.Screen, l, o int, r rune, style tcell.Style) {
+	s.SetContent(o, l, r, nil, style)
 }
 
 // draw text inside of window at mainarea.
-func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
-	w := a.Win
+func drawScreen(s tcell.Screen, norm *NormalMode) {
+	w := norm.area.Win
 	// parse syntax
 	if norm.dirty {
 		norm.parser.ClearFrom(cell.Pt{L: w.Min().L, O: 0})
@@ -25,77 +25,66 @@ func drawScreen(norm *NormalMode, a *Area, c *Cursor) {
 		if l < w.Min().L || l >= w.Max().L {
 			continue
 		}
-		origFg := term.ColorWhite
-		origBg := term.ColorBlack
+		origStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 		o := 0
 		for b, r := range ln.data {
 			if o >= w.Max().O {
 				break
 			}
 
-			fg := origFg
-			bg := origBg
+			style := origStyle
 			for _, m := range norm.parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
-					c := m.Color
-					bg = c.Bg
-					fg = c.Fg
+					style = m.Style
 					break
 				}
 			}
 
 			if norm.selection.Contains(cell.Pt{l, b}) {
-				bg = term.ColorGreen
+				style = tcell.StyleDefault.Background(tcell.ColorGreen).Foreground(tcell.ColorReset)
 			}
 			if r == '\t' {
 				for i := 0; i < norm.text.tabWidth; i++ {
 					if o >= w.Min().O {
-						SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(' '), fg, bg)
+						SetCell(s, l-w.Min().L, o-w.Min().O+norm.area.min.O, rune(' '), style)
 					}
 					o += 1
 				}
 			} else {
 				if o >= w.Min().O {
-					SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(r), fg, bg)
+					SetCell(s, l-w.Min().L, o-w.Min().O+norm.area.min.O, rune(r), style)
 				}
 				o += runewidth.RuneWidth(r)
 			}
 		}
 		// set original color to the last cell. (white and black)
 		// if not set, the cursor's color will look different.
-		SetCell(l-w.Min().L, o-w.Min().O+a.min.O, rune(' '), origFg, origBg)
+		SetCell(s, l-w.Min().L, o-w.Min().O+norm.area.min.O, rune(' '), origStyle)
 	}
-
-	if true {
-		// show left edge on cursor line.
-		// it does not draw 'on' the screen and should refine it. (move it some where?)
-		SetCell(c.l-w.Min().L, a.min.O-1, rune('·'), term.ColorCyan, term.ColorBlack)
-	}
-
 }
 
 // drawStatus draws current status of m at bottom of terminal.
 // If m has Error, it will printed with red background.
-func drawStatus(m Mode) {
-	var bg term.Attribute
+func drawStatus(s tcell.Screen, m Mode) {
+	var style tcell.Style
 	var status string
 	if m.Error() != "" {
-		bg = term.ColorRed
+		style = tcell.StyleDefault.Background(tcell.ColorRed).Foreground(tcell.ColorBlack)
 		status = m.Error()
 	} else {
-		bg = term.ColorWhite
+		style = tcell.StyleDefault.Background(tcell.ColorWhite).Foreground(tcell.ColorBlack)
 		status = m.Status()
 	}
 
-	termw, termh := term.Size()
+	termw, termh := s.Size()
 	statusLine := termh - 1
 	// clear and draw
 	for i := 0; i < termw; i++ {
-		SetCell(statusLine, i, ' ', term.ColorBlack, bg)
+		SetCell(s, statusLine, i, ' ', style)
 	}
 	o := 0
 	for _, r := range status {
-		SetCell(statusLine, o, r, term.ColorBlack, bg)
+		SetCell(s, statusLine, o, r, style)
 		o += runewidth.RuneWidth(r)
 	}
 }

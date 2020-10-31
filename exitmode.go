@@ -1,30 +1,29 @@
 package main
 
 import (
-	"os"
-
-	term "github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 type ExitMode struct {
 	f      string // name of this file.
 	cursor *Cursor
-	mode   *ModeSelector
+	tor    *Tor
+	exit   func()
 }
 
 func (m *ExitMode) Start() {
-	term.SetInputMode(term.InputEsc)
+	if !tor.normal.text.edited {
+		m.exit()
+	}
 }
 
 func (m *ExitMode) End() {}
 
-func (m *ExitMode) Handle(ev term.Event) {
-	if ev.Ch == 'y' {
-		saveLastPosition(m.f, m.cursor.l, m.cursor.b)
-		term.Close()
-		os.Exit(0)
-	} else if ev.Ch == 'n' || ev.Key == term.KeyEsc || ev.Key == term.KeyCtrlK {
-		m.mode.ChangeTo(m.mode.normal)
+func (m *ExitMode) Handle(ev *tcell.EventKey) {
+	if ev.Rune() == 'y' {
+		m.exit()
+	} else if ev.Rune() == 'n' || ev.Key() == tcell.KeyEsc || ev.Key() == tcell.KeyCtrlK {
+		tor.ChangeMode(tor.normal)
 	}
 }
 

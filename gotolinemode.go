@@ -5,30 +5,27 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	term "github.com/nsf/termbox-go"
+	"github.com/gdamore/tcell/v2"
 )
 
 type GotoLineMode struct {
 	linestr string
 
 	cursor *Cursor
-	mode   *ModeSelector
 }
 
-func (m *GotoLineMode) Start() {
-	term.SetInputMode(term.InputEsc)
-}
+func (m *GotoLineMode) Start() {}
 
 func (m *GotoLineMode) End() {}
 
-func (m *GotoLineMode) Handle(ev term.Event) {
-	switch ev.Key {
-	case term.KeyEsc, term.KeyCtrlK:
+func (m *GotoLineMode) Handle(ev *tcell.EventKey) {
+	switch ev.Key() {
+	case tcell.KeyEsc, tcell.KeyCtrlK:
 		m.linestr = ""
-		m.mode.ChangeTo(m.mode.normal)
-	case term.KeyEnter:
+		tor.ChangeMode(tor.normal)
+	case tcell.KeyEnter:
 		if m.linestr == "" {
-			m.mode.ChangeTo(m.mode.normal)
+			tor.ChangeMode(tor.normal)
 			return
 		}
 		n, err := strconv.Atoi(m.linestr)
@@ -43,18 +40,18 @@ func (m *GotoLineMode) Handle(ev term.Event) {
 		}
 		m.cursor.GotoLine(n)
 		m.linestr = ""
-		m.mode.ChangeTo(m.mode.normal)
-	case term.KeyBackspace, term.KeyBackspace2:
+		tor.ChangeMode(tor.normal)
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if m.linestr == "" {
 			return
 		}
 		_, rlen := utf8.DecodeLastRuneInString(m.linestr)
 		m.linestr = m.linestr[:len(m.linestr)-rlen]
 	default:
-		if ev.Ch != 0 {
-			_, err := strconv.Atoi(string(ev.Ch))
+		if ev.Rune() != 0 {
+			_, err := strconv.Atoi(string(ev.Rune()))
 			if err == nil {
-				m.linestr += string(ev.Ch)
+				m.linestr += string(ev.Rune())
 			}
 		}
 	}

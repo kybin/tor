@@ -2,18 +2,16 @@ package main
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/kybin/tor/syntax"
-	term "github.com/nsf/termbox-go"
 )
 
 // NormalMode is a mode for text editing.
 type NormalMode struct {
-	area      *Area
 	text      *Text
 	cursor    *Cursor
 	selection *Selection
@@ -27,20 +25,18 @@ type NormalMode struct {
 	status string
 	err    string
 
-	mode *ModeSelector
+	area *Area
 }
 
 // Start prepare things to start a normal mode.
-func (m *NormalMode) Start() {
-	term.SetInputMode(term.InputAlt)
-}
+func (m *NormalMode) Start() {}
 
 // End prepare things to end a normal mode.
 func (m *NormalMode) End() {}
 
 // Handle handles a terminal event.
 // It will run appropriate actions, and save it in history.
-func (m *NormalMode) Handle(ev term.Event) {
+func (m *NormalMode) Handle(ev *tcell.EventKey) {
 	m.status = ""
 	m.err = ""
 
@@ -102,128 +98,122 @@ func (m *NormalMode) Handle(ev term.Event) {
 }
 
 // parseEvent parses a terminal event and return actions.
-func (m *NormalMode) parseEvent(ev term.Event) []*Action {
-	if ev.Type != term.EventKey {
-		panic(fmt.Sprintln("what the..", ev.Type, "event?"))
-	}
-
-	switch ev.Key {
-	case term.KeyCtrlQ:
+func (m *NormalMode) parseEvent(ev *tcell.EventKey) []*Action {
+	switch ev.Key() {
+	case tcell.KeyCtrlQ:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "exit"}}
-	case term.KeyCtrlS:
+	case tcell.KeyCtrlS:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "save"}}
-	case term.KeyCtrlK:
+	case tcell.KeyCtrlK:
 		return []*Action{{kind: "selection", value: "off"}}
 	// move
-	case term.KeyArrowLeft:
+	case tcell.KeyLeft:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "left"}}
-	case term.KeyArrowRight:
+	case tcell.KeyRight:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "right"}}
-	case term.KeyArrowUp:
+	case tcell.KeyUp:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "up"}}
-	case term.KeyArrowDown:
+	case tcell.KeyDown:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "down"}}
-	case term.KeyPgup:
+	case tcell.KeyPgUp:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pageup"}}
-	case term.KeyPgdn:
+	case tcell.KeyPgDn:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "pagedown"}}
-	case term.KeyHome:
+	case tcell.KeyHome:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "bol"}}
-	case term.KeyEnd:
+	case tcell.KeyEnd:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}}
 	// insert
-	case term.KeyEnter:
+	case tcell.KeyEnter:
 		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: "\n"}}
-	case term.KeyCtrlN:
-		if ev.Mod&term.ModAlt != 0 {
+	case tcell.KeyCtrlN:
+		if ev.Modifiers()&tcell.ModAlt != 0 {
 			return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "eol"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
 		}
 		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: "\n"}, {kind: "insert", value: "autoIndent"}}
-	case term.KeySpace:
-		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: " "}}
-	case term.KeyTab:
+	case tcell.KeyTab:
 		tab := "\t"
 		if m.text.tabToSpace {
 			tab = strings.Repeat(" ", m.text.tabWidth)
 		}
 		return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: tab}}
-	case term.KeyCtrlU:
+	case tcell.KeyCtrlU:
 		return []*Action{{kind: "removeTab"}}
-	case term.KeyCtrlO:
+	case tcell.KeyCtrlO:
 		return []*Action{{kind: "insertTab"}}
 	// delete : value will added after actual deletion.
-	case term.KeyDelete:
+	case tcell.KeyDelete:
 		if m.selection.on {
 			return []*Action{{kind: "delete", value: "selection"}}
 		} else {
-			if ev.Mod&term.ModAlt != 0 {
+			if ev.Modifiers()&tcell.ModAlt != 0 {
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "nextBowEow"}, {kind: "delete", value: "selection"}}
 			}
 			return []*Action{{kind: "delete"}}
 		}
-	case term.KeyBackspace, term.KeyBackspace2:
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
 		if m.selection.on {
 			return []*Action{{kind: "delete", value: "selection"}}
 		} else {
-			if ev.Mod&term.ModAlt != 0 {
+			if ev.Modifiers()&tcell.ModAlt != 0 {
 				return []*Action{{kind: "selection", value: "on"}, {kind: "move", value: "prevBowEow"}, {kind: "delete", value: "selection"}}
 			}
 			return []*Action{{kind: "backspace"}}
 		}
 	// undo, redo
-	case term.KeyCtrlZ:
+	case tcell.KeyCtrlZ:
 		return []*Action{{kind: "undo"}}
-	case term.KeyCtrlY:
+	case tcell.KeyCtrlY:
 		return []*Action{{kind: "redo"}}
 	// copy, paste, cut
-	case term.KeyCtrlC:
+	case tcell.KeyCtrlC:
 		if m.selection.on {
 			return []*Action{{kind: "copy"}, {kind: "selection", value: "off"}}
 		} else {
 			return []*Action{}
 		}
-	case term.KeyCtrlV:
+	case tcell.KeyCtrlV:
 		if m.selection.on {
 			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.copied}}
 		}
 		return []*Action{{kind: "insert", value: m.copied}}
-	case term.KeyCtrlP:
+	case tcell.KeyCtrlP:
 		if m.selection.on {
 			return []*Action{{kind: "delete", value: "selection"}, {kind: "paste", value: m.copied}}
 		}
 		return []*Action{{kind: "paste", value: m.copied}}
-	case term.KeyCtrlJ:
+	case tcell.KeyCtrlJ:
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: m.mode.replace.str}}
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: tor.replace.str}}
 		}
 		return []*Action{}
-	case term.KeyCtrlX:
+	case tcell.KeyCtrlX:
 		if m.selection.on {
 			return []*Action{{kind: "copy"}, {kind: "delete", value: "selection"}}
 		} else {
 			return []*Action{{kind: "copy"}, {kind: "delete"}}
 		}
 	// find
-	case term.KeyCtrlD, term.KeyF3:
+	case tcell.KeyCtrlD, tcell.KeyF3:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findNextSelect"}}
-	case term.KeyCtrlB, term.KeyF2:
+	case tcell.KeyCtrlB, tcell.KeyF2:
 		return []*Action{{kind: "selection", value: "off"}, {kind: "move", value: "findPrevSelect"}}
-	case term.KeyCtrlF:
+	case tcell.KeyCtrlF:
 		return []*Action{{kind: "modeChange", value: "find"}}
-	case term.KeyCtrlR:
+	case tcell.KeyCtrlR:
 		return []*Action{{kind: "modeChange", value: "replace"}}
-	case term.KeyCtrlG:
+	case tcell.KeyCtrlG:
 		return []*Action{{kind: "modeChange", value: "gotoline"}}
-	case term.KeyCtrlA:
+	case tcell.KeyCtrlA:
 		return []*Action{{kind: "selectAll"}}
-	case term.KeyCtrlL:
+	case tcell.KeyCtrlL:
 		return []*Action{{kind: "selectLine"}}
 	default:
-		if ev.Ch == 0 {
+		if ev.Rune() == 0 {
 			return []*Action{}
 		}
-		if ev.Mod&term.ModAlt != 0 {
-			switch ev.Ch {
+		if ev.Modifiers()&tcell.ModAlt != 0 {
+			switch ev.Rune() {
 			case 'j':
 				return []*Action{{kind: "move", value: "selLeft"}, {kind: "selection", value: "off"}}
 			case 'J':
@@ -319,9 +309,9 @@ func (m *NormalMode) parseEvent(ev term.Event) []*Action {
 
 		// key pressed without modifier
 		if m.selection.on {
-			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: string(ev.Ch)}}
+			return []*Action{{kind: "delete", value: "selection"}, {kind: "insert", value: string(ev.Rune())}}
 		} else {
-			return []*Action{{kind: "insert", value: string(ev.Ch)}}
+			return []*Action{{kind: "insert", value: string(ev.Rune())}}
 		}
 	}
 }
@@ -340,13 +330,7 @@ func (m *NormalMode) do(a *Action) {
 
 	switch a.kind {
 	case "exit":
-		if !m.text.edited {
-			saveLastPosition(m.f, m.cursor.l, m.cursor.b)
-			term.Close()
-			os.Exit(0)
-		} else {
-			m.mode.ChangeTo(m.mode.exit)
-		}
+		tor.ChangeMode(tor.exit)
 	case "save":
 		err := save(m.f, m.text)
 		if err != nil {
@@ -405,11 +389,11 @@ func (m *NormalMode) do(a *Action) {
 		saveConfig("copy", m.copied)
 	case "modeChange":
 		if a.value == "find" {
-			m.mode.ChangeTo(m.mode.find)
+			tor.ChangeMode(tor.find)
 		} else if a.value == "replace" {
-			m.mode.ChangeTo(m.mode.replace)
+			tor.ChangeMode(tor.replace)
 		} else if a.value == "gotoline" {
-			m.mode.ChangeTo(m.mode.gotoline)
+			tor.ChangeMode(tor.gotoline)
 		}
 	case "selection":
 		if a.value == "on" && !m.selection.on {
@@ -485,48 +469,48 @@ func (m *NormalMode) do(a *Action) {
 		case "matchingBracket":
 			m.cursor.GotoMatchingBracket()
 		case "findPrev":
-			ok := m.cursor.GotoPrev(m.mode.find.str)
+			ok := m.cursor.GotoPrev(tor.find.str)
 			if !ok {
-				m.cursor.GotoLast(m.mode.find.str)
+				m.cursor.GotoLast(tor.find.str)
 			}
 		case "findNext":
-			ok := m.cursor.GotoNext(m.mode.find.str)
+			ok := m.cursor.GotoNext(tor.find.str)
 			if !ok {
-				m.cursor.GotoFirst(m.mode.find.str)
+				m.cursor.GotoFirst(tor.find.str)
 			}
 		case "findPrevWord":
-			m.cursor.GotoPrevWord(m.mode.find.str)
+			m.cursor.GotoPrevWord(tor.find.str)
 		case "findNextWord":
-			m.cursor.GotoNextWord(m.mode.find.str)
+			m.cursor.GotoNextWord(tor.find.str)
 		// TODO: "findPrevSelect" and "findNextSelect" are hack. make separate action.
 		case "findPrevSelect":
-			ok := m.cursor.GotoPrev(m.mode.find.str)
+			ok := m.cursor.GotoPrev(tor.find.str)
 			if !ok {
-				ok = m.cursor.GotoLast(m.mode.find.str)
+				ok = m.cursor.GotoLast(tor.find.str)
 			}
 			if ok {
 				m.selection.on = true
-				for range m.mode.find.str {
+				for range tor.find.str {
 					m.cursor.MoveRight()
 				}
 				m.selection.SetStart(m.cursor.BytePos())
-				for range m.mode.find.str {
+				for range tor.find.str {
 					m.cursor.MoveLeft()
 				}
 				m.selection.SetEnd(m.cursor.BytePos())
 			}
 		case "findNextSelect":
-			ok := m.cursor.GotoNext(m.mode.find.str)
+			ok := m.cursor.GotoNext(tor.find.str)
 			if !ok {
-				ok = m.cursor.GotoFirst(m.mode.find.str)
+				ok = m.cursor.GotoFirst(tor.find.str)
 			}
 			if ok {
 				m.selection.on = true
-				for range m.mode.find.str {
+				for range tor.find.str {
 					m.cursor.MoveRight()
 				}
 				m.selection.SetStart(m.cursor.BytePos())
-				for range m.mode.find.str {
+				for range tor.find.str {
 					m.cursor.MoveLeft()
 				}
 				m.selection.SetEnd(m.cursor.BytePos())
