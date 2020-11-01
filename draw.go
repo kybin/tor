@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gdamore/tcell/v2"
 	"github.com/kybin/tor/cell"
+	"github.com/kybin/tor/syntax"
 	"github.com/mattn/go-runewidth"
 )
 
@@ -35,7 +36,10 @@ func drawScreen(s tcell.Screen, norm *NormalMode) {
 			style := origStyle
 			for _, m := range norm.parser.Matches {
 				if m.Range.Contains(cell.Pt{l, b}) {
-					style = m.Style
+					attr, ok := syntax.DefaultTheme[m.Type]
+					if ok {
+						style = tcell.StyleDefault.Background(attr.Bg).Foreground(attr.Fg)
+					}
 					break
 				}
 			}

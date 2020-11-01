@@ -14,41 +14,52 @@ func color(fg, bg tcell.Color) tcell.Style {
 	return tcell.StyleDefault.Foreground(fg).Background(bg)
 }
 
+type Type int
+
+const (
+	TypeKeyword = Type(iota)
+	TypeString
+	TypeRune
+	TypeInt
+	TypeComment
+	TypeTrailingSpaces
+)
+
 func init() {
 	def := NewLanguage(false, 4)
-	def.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
+	def.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
 	Languages[""] = def
 
 	golang := NewLanguage(false, 4)
-	golang.AddSyntax(Syntax{"string", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
-	golang.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), color(tcell.ColorRed, tcell.ColorBlack)})
-	golang.AddSyntax(Syntax{"rune", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
-	golang.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
-	golang.AddSyntax(Syntax{"multi line comment", regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`), color(tcell.ColorPurple, tcell.ColorBlack)})
-	golang.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
-	golang.AddSyntax(Syntax{"package", regexp.MustCompile(`^package\s`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	golang.AddSyntax(Syntax{"string", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
+	golang.AddSyntax(Syntax{"raw string", TypeString, regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")})
+	golang.AddSyntax(Syntax{"rune", TypeRune, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
+	golang.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)//.*`)})
+	golang.AddSyntax(Syntax{"multi line comment", TypeComment, regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`)})
+	golang.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
+	golang.AddSyntax(Syntax{"package", TypeKeyword, regexp.MustCompile(`^package\s`)})
 	Languages["go"] = golang
 
 	py := NewLanguage(false, 4)
-	py.AddSyntax(Syntax{"multi line string1", regexp.MustCompile(`^(?s)""".*?(?:"""|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
-	py.AddSyntax(Syntax{"multi line string2", regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
-	py.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
-	py.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
-	py.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)#.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
-	py.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
+	py.AddSyntax(Syntax{"multi line string1", TypeString, regexp.MustCompile(`^(?s)""".*?(?:"""|$)`)})
+	py.AddSyntax(Syntax{"multi line string2", TypeString, regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`)})
+	py.AddSyntax(Syntax{"string1", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
+	py.AddSyntax(Syntax{"string2", TypeString, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
+	py.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)#.*`)})
+	py.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
 	Languages["py"] = py
 
 	ts := NewLanguage(true, 2)
-	ts.AddSyntax(Syntax{"raw string", regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)"), color(tcell.ColorRed, tcell.ColorBlack)})
-	ts.AddSyntax(Syntax{"string1", regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`), color(tcell.ColorRed, tcell.ColorBlack)})
-	ts.AddSyntax(Syntax{"string2", regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`), color(tcell.ColorYellow, tcell.ColorBlack)})
-	ts.AddSyntax(Syntax{"comment", regexp.MustCompile(`^(?m)//.*`), color(tcell.ColorPurple, tcell.ColorBlack)})
-	ts.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
-	ts.AddSyntax(Syntax{"keywords", regexp.MustCompile(`^(import|export)\s`), color(tcell.ColorYellow, tcell.ColorBlack)})
+	ts.AddSyntax(Syntax{"raw string", TypeString, regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")})
+	ts.AddSyntax(Syntax{"string1", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
+	ts.AddSyntax(Syntax{"string2", TypeString, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
+	ts.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)//.*`)})
+	ts.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
+	ts.AddSyntax(Syntax{"keywords", TypeKeyword, regexp.MustCompile(`^(import|export)\s`)})
 	Languages["ts"] = ts
 
 	elm := NewLanguage(true, 2)
-	elm.AddSyntax(Syntax{"trailing spaces", regexp.MustCompile(`^(?m)[ \t]+$`), color(tcell.ColorBlack, tcell.ColorYellow)})
+	elm.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
 	Languages["elm"] = elm
 }
 
@@ -166,13 +177,13 @@ func (p *Parser) ClearFrom(pt cell.Pt) {
 }
 
 type Syntax struct {
-	Name  string
-	Re    *regexp.Regexp
-	Style tcell.Style
+	Name string
+	Type Type
+	Re   *regexp.Regexp
 }
 
 func (s Syntax) NewMatch(start, end cell.Pt) Match {
-	return Match{Name: s.Name, Range: cell.Range{start, end}, Style: s.Style}
+	return Match{Name: s.Name, Type: s.Type, Range: cell.Range{start, end}}
 }
 
 type Language struct {
@@ -244,6 +255,22 @@ func (c *Cursor) next() (r rune, size int) {
 
 type Match struct {
 	Name  string
+	Type  Type
 	Range cell.Range
-	Style tcell.Style
+}
+
+type Attr struct {
+	Fg tcell.Color
+	Bg tcell.Color
+}
+
+type Theme map[Type]Attr
+
+var DefaultTheme = Theme{
+	TypeKeyword:        Attr{Fg: tcell.ColorYellow, Bg: tcell.ColorReset},
+	TypeString:         Attr{Fg: tcell.ColorRed, Bg: tcell.ColorReset},
+	TypeRune:           Attr{Fg: tcell.ColorYellow, Bg: tcell.ColorReset},
+	TypeInt:            Attr{Fg: tcell.ColorReset, Bg: tcell.ColorReset},
+	TypeComment:        Attr{Fg: tcell.ColorPurple, Bg: tcell.ColorReset},
+	TypeTrailingSpaces: Attr{Fg: tcell.ColorReset, Bg: tcell.ColorYellow},
 }
