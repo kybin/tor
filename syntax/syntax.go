@@ -10,10 +10,6 @@ import (
 
 var Languages = make(map[string]*Language)
 
-func color(fg, bg tcell.Color) tcell.Style {
-	return tcell.StyleDefault.Foreground(fg).Background(bg)
-}
-
 type Type int
 
 const (
