@@ -87,14 +87,8 @@ func create(f string) (*Text, error) {
 	if ext != "" {
 		ext = strings.TrimPrefix(ext, ".")
 	}
-	tabToSpace := false
-	tabWidth := 4
-	lang, ok := syntax.Languages[ext]
-	if ok {
-		tabToSpace = lang.TabToSpace
-		tabWidth = lang.TabWidth
-	}
-	return &Text{lines: []Line{{""}}, tabToSpace: tabToSpace, tabWidth: tabWidth, writable: writable, lineEnding: "\n"}, nil
+	lang := syntax.NewLanguage(ext)
+	return &Text{lines: []Line{{""}}, tabToSpace: lang.TabToSpace, tabWidth: lang.TabWidth, writable: writable, lineEnding: "\n"}, nil
 }
 
 // read reads a file and returns it as *Text.

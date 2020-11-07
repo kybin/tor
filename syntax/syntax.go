@@ -8,8 +8,6 @@ import (
 	"github.com/kybin/tor/cell"
 )
 
-var Languages = make(map[string]*Language)
-
 type Type int
 
 const (
@@ -20,44 +18,6 @@ const (
 	TypeComment
 	TypeTrailingSpaces
 )
-
-func init() {
-	def := NewLanguage(false, 4)
-	def.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
-	Languages[""] = def
-
-	golang := NewLanguage(false, 4)
-	golang.AddSyntax(Syntax{"string", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
-	golang.AddSyntax(Syntax{"raw string", TypeString, regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")})
-	golang.AddSyntax(Syntax{"rune", TypeRune, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
-	golang.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)//.*`)})
-	golang.AddSyntax(Syntax{"multi line comment", TypeComment, regexp.MustCompile(`^(?s)/[*].*?(?:[*]/|$)`)})
-	golang.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
-	golang.AddSyntax(Syntax{"package", TypeKeyword, regexp.MustCompile(`^package\s`)})
-	Languages["go"] = golang
-
-	py := NewLanguage(false, 4)
-	py.AddSyntax(Syntax{"multi line string1", TypeString, regexp.MustCompile(`^(?s)""".*?(?:"""|$)`)})
-	py.AddSyntax(Syntax{"multi line string2", TypeString, regexp.MustCompile(`^(?s)'''.*?(?:'''|$)`)})
-	py.AddSyntax(Syntax{"string1", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
-	py.AddSyntax(Syntax{"string2", TypeString, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
-	py.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)#.*`)})
-	py.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
-	Languages["py"] = py
-
-	ts := NewLanguage(true, 2)
-	ts.AddSyntax(Syntax{"raw string", TypeString, regexp.MustCompile(`^(?s)` + "`" + `.*?` + "(?:`|$)")})
-	ts.AddSyntax(Syntax{"string1", TypeString, regexp.MustCompile(`^(?m)".*?(?:[^\\]?"|$)`)})
-	ts.AddSyntax(Syntax{"string2", TypeString, regexp.MustCompile(`^(?m)'.*?(?:[^\\]?'|$)`)})
-	ts.AddSyntax(Syntax{"comment", TypeComment, regexp.MustCompile(`^(?m)//.*`)})
-	ts.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
-	ts.AddSyntax(Syntax{"keywords", TypeKeyword, regexp.MustCompile(`^(import|export)\s`)})
-	Languages["ts"] = ts
-
-	elm := NewLanguage(true, 2)
-	elm.AddSyntax(Syntax{"trailing spaces", TypeTrailingSpaces, regexp.MustCompile(`^(?m)[ \t]+$`)})
-	Languages["elm"] = elm
-}
 
 // Byter could converted to []bytes.
 type Byter interface {
@@ -75,14 +35,9 @@ type Parser struct {
 }
 
 // NewParser creates a new Parser.
-func NewParser(text Byter, langName string) *Parser {
+func NewParser(text Byter, ext string) *Parser {
 	p := &Parser{}
-	lang, ok := Languages[langName]
-	if ok {
-		p.lang = lang
-	} else {
-		p.lang = Languages[""]
-	}
+	p.lang = NewLanguage(ext)
 	p.SetText(text)
 	return p
 }
@@ -180,24 +135,6 @@ type Syntax struct {
 
 func (s Syntax) NewMatch(start, end cell.Pt) Match {
 	return Match{Name: s.Name, Type: s.Type, Range: cell.Range{start, end}}
-}
-
-type Language struct {
-	TabToSpace bool
-	TabWidth   int
-	syntaxes   []Syntax // should be ordered
-}
-
-func NewLanguage(tabToSpace bool, tabWidth int) *Language {
-	return &Language{
-		TabToSpace: tabToSpace,
-		TabWidth:   tabWidth,
-		syntaxes:   []Syntax{},
-	}
-}
-
-func (l *Language) AddSyntax(s Syntax) {
-	l.syntaxes = append(l.syntaxes, s)
 }
 
 type Cursor struct {
