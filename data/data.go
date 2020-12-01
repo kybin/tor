@@ -111,10 +111,72 @@ func (c *Cursor) Shift(o int) {
 	}
 }
 
-func (c *Cursor) Start()        {}
-func (c *Cursor) End()          {}
-func (c *Cursor) GotoNextLine() {}
-func (c *Cursor) GotoPrevLine() {}
+func (c *Cursor) GotoStart() {
+	c.appending = false
+	c.i = 0
+	c.o = 0
+}
+
+func (c *Cursor) GotoEnd() {
+	c.appending = false
+	c.i = len(c.clips)
+	c.o = 0
+}
+
+func (c *Cursor) GotoNextLine() {
+	c.appending = false
+	if len(c.clips) == 0 {
+		panic("length of clips should not be zero")
+	}
+	for {
+		if c.i == len(c.clips) {
+			if c.o != 0 {
+				panic("c.o should 0 when c.i == len(c.clips)")
+			}
+			return
+		}
+		nls := c.clips[c.i].newlines
+		for i := range nls {
+			o := nls[i]
+			if o <= c.o {
+				continue
+			}
+			c.o = o
+			return
+		}
+		c.i++
+		c.o = 0
+	}
+}
+
+func (c *Cursor) GotoPrevLine() {
+	c.appending = false
+	if len(c.clips) == 0 {
+		panic("length of clips should not be zero")
+	}
+	if c.i == len(c.clips) {
+		c.i--
+		c.o = len(c.clips[c.i].data)
+	}
+	for {
+		nls := c.clips[c.i].newlines
+		for i := range nls {
+			o := nls[len(nls)-1-i]
+			if o >= c.o {
+				continue
+			}
+			c.o = o
+			return
+		}
+		if c.i == 0 {
+			// no more previous clip
+			c.o = 0
+			return
+		}
+		c.i--
+		c.o = len(c.clips[c.i].data)
+	}
+}
 
 func (c *Cursor) Write(r rune) {
 	if c.appending {

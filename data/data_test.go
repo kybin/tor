@@ -91,3 +91,79 @@ func TestCursorWrite(t *testing.T) {
 		}
 	}
 }
+
+func TestCursorGotoNextLine(t *testing.T) {
+	type Step struct {
+		i int
+		o int
+	}
+	cases := []struct {
+		label string
+		clips []Clip
+		wants []Step
+	}{
+		{
+			label: "simple",
+			clips: []Clip{
+				DataClip([]byte("what a nice day\n")),
+				DataClip([]byte("do you have breakfast?\n or shall we?")),
+			},
+			wants: []Step{{0, 15}, {1, 22}, {2, 0}, {2, 0}},
+		},
+		{
+			label: "korean",
+			clips: []Clip{
+				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
+			},
+			wants: []Step{{0, 7}, {1, 20}, {2, 0}, {2, 0}},
+		},
+	}
+
+	for _, c := range cases {
+		cs := NewCursor(c.clips)
+		for i, want := range c.wants {
+			cs.GotoNextLine()
+			if cs.i != want.i || cs.o != want.o {
+				t.Fatalf("%s: step %d: got [%d:%d], want [%d:%d]", c.label, i, cs.i, cs.o, want.i, want.o)
+			}
+		}
+	}
+}
+
+func TestCursorGotoPrevLine(t *testing.T) {
+	type Step struct {
+		i int
+		o int
+	}
+	cases := []struct {
+		label string
+		clips []Clip
+		wants []Step
+	}{
+		{
+			label: "simple",
+			clips: []Clip{
+				DataClip([]byte("what a nice day\n")),
+				DataClip([]byte("do you have breakfast?\n or shall we?")),
+			},
+			wants: []Step{{1, 22}, {0, 15}, {0, 0}, {0, 0}},
+		},
+		{
+			label: "korean",
+			clips: []Clip{
+				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
+			},
+			wants: []Step{{1, 20}, {0, 7}, {0, 0}, {0, 0}},
+		},
+	}
+
+	for _, c := range cases {
+		cs := &Cursor{clips: c.clips, i: len(c.clips), o: 0}
+		for i, want := range c.wants {
+			cs.GotoPrevLine()
+			if cs.i != want.i || cs.o != want.o {
+				t.Fatalf("%s: step %d: got [%d:%d], want [%d:%d]", c.label, i, cs.i, cs.o, want.i, want.o)
+			}
+		}
+	}
+}
