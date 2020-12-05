@@ -1,7 +1,7 @@
 package data
 
 // this package uses panic, as data validation is very important here.
-// if something goes wrong, panic is safer for saving user data (usually a file).
+// if something goes wrong, panic is safer than getting corrupted data.
 
 import "unicode/utf8"
 
