@@ -167,3 +167,78 @@ func TestCursorGotoPrevLine(t *testing.T) {
 		}
 	}
 }
+
+func TestCursorGotoNext(t *testing.T) {
+	cases := []struct {
+		label string
+		clips []Clip
+		nstep int
+	}{
+		{
+			label: "numbers and newlines",
+			clips: []Clip{
+				DataClip([]byte("1")),
+				DataClip([]byte("23\n")),
+				DataClip([]byte(" 4\r\n")),
+				DataClip([]byte("56 7")),
+				DataClip([]byte("8\n\n\n90")),
+			},
+			nstep: 17,
+		},
+		{
+			label: "korean",
+			clips: []Clip{
+				DataClip([]byte("한글 테스트\n")),
+				DataClip([]byte("english test\n")),
+			},
+			nstep: 20,
+		},
+	}
+	for _, c := range cases {
+		cs := NewCursor(c.clips)
+		for i := 0; i < c.nstep; i++ {
+			cs.MoveNext()
+		}
+		if cs.i != len(c.clips) || cs.o != 0 {
+			t.Fatalf("%s: got [%d:%d], want [%d:%d]", c.label, cs.i, cs.o, len(c.clips), 0)
+		}
+	}
+}
+
+func TestCursorGotoPrev(t *testing.T) {
+	cases := []struct {
+		label string
+		clips []Clip
+		nstep int
+	}{
+		{
+			label: "numbers and newlines",
+			clips: []Clip{
+				DataClip([]byte("1")),
+				DataClip([]byte("23\n")),
+				DataClip([]byte(" 4\r\n")),
+				DataClip([]byte("56 7")),
+				DataClip([]byte("8\n\n\n90")),
+			},
+			nstep: 17,
+		},
+		{
+			label: "korean",
+			clips: []Clip{
+				DataClip([]byte("한글 테스트\n")),
+				DataClip([]byte("english test\n")),
+			},
+			nstep: 20,
+		},
+	}
+	for _, c := range cases {
+		cs := NewCursor(c.clips)
+		cs.i = len(c.clips)
+		for i := 0; i < c.nstep; i++ {
+			cs.MovePrev()
+		}
+		if cs.i != 0 || cs.o != 0 {
+			t.Fatalf("%s: got [%d:%d], want [%d:%d]", c.label, cs.i, cs.o, 0, 0)
+		}
+	}
+}

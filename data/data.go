@@ -93,20 +93,88 @@ func NewCursor(clips []Clip) *Cursor {
 	return &Cursor{clips: clips}
 }
 
-func (c *Cursor) Shift(o int) {
-	c.o += o
-	for {
-		if c.o < 0 {
-			c.i--
-			c.o += len(c.clips[c.i].data)
-		} else if c.o >= len(c.clips[c.i].data) {
-			c.o -= len(c.clips[c.i].data)
-			c.i++
-			if c.o == 0 && c.i == len(c.clips) {
-				break
-			}
-		} else {
-			break
+func nextOffset(data []byte, o int) int {
+	remain := data[o:]
+	r, n := utf8.DecodeRune(remain)
+	remain = remain[n:]
+	if r == '\r' {
+		r, _ := utf8.DecodeRune(remain)
+		if r == '\n' {
+			n += 1
+		}
+	}
+	o += n
+	if o == len(data) {
+		return -1
+	}
+	return o
+}
+
+func prevOffset(data []byte, o int) int {
+	if o == 0 {
+		return -1
+	}
+	remain := data[:o]
+	r, n := utf8.DecodeLastRune(remain)
+	remain = remain[:len(remain)-n]
+	if r == '\n' {
+		r, _ := utf8.DecodeLastRune(remain)
+		if r == '\r' {
+			n += 1
+		}
+	}
+	return o - n
+}
+
+func (c *Cursor) MoveNext() {
+	c.appending = false
+	if c.i == len(c.clips) {
+		if c.o != 0 {
+			panic("c.o should 0 when c.i == len(c.clips)")
+		}
+		return
+	}
+	o := nextOffset(c.clips[c.i].data, c.o)
+	if o == -1 {
+		c.i++
+		c.o = 0
+		return
+	}
+	c.o = o
+}
+
+func (c *Cursor) MovePrev() {
+	c.appending = false
+	if c.i == 0 && c.o == 0 {
+		return
+	}
+	if c.i == len(c.clips) {
+		if c.o != 0 {
+			panic("c.o should 0 when c.i == len(c.clips)")
+		}
+		c.i--
+		c.o = len(c.clips[c.i].data)
+	}
+	o := prevOffset(c.clips[c.i].data, c.o)
+	if o == -1 {
+		c.i--
+		c.o = 0
+		return
+	}
+	c.o = o
+}
+
+func (c *Cursor) Move(o int) {
+	if o == 0 {
+		return
+	}
+	if o > 0 {
+		for i := 0; i < o; i++ {
+			c.MoveNext()
+		}
+	} else {
+		for i := 0; i > o; i-- {
+			c.MovePrev()
 		}
 	}
 }
