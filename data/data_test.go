@@ -82,7 +82,7 @@ func TestCursorWrite(t *testing.T) {
 				t.Fatalf("%q panicked: %s", c.label, r)
 			}
 		}()
-		c.cs.Shift(c.at)
+		c.cs.Move(c.at)
 		for _, r := range c.writes {
 			c.cs.Write(r)
 		}
