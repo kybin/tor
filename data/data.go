@@ -33,6 +33,21 @@ func (c Clip) Len() int {
 	return len(c.data)
 }
 
+func cut(c Clip, o int) (a, b Clip) {
+	aNewlines := make([]int, 0)
+	bNewlines := make([]int, 0)
+	for _, n := range c.newlines {
+		if o < n {
+			aNewlines = append(aNewlines, n)
+		} else {
+			bNewlines = append(bNewlines, n-o)
+		}
+	}
+	a = Clip{data: c.data[:o], newlines: aNewlines}
+	b = Clip{data: c.data[o:], newlines: bNewlines}
+	return a, b
+}
+
 func (c Clip) Cut(o int) (a, b Clip) {
 	aNewlines := make([]int, 0)
 	bNewlines := make([]int, 0)
@@ -283,5 +298,27 @@ func (c *Cursor) Write(r rune) {
 	c.o = 0
 }
 
-func (c *Cursor) Delete()    {}
+func (c *Cursor) Delete() {
+	c.appending = false
+	if c.i == len(c.clips) {
+		if c.o != 0 {
+			panic("c.o should 0 when c.i == len(c.clips)")
+		}
+		return
+	}
+	if c.o != 0 {
+		clipA, clipB := c.clips[c.i].Cut(c.o)
+		c.clips[c.i] = clipA
+		c.clips = append(append(c.clips[:c.i], clipA, clipB), c.clips[c.i+1:]...)
+		c.i++
+		c.o = 0
+	}
+	p := nextOffset(c.clips[c.i].data, 0)
+	if p == -1 {
+		c.clips = append(c.clips[:c.i], c.clips[c.i+1:]...)
+		return
+	}
+	_, c.clips[c.i] = c.clips[c.i].Cut(p)
+}
+
 func (c *Cursor) Backspace() {}
