@@ -37,19 +37,82 @@ func TestDataClip(t *testing.T) {
 	}
 }
 
+func TestCursorCut(t *testing.T) {
+	cases := []struct {
+		label string
+		cs    *Cursor
+		want  *Cursor
+	}{
+		{
+			label: "middle",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         0,
+				o:         7,
+				appending: false,
+			},
+			want: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is")), DataClip([]byte(" sparta."))},
+				i:         1,
+				o:         0,
+				appending: false,
+			},
+		},
+		{
+			label: "first",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         0,
+				o:         0,
+				appending: false,
+			},
+			want: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         0,
+				o:         0,
+				appending: false,
+			},
+		},
+		{
+			label: "last",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         1,
+				o:         0,
+				appending: false,
+			},
+			want: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         1,
+				o:         0,
+				appending: false,
+			},
+		},
+	}
+	for _, c := range cases {
+		c.cs.Cut()
+		if !reflect.DeepEqual(c.cs, c.want) {
+			t.Fatalf("%s: got %v, want %v", c.label, c.cs, c.want)
+		}
+	}
+}
+
 func TestCursorWrite(t *testing.T) {
 	cases := []struct {
 		label  string
 		cs     *Cursor
 		writes []rune
-		at     int
 		want   *Cursor
 	}{
 		{
-			label:  "middle",
-			cs:     NewCursor([]Clip{DataClip([]byte("this is sparta."))}),
+			label: "middle",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         0,
+				o:         7,
+				appending: false,
+			},
 			writes: []rune("n't"),
-			at:     7,
 			want: &Cursor{
 				clips:     []Clip{DataClip([]byte("this is")), DataClip([]byte("n't")), DataClip([]byte(" sparta."))},
 				i:         2,
@@ -58,10 +121,14 @@ func TestCursorWrite(t *testing.T) {
 			},
 		},
 		{
-			label:  "first",
-			cs:     NewCursor([]Clip{DataClip([]byte("this is sparta."))}),
+			label: "first",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         0,
+				o:         0,
+				appending: false,
+			},
 			writes: []rune("hey, "),
-			at:     0,
 			want: &Cursor{
 				clips:     []Clip{DataClip([]byte("hey, ")), DataClip([]byte("this is sparta."))},
 				i:         1,
@@ -70,10 +137,14 @@ func TestCursorWrite(t *testing.T) {
 			},
 		},
 		{
-			label:  "last",
-			cs:     NewCursor([]Clip{DataClip([]byte("this is sparta."))}),
+			label: "last",
+			cs: &Cursor{
+				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				i:         1,
+				o:         0,
+				appending: false,
+			},
 			writes: []rune(" isn't it?"),
-			at:     15,
 			want: &Cursor{
 				clips:     []Clip{DataClip([]byte("this is sparta.")), DataClip([]byte(" isn't it?"))},
 				i:         2,
@@ -83,17 +154,11 @@ func TestCursorWrite(t *testing.T) {
 		},
 	}
 	for _, c := range cases {
-		defer func() {
-			if r := recover(); r != nil {
-				t.Fatalf("%q panicked: %s", c.label, r)
-			}
-		}()
-		c.cs.Move(c.at)
 		for _, r := range c.writes {
 			c.cs.Write(r)
 		}
 		if !reflect.DeepEqual(c.cs, c.want) {
-			t.Fatalf("got %v, want %v", c.cs, c.want)
+			t.Fatalf("%s: got %v, want %v", c.label, c.cs, c.want)
 		}
 	}
 }

@@ -261,40 +261,38 @@ func (c *Cursor) GotoPrevLine() {
 	}
 }
 
+// Cut cuts the underlying clip it stands.
+// If it is standing at edge of clip(s), it doesn't do anything.
+func (c *Cursor) Cut() {
+	if c.i == len(c.clips) {
+		if c.o != 0 {
+			panic("c.o should 0 when c.i == len(c.clips)")
+		}
+		return
+	}
+	if c.o == 0 {
+		// edge
+		return
+	}
+	clipA, clipB := c.clips[c.i].Cut(c.o)
+	c.clips = append(c.clips[:c.i], append([]Clip{clipA, clipB}, c.clips[c.i+1:]...)...)
+	c.i++
+	c.o = 0
+}
+
 func (c *Cursor) Write(r rune) {
 	if c.appending {
 		if c.o != 0 {
 			panic("c.o should 0 when appending")
 		}
-		i := c.i - 1
-		c.clips[i] = c.clips[i].Append(r)
+		c.clips[c.i-1] = c.clips[c.i-1].Append(r)
 		return
 	}
 	c.appending = true
-
+	c.Cut()
 	clipInsert := DataClip(runeToBytes(r))
-	if c.i == len(c.clips) {
-		if c.o != 0 {
-			panic("c.o should 0 when c.i == len(c.clips)")
-		}
-		c.clips = append(c.clips, clipInsert)
-		c.i++
-		c.o = 0
-		return
-	}
-	before := c.clips[:c.i]
-	after := c.clips[c.i+1:]
-	if c.o == 0 {
-		// writing at very beginning of data, or at the border between two clips.
-		c.clips = append(append(before, clipInsert, c.clips[c.i]), after...)
-		c.i++
-		c.o = 0
-		return
-	}
-	// writing in the middle of clip.
-	clip1, clip2 := c.clips[c.i].Cut(c.o)
-	c.clips = append(append(before, clip1, clipInsert, clip2), after...)
-	c.i += 2
+	c.clips = append(c.clips[:c.i], append([]Clip{clipInsert}, c.clips[c.i:]...)...)
+	c.i++
 	c.o = 0
 }
 
@@ -306,12 +304,7 @@ func (c *Cursor) Delete() {
 		}
 		return
 	}
-	if c.o != 0 {
-		clipA, clipB := c.clips[c.i].Cut(c.o)
-		c.clips = append(append(c.clips[:c.i], clipA, clipB), c.clips[c.i+1:]...)
-		c.i++
-		c.o = 0
-	}
+	c.Cut()
 	p := nextOffset(c.clips[c.i].data, 0)
 	if p == -1 {
 		c.clips = append(c.clips[:c.i], c.clips[c.i+1:]...)
@@ -325,12 +318,7 @@ func (c *Cursor) Backspace() {
 	if c.i == 0 && c.o == 0 {
 		return
 	}
-	if c.o != 0 {
-		clipA, clipB := c.clips[c.i].Cut(c.o)
-		c.clips = append(append(c.clips[:c.i], clipA, clipB), c.clips[c.i+1:]...)
-		c.i++
-		c.o = 0
-	}
+	c.Cut()
 	p := prevOffset(c.clips[c.i-1].data, len(c.clips[c.i-1].data))
 	if p == 0 {
 		c.clips = append(c.clips[:c.i-1], c.clips[c.i:]...)
