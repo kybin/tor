@@ -170,13 +170,12 @@ func (c *Cursor) MovePrev() {
 		c.i--
 		c.o = len(c.clips[c.i].data)
 	}
-	o := prevOffset(c.clips[c.i].data, c.o)
-	if o == -1 {
+	if c.o == 0 {
 		c.i--
-		c.o = 0
+		c.o = prevOffset(c.clips[c.i].data, len(c.clips[c.i].data))
 		return
 	}
-	c.o = o
+	c.o = prevOffset(c.clips[c.i].data, c.o)
 }
 
 func (c *Cursor) Move(o int) {

@@ -231,6 +231,7 @@ func TestCursorGotoPrevLine(t *testing.T) {
 	}
 }
 
+// TODO: the test don't catch a bug when MoveNext moves too fast.
 func TestCursorGotoNext(t *testing.T) {
 	cases := []struct {
 		label string
@@ -268,6 +269,7 @@ func TestCursorGotoNext(t *testing.T) {
 	}
 }
 
+// TODO: the test don't catch a bug when MovePrev moves too fast.
 func TestCursorGotoPrev(t *testing.T) {
 	cases := []struct {
 		label string
