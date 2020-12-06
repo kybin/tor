@@ -5,6 +5,12 @@ import (
 	"testing"
 )
 
+// Pos represents position of a cursor.
+type Pos struct {
+	i int // clip index
+	o int // offset in the clip
+}
+
 func TestDataClip(t *testing.T) {
 	cases := []struct {
 		data []byte
@@ -93,14 +99,10 @@ func TestCursorWrite(t *testing.T) {
 }
 
 func TestCursorGotoNextLine(t *testing.T) {
-	type Step struct {
-		i int
-		o int
-	}
 	cases := []struct {
 		label string
 		clips []Clip
-		wants []Step
+		wants []Pos
 	}{
 		{
 			label: "simple",
@@ -108,14 +110,14 @@ func TestCursorGotoNextLine(t *testing.T) {
 				DataClip([]byte("what a nice day\n")),
 				DataClip([]byte("do you have breakfast?\n or shall we?")),
 			},
-			wants: []Step{{0, 15}, {1, 22}, {2, 0}, {2, 0}},
+			wants: []Pos{{0, 15}, {1, 22}, {2, 0}, {2, 0}},
 		},
 		{
 			label: "korean",
 			clips: []Clip{
 				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
 			},
-			wants: []Step{{0, 7}, {1, 20}, {2, 0}, {2, 0}},
+			wants: []Pos{{0, 7}, {1, 20}, {2, 0}, {2, 0}},
 		},
 	}
 
@@ -131,14 +133,10 @@ func TestCursorGotoNextLine(t *testing.T) {
 }
 
 func TestCursorGotoPrevLine(t *testing.T) {
-	type Step struct {
-		i int
-		o int
-	}
 	cases := []struct {
 		label string
 		clips []Clip
-		wants []Step
+		wants []Pos
 	}{
 		{
 			label: "simple",
@@ -146,14 +144,14 @@ func TestCursorGotoPrevLine(t *testing.T) {
 				DataClip([]byte("what a nice day\n")),
 				DataClip([]byte("do you have breakfast?\n or shall we?")),
 			},
-			wants: []Step{{1, 22}, {0, 15}, {0, 0}, {0, 0}},
+			wants: []Pos{{1, 22}, {0, 15}, {0, 0}, {0, 0}},
 		},
 		{
 			label: "korean",
 			clips: []Clip{
 				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
 			},
-			wants: []Step{{1, 20}, {0, 7}, {0, 0}, {0, 0}},
+			wants: []Pos{{1, 20}, {0, 7}, {0, 0}, {0, 0}},
 		},
 	}
 
@@ -244,14 +242,10 @@ func TestCursorGotoPrev(t *testing.T) {
 }
 
 func TestCursorDelete(t *testing.T) {
-	type Step struct {
-		i int
-		o int
-	}
 	cases := []struct {
 		label  string
 		clips  []Clip
-		from   Step
+		from   Pos
 		nsteps int
 		want   []Clip
 	}{
@@ -264,7 +258,7 @@ func TestCursorDelete(t *testing.T) {
 				DataClip([]byte("e")),
 				DataClip([]byte("fgh")),
 			},
-			from:   Step{0, 0},
+			from:   Pos{0, 0},
 			nsteps: 8,
 			want:   []Clip{},
 		},
@@ -277,7 +271,7 @@ func TestCursorDelete(t *testing.T) {
 				DataClip([]byte("e")),
 				DataClip([]byte("fgh")),
 			},
-			from:   Step{0, 0},
+			from:   Pos{0, 0},
 			nsteps: 12,
 			want:   []Clip{},
 		},
@@ -290,7 +284,7 @@ func TestCursorDelete(t *testing.T) {
 				DataClip([]byte("e")),
 				DataClip([]byte("fgh")),
 			},
-			from:   Step{1, 1},
+			from:   Pos{1, 1},
 			nsteps: 6,
 			want: []Clip{
 				DataClip([]byte("a")),
@@ -302,7 +296,7 @@ func TestCursorDelete(t *testing.T) {
 			clips: []Clip{
 				DataClip([]byte("a")),
 			},
-			from:   Step{1, 0},
+			from:   Pos{1, 0},
 			nsteps: 3,
 			want: []Clip{
 				DataClip([]byte("a")),
@@ -311,7 +305,7 @@ func TestCursorDelete(t *testing.T) {
 		{
 			label:  "empty clip",
 			clips:  []Clip{},
-			from:   Step{0, 0},
+			from:   Pos{0, 0},
 			nsteps: 1,
 			want:   []Clip{},
 		},
