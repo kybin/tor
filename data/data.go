@@ -308,7 +308,6 @@ func (c *Cursor) Delete() {
 	}
 	if c.o != 0 {
 		clipA, clipB := c.clips[c.i].Cut(c.o)
-		c.clips[c.i] = clipA
 		c.clips = append(append(c.clips[:c.i], clipA, clipB), c.clips[c.i+1:]...)
 		c.i++
 		c.o = 0
