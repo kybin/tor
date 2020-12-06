@@ -322,3 +322,84 @@ func TestCursorDelete(t *testing.T) {
 		}
 	}
 }
+
+func TestCursorBackspace(t *testing.T) {
+	cases := []struct {
+		label  string
+		clips  []Clip
+		from   Pos
+		nsteps int
+		want   []Clip
+	}{
+		{
+			label: "basic",
+			clips: []Clip{
+				DataClip([]byte("a")),
+				DataClip([]byte("bc")),
+				DataClip([]byte("d")),
+				DataClip([]byte("e")),
+				DataClip([]byte("fgh")),
+			},
+			from:   Pos{5, 0},
+			nsteps: 8,
+			want:   []Clip{},
+		},
+		{
+			label: "more steps",
+			clips: []Clip{
+				DataClip([]byte("a")),
+				DataClip([]byte("bc")),
+				DataClip([]byte("d")),
+				DataClip([]byte("e")),
+				DataClip([]byte("fgh")),
+			},
+			from:   Pos{5, 0},
+			nsteps: 12,
+			want:   []Clip{},
+		},
+		{
+			label: "in the middle",
+			clips: []Clip{
+				DataClip([]byte("a")),
+				DataClip([]byte("bc")),
+				DataClip([]byte("d")),
+				DataClip([]byte("e")),
+				DataClip([]byte("fgh")),
+			},
+			from:   Pos{4, 1},
+			nsteps: 6,
+			want: []Clip{
+				DataClip([]byte("gh")),
+			},
+		},
+		{
+			label: "from the start",
+			clips: []Clip{
+				DataClip([]byte("a")),
+			},
+			from:   Pos{0, 0},
+			nsteps: 3,
+			want: []Clip{
+				DataClip([]byte("a")),
+			},
+		},
+		{
+			label:  "empty clip",
+			clips:  []Clip{},
+			from:   Pos{0, 0},
+			nsteps: 1,
+			want:   []Clip{},
+		},
+	}
+	for _, c := range cases {
+		cs := NewCursor(c.clips)
+		cs.i = c.from.i
+		cs.o = c.from.o
+		for i := 0; i < c.nsteps; i++ {
+			cs.Backspace()
+		}
+		if !reflect.DeepEqual(cs.clips, c.want) {
+			t.Fatalf("%s: got %v, want %v", c.label, cs.clips, c.want)
+		}
+	}
+}

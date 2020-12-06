@@ -320,4 +320,22 @@ func (c *Cursor) Delete() {
 	_, c.clips[c.i] = c.clips[c.i].Cut(p)
 }
 
-func (c *Cursor) Backspace() {}
+func (c *Cursor) Backspace() {
+	c.appending = false
+	if c.i == 0 && c.o == 0 {
+		return
+	}
+	if c.o != 0 {
+		clipA, clipB := c.clips[c.i].Cut(c.o)
+		c.clips = append(append(c.clips[:c.i], clipA, clipB), c.clips[c.i+1:]...)
+		c.i++
+		c.o = 0
+	}
+	p := prevOffset(c.clips[c.i-1].data, len(c.clips[c.i-1].data))
+	if p == 0 {
+		c.clips = append(c.clips[:c.i-1], c.clips[c.i:]...)
+		c.i--
+		return
+	}
+	c.clips[c.i-1], _ = c.clips[c.i-1].Cut(p)
+}
