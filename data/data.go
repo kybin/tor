@@ -38,10 +38,6 @@ func Clips(datas ...[]byte) []Clip {
 	return clips
 }
 
-func (c Clip) Len() int {
-	return len(c.data)
-}
-
 func (c Clip) Cut(o int) (a, b Clip) {
 	aNewlines := make([]int, 0)
 	bNewlines := make([]int, 0)
