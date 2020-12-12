@@ -231,7 +231,7 @@ func TestCursorGotoPrevLine(t *testing.T) {
 	}
 }
 
-func TestCursorGotoNext(t *testing.T) {
+func TestCursorMoveNext(t *testing.T) {
 	cases := []struct {
 		label string
 		clips []Clip
@@ -278,7 +278,7 @@ func TestCursorGotoNext(t *testing.T) {
 	}
 }
 
-func TestCursorGotoPrev(t *testing.T) {
+func TestCursorMovePrev(t *testing.T) {
 	cases := []struct {
 		label string
 		clips []Clip
