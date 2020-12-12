@@ -72,30 +72,6 @@ func (c Clip) Cut(o int) (a, b Clip) {
 	return a, b
 }
 
-func (c Clip) PopFirst() Clip {
-	if c.Len() <= 0 {
-		panic("cannot pop")
-	}
-	r, n := utf8.DecodeRune(c.data)
-	c.data = c.data[:len(c.data)-n]
-	if r == '\n' {
-		c.newlines = c.newlines[:len(c.newlines)-1]
-	}
-	return c
-}
-
-func (c Clip) PopLast() Clip {
-	if c.Len() <= 0 {
-		panic("cannot pop")
-	}
-	r, n := utf8.DecodeLastRune(c.data)
-	c.data = c.data[n:]
-	if r == '\n' {
-		c.newlines = c.newlines[1:]
-	}
-	return c
-}
-
 func (c Clip) Append(r rune) Clip {
 	if r == '\n' {
 		c.newlines = append(c.newlines, len(c.data))
