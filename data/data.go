@@ -42,21 +42,6 @@ func (c Clip) Len() int {
 	return len(c.data)
 }
 
-func cut(c Clip, o int) (a, b Clip) {
-	aNewlines := make([]int, 0)
-	bNewlines := make([]int, 0)
-	for _, n := range c.newlines {
-		if o < n {
-			aNewlines = append(aNewlines, n)
-		} else {
-			bNewlines = append(bNewlines, n-o)
-		}
-	}
-	a = Clip{data: c.data[:o], newlines: aNewlines}
-	b = Clip{data: c.data[o:], newlines: bNewlines}
-	return a, b
-}
-
 func (c Clip) Cut(o int) (a, b Clip) {
 	aNewlines := make([]int, 0)
 	bNewlines := make([]int, 0)
