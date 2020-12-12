@@ -231,12 +231,11 @@ func TestCursorGotoPrevLine(t *testing.T) {
 	}
 }
 
-// TODO: the test don't catch a bug when MoveNext moves too fast.
 func TestCursorGotoNext(t *testing.T) {
 	cases := []struct {
 		label string
 		clips []Clip
-		nstep int
+		steps []Pos
 	}{
 		{
 			label: "numbers and newlines",
@@ -247,7 +246,13 @@ func TestCursorGotoNext(t *testing.T) {
 				DataClip([]byte("56 7")),
 				DataClip([]byte("8\n\n\n90")),
 			},
-			nstep: 17,
+			steps: []Pos{
+				{1, 0}, {1, 1}, {1, 2},
+				{2, 0}, {2, 1}, {2, 2},
+				{3, 0}, {3, 1}, {3, 2}, {3, 3},
+				{4, 0}, {4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5},
+				{5, 0}, {5, 0},
+			},
 		},
 		{
 			label: "korean",
@@ -255,26 +260,29 @@ func TestCursorGotoNext(t *testing.T) {
 				DataClip([]byte("한글 테스트\n")),
 				DataClip([]byte("english test\n")),
 			},
-			nstep: 20,
+			steps: []Pos{
+				{0, 3}, {0, 6}, {0, 7}, {0, 10}, {0, 13}, {0, 16},
+				{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, {1, 9}, {1, 10}, {1, 11}, {1, 12},
+				{2, 0}, {2, 0},
+			},
 		},
 	}
 	for _, c := range cases {
 		cs := NewCursor(c.clips)
-		for i := 0; i < c.nstep; i++ {
+		for i, want := range c.steps {
 			cs.MoveNext()
-		}
-		if cs.i != len(c.clips) || cs.o != 0 {
-			t.Fatalf("%s: got [%d:%d], want [%d:%d]", c.label, cs.i, cs.o, len(c.clips), 0)
+			if cs.i != want.i || cs.o != want.o {
+				t.Fatalf("%s: step %d: got [%d:%d], want [%d:%d]", c.label, i, cs.i, cs.o, want.i, want.o)
+			}
 		}
 	}
 }
 
-// TODO: the test don't catch a bug when MovePrev moves too fast.
 func TestCursorGotoPrev(t *testing.T) {
 	cases := []struct {
 		label string
 		clips []Clip
-		nstep int
+		steps []Pos
 	}{
 		{
 			label: "numbers and newlines",
@@ -285,7 +293,13 @@ func TestCursorGotoPrev(t *testing.T) {
 				DataClip([]byte("56 7")),
 				DataClip([]byte("8\n\n\n90")),
 			},
-			nstep: 17,
+			steps: []Pos{
+				{4, 5}, {4, 4}, {4, 3}, {4, 2}, {4, 1}, {4, 0},
+				{3, 3}, {3, 2}, {3, 1}, {3, 0},
+				{2, 2}, {2, 1}, {2, 0},
+				{1, 2}, {1, 1}, {1, 0},
+				{0, 0}, {0, 0},
+			},
 		},
 		{
 			label: "korean",
@@ -293,17 +307,19 @@ func TestCursorGotoPrev(t *testing.T) {
 				DataClip([]byte("한글 테스트\n")),
 				DataClip([]byte("english test\n")),
 			},
-			nstep: 20,
+			steps: []Pos{
+				{1, 12}, {1, 11}, {1, 10}, {1, 9}, {1, 8}, {1, 7}, {1, 6}, {1, 5}, {1, 4}, {1, 3}, {1, 2}, {1, 1}, {1, 0},
+				{0, 16}, {0, 13}, {0, 10}, {0, 7}, {0, 6}, {0, 3}, {0, 0}, {0, 0},
+			},
 		},
 	}
 	for _, c := range cases {
-		cs := NewCursor(c.clips)
-		cs.i = len(c.clips)
-		for i := 0; i < c.nstep; i++ {
+		cs := &Cursor{clips: c.clips, i: len(c.clips), o: 0}
+		for i, want := range c.steps {
 			cs.MovePrev()
-		}
-		if cs.i != 0 || cs.o != 0 {
-			t.Fatalf("%s: got [%d:%d], want [%d:%d]", c.label, cs.i, cs.o, 0, 0)
+			if cs.i != want.i || cs.o != want.o {
+				t.Fatalf("%s: step %d: got [%d:%d], want [%d:%d]", c.label, i, cs.i, cs.o, want.i, want.o)
+			}
 		}
 	}
 }
