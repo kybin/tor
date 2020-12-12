@@ -46,13 +46,13 @@ func TestCursorCut(t *testing.T) {
 		{
 			label: "middle",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         0,
 				o:         7,
 				appending: false,
 			},
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is")), DataClip([]byte(" sparta."))},
+				clips:     Clips([]byte("this is"), []byte(" sparta.")),
 				i:         1,
 				o:         0,
 				appending: false,
@@ -61,13 +61,13 @@ func TestCursorCut(t *testing.T) {
 		{
 			label: "first",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         0,
 				o:         0,
 				appending: false,
 			},
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         0,
 				o:         0,
 				appending: false,
@@ -76,13 +76,13 @@ func TestCursorCut(t *testing.T) {
 		{
 			label: "last",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         1,
 				o:         0,
 				appending: false,
 			},
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         1,
 				o:         0,
 				appending: false,
@@ -107,14 +107,14 @@ func TestCursorWrite(t *testing.T) {
 		{
 			label: "middle",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         0,
 				o:         7,
 				appending: false,
 			},
 			writes: []rune("n't"),
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is")), DataClip([]byte("n't")), DataClip([]byte(" sparta."))},
+				clips:     Clips([]byte("this is"), []byte("n't"), []byte(" sparta.")),
 				i:         2,
 				o:         0,
 				appending: true,
@@ -123,14 +123,14 @@ func TestCursorWrite(t *testing.T) {
 		{
 			label: "first",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         0,
 				o:         0,
 				appending: false,
 			},
 			writes: []rune("hey, "),
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("hey, ")), DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("hey, "), []byte("this is sparta.")),
 				i:         1,
 				o:         0,
 				appending: true,
@@ -139,14 +139,14 @@ func TestCursorWrite(t *testing.T) {
 		{
 			label: "last",
 			cs: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta."))},
+				clips:     Clips([]byte("this is sparta.")),
 				i:         1,
 				o:         0,
 				appending: false,
 			},
 			writes: []rune(" isn't it?"),
 			want: &Cursor{
-				clips:     []Clip{DataClip([]byte("this is sparta.")), DataClip([]byte(" isn't it?"))},
+				clips:     Clips([]byte("this is sparta."), []byte(" isn't it?")),
 				i:         2,
 				o:         0,
 				appending: true,
@@ -171,17 +171,18 @@ func TestCursorGotoNextLine(t *testing.T) {
 	}{
 		{
 			label: "simple",
-			clips: []Clip{
-				DataClip([]byte("what a nice day\n")),
-				DataClip([]byte("do you have breakfast?\n or shall we?")),
-			},
+			clips: Clips(
+				[]byte("what a nice day\n"),
+				[]byte("do you have breakfast?\n or shall we?"),
+			),
 			wants: []Pos{{0, 15}, {1, 22}, {2, 0}, {2, 0}},
 		},
 		{
 			label: "korean",
-			clips: []Clip{
-				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
-			},
+			clips: Clips(
+				[]byte("이 건\n 한글"),
+				[]byte("테스트 입니다.\n"), // each hangul character is 3 bytes
+			),
 			wants: []Pos{{0, 7}, {1, 20}, {2, 0}, {2, 0}},
 		},
 	}
@@ -205,17 +206,18 @@ func TestCursorGotoPrevLine(t *testing.T) {
 	}{
 		{
 			label: "simple",
-			clips: []Clip{
-				DataClip([]byte("what a nice day\n")),
-				DataClip([]byte("do you have breakfast?\n or shall we?")),
-			},
+			clips: Clips(
+				[]byte("what a nice day\n"),
+				[]byte("do you have breakfast?\n or shall we?"),
+			),
 			wants: []Pos{{1, 22}, {0, 15}, {0, 0}, {0, 0}},
 		},
 		{
 			label: "korean",
-			clips: []Clip{
-				DataClip([]byte("이 건\n 한글")), DataClip([]byte("테스트 입니다.\n")), // each hangul character is 3 bytes
-			},
+			clips: Clips(
+				[]byte("이 건\n 한글"),
+				[]byte("테스트 입니다.\n"), // each hangul character is 3 bytes
+			),
 			wants: []Pos{{1, 20}, {0, 7}, {0, 0}, {0, 0}},
 		},
 	}
@@ -239,13 +241,13 @@ func TestCursorMoveNext(t *testing.T) {
 	}{
 		{
 			label: "numbers and newlines",
-			clips: []Clip{
-				DataClip([]byte("1")),
-				DataClip([]byte("23\n")),
-				DataClip([]byte(" 4\r\n")),
-				DataClip([]byte("56 7")),
-				DataClip([]byte("8\n\n\n90")),
-			},
+			clips: Clips(
+				[]byte("1"),
+				[]byte("23\n"),
+				[]byte(" 4\r\n"),
+				[]byte("56 7"),
+				[]byte("8\n\n\n90"),
+			),
 			steps: []Pos{
 				{1, 0}, {1, 1}, {1, 2},
 				{2, 0}, {2, 1}, {2, 2},
@@ -256,10 +258,10 @@ func TestCursorMoveNext(t *testing.T) {
 		},
 		{
 			label: "korean",
-			clips: []Clip{
-				DataClip([]byte("한글 테스트\n")),
-				DataClip([]byte("english test\n")),
-			},
+			clips: Clips(
+				[]byte("한글 테스트\n"),
+				[]byte("english test\n"),
+			),
 			steps: []Pos{
 				{0, 3}, {0, 6}, {0, 7}, {0, 10}, {0, 13}, {0, 16},
 				{1, 0}, {1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6}, {1, 7}, {1, 8}, {1, 9}, {1, 10}, {1, 11}, {1, 12},
@@ -286,13 +288,13 @@ func TestCursorMovePrev(t *testing.T) {
 	}{
 		{
 			label: "numbers and newlines",
-			clips: []Clip{
-				DataClip([]byte("1")),
-				DataClip([]byte("23\n")),
-				DataClip([]byte(" 4\r\n")),
-				DataClip([]byte("56 7")),
-				DataClip([]byte("8\n\n\n90")),
-			},
+			clips: Clips(
+				[]byte("1"),
+				[]byte("23\n"),
+				[]byte(" 4\r\n"),
+				[]byte("56 7"),
+				[]byte("8\n\n\n90"),
+			),
 			steps: []Pos{
 				{4, 5}, {4, 4}, {4, 3}, {4, 2}, {4, 1}, {4, 0},
 				{3, 3}, {3, 2}, {3, 1}, {3, 0},
@@ -303,10 +305,10 @@ func TestCursorMovePrev(t *testing.T) {
 		},
 		{
 			label: "korean",
-			clips: []Clip{
-				DataClip([]byte("한글 테스트\n")),
-				DataClip([]byte("english test\n")),
-			},
+			clips: Clips(
+				[]byte("한글 테스트\n"),
+				[]byte("english test\n"),
+			),
 			steps: []Pos{
 				{1, 12}, {1, 11}, {1, 10}, {1, 9}, {1, 8}, {1, 7}, {1, 6}, {1, 5}, {1, 4}, {1, 3}, {1, 2}, {1, 1}, {1, 0},
 				{0, 16}, {0, 13}, {0, 10}, {0, 7}, {0, 6}, {0, 3}, {0, 0}, {0, 0},
@@ -334,56 +336,56 @@ func TestCursorDelete(t *testing.T) {
 	}{
 		{
 			label: "basic",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{0, 0},
 			nsteps: 8,
 			want:   []Clip{},
 		},
 		{
 			label: "more steps",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{0, 0},
 			nsteps: 12,
 			want:   []Clip{},
 		},
 		{
 			label: "in the middle",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{1, 1},
 			nsteps: 6,
-			want: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("b")),
-			},
+			want: Clips(
+				[]byte("a"),
+				[]byte("b"),
+			),
 		},
 		{
 			label: "from the end",
-			clips: []Clip{
-				DataClip([]byte("a")),
-			},
+			clips: Clips(
+				[]byte("a"),
+			),
 			from:   Pos{1, 0},
 			nsteps: 3,
-			want: []Clip{
-				DataClip([]byte("a")),
-			},
+			want: Clips(
+				[]byte("a"),
+			),
 		},
 		{
 			label:  "empty clip",
@@ -416,55 +418,55 @@ func TestCursorBackspace(t *testing.T) {
 	}{
 		{
 			label: "basic",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{5, 0},
 			nsteps: 8,
 			want:   []Clip{},
 		},
 		{
 			label: "more steps",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{5, 0},
 			nsteps: 12,
 			want:   []Clip{},
 		},
 		{
 			label: "in the middle",
-			clips: []Clip{
-				DataClip([]byte("a")),
-				DataClip([]byte("bc")),
-				DataClip([]byte("d")),
-				DataClip([]byte("e")),
-				DataClip([]byte("fgh")),
-			},
+			clips: Clips(
+				[]byte("a"),
+				[]byte("bc"),
+				[]byte("d"),
+				[]byte("e"),
+				[]byte("fgh"),
+			),
 			from:   Pos{4, 1},
 			nsteps: 6,
-			want: []Clip{
-				DataClip([]byte("gh")),
-			},
+			want: Clips(
+				[]byte("gh"),
+			),
 		},
 		{
 			label: "from the start",
-			clips: []Clip{
-				DataClip([]byte("a")),
-			},
+			clips: Clips(
+				[]byte("a"),
+			),
 			from:   Pos{0, 0},
 			nsteps: 3,
-			want: []Clip{
-				DataClip([]byte("a")),
-			},
+			want: Clips(
+				[]byte("a"),
+			),
 		},
 		{
 			label:  "empty clip",

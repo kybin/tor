@@ -29,6 +29,15 @@ func DataClip(data []byte) Clip {
 	}
 }
 
+func Clips(datas ...[]byte) []Clip {
+	clips := make([]Clip, 0)
+	for _, data := range datas {
+		c := DataClip(data)
+		clips = append(clips, c)
+	}
+	return clips
+}
+
 func (c Clip) Len() int {
 	return len(c.data)
 }
