@@ -74,49 +74,44 @@ func NewCursor(clips []Clip) *Cursor {
 	return &Cursor{clips: clips}
 }
 
-func nextOffset(data []byte, o int) int {
-	if len(data) == 0 {
+// next returns bytes for the next rune(s) of cursor.
+// Note: It could return "\r\n" if it exists in data.
+func (c *Cursor) next() []byte {
+	data := c.clips[c.i].data[c.o:]
+	r, n := utf8.DecodeRune(data)
+	if n == 0 {
 		panic("data empty")
 	}
-	if o == len(data) {
-		panic("o is already at end")
-	}
-	remain := data[o:]
-	r, n := utf8.DecodeRune(remain)
 	if n == -1 {
 		panic("rune error")
 	}
-	remain = remain[n:]
 	if r == '\r' {
-		r, _ := utf8.DecodeRune(remain)
+		r, _ := utf8.DecodeRune(data[n:])
 		if r == '\n' {
-			n += 1
+			n++
 		}
 	}
-	o += n
-	return o
+	return data[:n]
 }
 
-func prevOffset(data []byte, o int) int {
-	if len(data) == 0 {
+// prev returns bytes for the prev rune(s) of cursor.
+// Note: It could return "\r\n" if it exists in data.
+func (c *Cursor) prev() []byte {
+	data := c.clips[c.i].data[:c.o]
+	r, n := utf8.DecodeLastRune(data)
+	if n == 0 {
 		panic("data empty")
 	}
-	if o == 0 {
-		panic("o is already at start")
-	}
-	remain := data[:o]
-	r, n := utf8.DecodeLastRune(remain)
 	if n == -1 {
 		panic("rune error")
 	}
-	remain = remain[:len(remain)-n]
 	if r == '\n' {
-		r, _ := utf8.DecodeLastRune(remain)
+		r, _ := utf8.DecodeLastRune(data[:len(data)-n])
 		if r == '\r' {
-			n += 1
+			n++
 		}
 	}
-	return o - n
+	return data[len(data)-n:]
 }
 
 func (c *Cursor) MoveNext() {
@@ -124,7 +119,8 @@ func (c *Cursor) MoveNext() {
 	if c.i == len(c.clips) && c.o == 0 {
 		return
 	}
-	c.o = nextOffset(c.clips[c.i].data, c.o)
+	next := c.next()
+	c.o += len(next)
 	if c.o == len(c.clips[c.i].data) {
 		c.i++
 		c.o = 0
@@ -140,7 +136,8 @@ func (c *Cursor) MovePrev() {
 		c.i--
 		c.o = len(c.clips[c.i].data)
 	}
-	c.o = prevOffset(c.clips[c.i].data, c.o)
+	prev := c.prev()
+	c.o -= len(prev)
 }
 
 func (c *Cursor) Move(o int) {
@@ -269,12 +266,10 @@ func (c *Cursor) Delete() {
 		return
 	}
 	c.Cut()
-	p := nextOffset(c.clips[c.i].data, 0)
-	if p == len(c.clips[c.i].data) {
-		c.clips = append(c.clips[:c.i], c.clips[c.i+1:]...)
-		return
-	}
-	_, c.clips[c.i] = c.clips[c.i].Cut(p)
+	c.MoveNext()
+	c.Cut()
+	c.clips = append(c.clips[:c.i-1], c.clips[c.i:]...)
+	c.i--
 }
 
 func (c *Cursor) Backspace() {
@@ -283,11 +278,7 @@ func (c *Cursor) Backspace() {
 		return
 	}
 	c.Cut()
-	p := prevOffset(c.clips[c.i-1].data, len(c.clips[c.i-1].data))
-	if p == 0 {
-		c.clips = append(c.clips[:c.i-1], c.clips[c.i:]...)
-		c.i--
-		return
-	}
-	c.clips[c.i-1], _ = c.clips[c.i-1].Cut(p)
+	c.MovePrev()
+	c.Cut()
+	c.clips = append(c.clips[:c.i], c.clips[c.i+1:]...)
 }
