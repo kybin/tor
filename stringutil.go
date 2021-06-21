@@ -15,7 +15,11 @@ func vlen(s string, tabWidth int) int {
 		if r == '\t' {
 			o += tabWidth
 		} else {
-			o += runewidth.RuneWidth(r)
+			w := runewidth.RuneWidth(r)
+			if w == 0 {
+				w = 1
+			}
+			o += w
 		}
 	}
 	return o

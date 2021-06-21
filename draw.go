@@ -55,10 +55,17 @@ func drawScreen(s tcell.Screen, norm *NormalMode) {
 					o += 1
 				}
 			} else {
+				width := runewidth.RuneWidth(r)
+				if width == 0 {
+					// It's illegal character in tor. Shade the character so we can see it easily.
+					// See vlen function in stringutil.go as well.
+					r = '\u2591'
+					width = 1
+				}
 				if o >= w.Min().O {
 					SetCell(s, l-w.Min().L, o-w.Min().O+norm.area.min.O, rune(r), style)
 				}
-				o += runewidth.RuneWidth(r)
+				o += width
 			}
 		}
 		// set original color to the last cell. (white and black)
